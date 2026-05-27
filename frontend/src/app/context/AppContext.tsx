@@ -176,7 +176,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getIncidentById = (id: string) => {
-    return incidents.find(i => i.id === id.toUpperCase());
+    return incidents.find(i => i.id.toLowerCase() === id.toLowerCase());
   };
 
   const login = async (email: string, password: string, name?: string): Promise<boolean> => {

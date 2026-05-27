@@ -8,7 +8,12 @@ const incidentRoutes = require('./routes/incidents');
 const app = express();
 
 // Middleware
-app.use(cors({ origin: process.env.FRONTEND_URL }));
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin)) return cb(null, true);
+    cb(new Error('Not allowed by CORS'));
+  }
+}));
 app.use(express.json());
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
