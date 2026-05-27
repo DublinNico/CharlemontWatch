@@ -1,0 +1,130 @@
+const sgMail = require('@sendgrid/mail');
+
+// Initialize SendGrid with API key from .env
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+// Helper: get incident type display name
+const getIncidentTypeName = (type) => {
+  const names = {
+    graffiti: 'Graffiti Report',
+    antisocial: 'Anti-Social Behavior',
+    safetyhazard: 'Safety Hazard',
+    maintenance: 'Maintenance Request'
+  };
+  return names[type] || type;
+};
+
+// Send email to resident confirming report received
+const sendResidentConfirmation = async (incident, residentEmail) => {
+  // If anonymous report (no email), skip resident email
+  if (!residentEmail) {
+    return;
+  }
+
+  const trackingLink = `${process.env.FRONTEND_URL}/#track`;
+
+  const msg = {
+    to: residentEmail,
+    from: process.env.SENDGRID_FROM_EMAIL || 'reports@charlemontwatch.ie',
+    subject: `Your Incident Report ${incident.shortId} - CharlemontWatch`,
+    html: `
+      <h2>Thank you for reporting this incident</h2>
+      <p>Your report has been received. Use the ID below to track its status:</p>
+
+      <div style="background:#f5f5f5;border:2px dashed #1976d2;border-radius:8px;padding:20px;text-align:center;margin:20px 0;">
+        <p style="margin:0;font-size:13px;color:#666;">Your Incident ID</p>
+        <p style="margin:8px 0 0;font-size:24px;font-weight:700;letter-spacing:3px;color:#1976d2;">${incident.shortId}</p>
+      </div>
+
+      <p><strong>Location:</strong> ${incident.location}</p>
+      <p><strong>Type:</strong> ${getIncidentTypeName(incident.incidentType)}</p>
+      <p><strong>Status:</strong> ${incident.status}</p>
+
+      <p>To track your report, go to <a href="${trackingLink}">${trackingLink}</a> and enter your Incident ID.</p>
+
+      <p>We'll email you when the status changes.</p>
+      <p>CharlemontWatch Team</p>
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`Resident confirmation email sent to ${residentEmail}`);
+  } catch (error) {
+    console.error('Failed to send resident email:', error);
+  }
+};
+
+// Send email to admin (you) notifying of new incident
+const sendAdminNotification = async (incident) => {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminLink = `${process.env.FRONTEND_URL}/admin`;
+
+  const msg = {
+    to: adminEmail,
+    from: process.env.SENDGRID_FROM_EMAIL || 'reports@charlemontwatch.ie',
+    subject: `[NEW] ${getIncidentTypeName(incident.incidentType)} at ${incident.location}`,
+    html: `
+      <h2>New Incident Report</h2>
+      
+      <p><strong>ID:</strong> ${incident._id.toString().slice(-8).toUpperCase()}</p>
+      <p><strong>Type:</strong> ${getIncidentTypeName(incident.incidentType)}</p>
+      <p><strong>Location:</strong> ${incident.location}</p>
+      <p><strong>Description:</strong> ${incident.description}</p>
+      <p><strong>Reporter:</strong> ${incident.reporterEmail || 'Anonymous'}</p>
+      <p><strong>Reported:</strong> ${incident.reportedDate.toLocaleString()}</p>
+      ${incident.photos.length > 0 ? `<p><strong>Photos:</strong> ${incident.photos.length} uploaded</p>` : ''}
+      
+      <p><a href="${adminLink}">View in Admin Dashboard</a></p>
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`Admin notification sent to ${adminEmail}`);
+  } catch (error) {
+    console.error('Failed to send admin email:', error);
+  }
+};
+
+// Send status update email to resident
+const sendStatusUpdate = async (incident, residentEmail) => {
+  if (!residentEmail) {
+    return;
+  }
+
+  const trackingLink = `${process.env.FRONTEND_URL}/track/${incident._id}`;
+  const statusMessages = {
+    NEW: 'Your report has been received and is waiting to be processed.',
+    IN_PROGRESS: 'Work has started on your report. We\'re on it!',
+    RESOLVED: 'Your report has been resolved. Thank you for helping keep Charlemont safe!'
+  };
+
+  const msg = {
+    to: residentEmail,
+    from: process.env.SENDGRID_FROM_EMAIL || 'reports@charlemontwatch.ie',
+    subject: `Incident #${incident._id.toString().slice(-8).toUpperCase()} - Status: ${incident.status}`,
+    html: `
+      <h2>Status Update</h2>
+      <p>Your incident (ID: ${incident._id.toString().slice(-8).toUpperCase()}) status has changed.</p>
+      
+      <p><strong>New Status:</strong> ${incident.status}</p>
+      <p>${statusMessages[incident.status]}</p>
+      
+      <p><a href="${trackingLink}">View Full Report</a></p>
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    console.log(`Status update email sent to ${residentEmail}`);
+  } catch (error) {
+    console.error('Failed to send status update email:', error);
+  }
+};
+
+module.exports = {
+  sendResidentConfirmation,
+  sendAdminNotification,
+  sendStatusUpdate
+};
