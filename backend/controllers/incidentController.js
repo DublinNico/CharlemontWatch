@@ -1,8 +1,7 @@
 const Incident = require('../models/Incident');
 const s3 = require('../config/s3');
 const crypto = require('crypto');
-
-const generateShortId = () => 'CW-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+const { generateShortId } = require('../utils/idUtils');
 const { sendResidentConfirmation, sendAdminNotification, sendStatusUpdate } = require('../services/emailService');
 
 // Create incident (report)
