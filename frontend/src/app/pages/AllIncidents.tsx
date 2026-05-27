@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { IncidentCard } from '../components/IncidentCard';
 import { useApp, IncidentType, IncidentStatus } from '../context/AppContext';
@@ -19,6 +20,7 @@ const typeColors: Record<IncidentType, { bg: string; text: string; border: strin
 
 export function AllIncidents() {
   const { incidents } = useApp();
+  const navigate = useNavigate();
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<IncidentType | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<IncidentStatus | 'all'>('all');
 
@@ -188,7 +190,11 @@ export function AllIncidents() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {filteredIncidents.map(incident => (
-                <IncidentCard key={incident.id} incident={incident} />
+                <IncidentCard
+                  key={incident.id}
+                  incident={incident}
+                  onClick={() => navigate(`/track?id=${incident.id}`)}
+                />
               ))}
             </div>
           </>

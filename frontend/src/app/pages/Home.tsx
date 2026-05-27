@@ -1,4 +1,4 @@
-import { Shield, Search, List, Info, Lock, User, ArrowRight, Bell, MapPin, Users } from 'lucide-react';
+import { Shield, Search, List, Info, Lock, User, ArrowRight, Bell, MapPin, Users, FileText, Eye, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { useApp } from '../context/AppContext';
@@ -156,6 +156,60 @@ export function Home() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="max-w-7xl mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+          <p className="text-lg text-muted-foreground">Four simple steps to a safer community</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[
+            { number: 1, title: 'Report', description: 'Submit an incident with photos and details', icon: FileText },
+            { number: 2, title: 'Track', description: 'Use your incident ID to monitor progress', icon: Eye },
+            { number: 3, title: 'Review', description: 'Admin reviews and updates status', icon: Shield },
+            { number: 4, title: 'Resolve', description: 'Issue is addressed and marked complete', icon: CheckCircle },
+          ].map(step => (
+            <Card key={step.number} className="text-center border-0 shadow-lg">
+              <CardContent className="p-6">
+                <div className="w-12 h-12 bg-indigo-600 text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
+                  {step.number}
+                </div>
+                <step.icon className="w-8 h-8 text-indigo-600 mx-auto mb-3" />
+                <h3 className="font-semibold text-lg mb-1">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* Incident Types */}
+      <section className="bg-gradient-to-br from-slate-50 to-indigo-50 py-16">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Incident Types</h2>
+            <p className="text-lg text-muted-foreground">What can you report?</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { type: 'Graffiti', description: 'Report vandalism and graffiti in public spaces', accent: '#f97316', bg: 'bg-orange-100', text: 'text-orange-700' },
+              { type: 'Anti-Social Behaviour', description: 'Report disturbances, noise, and antisocial activity', accent: '#ef4444', bg: 'bg-red-100', text: 'text-red-700' },
+              { type: 'Safety Hazard', description: 'Report dangerous conditions that risk injury', accent: '#f59e0b', bg: 'bg-amber-100', text: 'text-amber-700' },
+              { type: 'Maintenance Issue', description: 'Report building and infrastructure maintenance needs', accent: '#10b981', bg: 'bg-emerald-100', text: 'text-emerald-700' },
+            ].map(item => (
+              <Card key={item.type} className="shadow-lg" style={{ borderLeft: `4px solid ${item.accent}` }}>
+                <CardContent className="p-6">
+                  <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${item.bg} ${item.text} mb-3`}>
+                    {item.type}
+                  </span>
+                  <p className="text-sm text-muted-foreground">{item.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </section>
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Search, Shield, FileText, Eye, CheckCircle } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Header } from '../components/Header';
 import { StatsCard } from '../components/StatsCard';
 import { IncidentCard } from '../components/IncidentCard';
@@ -8,13 +8,6 @@ import { useApp, IncidentType, Incident } from '../context/AppContext';
 import { useNavigate, useSearchParams } from 'react-router';
 
 const API_BASE = 'http://localhost:5000/api';
-
-const typeColors: Record<IncidentType, string> = {
-  'Graffiti': '#f57c00',
-  'Anti-Social Behaviour': '#d32f2f',
-  'Safety Hazard': '#fbc02d',
-  'Maintenance Issue': '#388e3c',
-};
 
 const typeFromApi: Record<string, IncidentType> = {
   graffiti: 'Graffiti',
@@ -76,11 +69,13 @@ export function TrackReport() {
       setSearchId(id);
       doSearch(id);
     }
-  }, []);
+  }, [searchParams]);
 
   const doSearch = async (id: string) => {
-    const normalized = id.trim().toUpperCase();
-    if (!normalized) return;
+    const trimmed = id.trim();
+    if (!trimmed) return;
+    // Only uppercase CW- shortIds; MongoDB ObjectIds (24 hex chars) must stay as-is
+    const normalized = /^[0-9a-fA-F]{24}$/.test(trimmed) ? trimmed : trimmed.toUpperCase();
 
     setIsSearching(true);
     setNotFound(false);
@@ -148,65 +143,6 @@ export function TrackReport() {
           </div>
         )}
 
-        <div className="mt-12">
-          <h2 className="text-[#333333] mb-6 text-center">How It Works</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {[
-              { number: 1, title: 'Report', description: 'Submit an incident with photos and details', icon: FileText },
-              { number: 2, title: 'Track', description: 'Use your incident ID to monitor progress', icon: Eye },
-              { number: 3, title: 'Review', description: 'Admin reviews and updates status', icon: Shield },
-              { number: 4, title: 'Resolve', description: 'Issue is addressed and marked complete', icon: CheckCircle },
-            ].map(step => (
-              <div key={step.number} className="bg-white rounded shadow-sm p-6 text-center">
-                <div className="w-12 h-12 bg-[#1976d2] text-white rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
-                  {step.number}
-                </div>
-                <step.icon className="w-8 h-8 text-[#1976d2] mx-auto mb-2" />
-                <h3 className="text-[#333333] mb-1">{step.title}</h3>
-                <p className="text-xs text-[#666666]">{step.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-12">
-          <h2 className="text-[#333333] mb-6 text-center">Incident Types</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {(Object.keys(typeColors) as IncidentType[]).map(type => (
-              <div
-                key={type}
-                className="bg-white rounded shadow-sm border-l-4 p-4"
-                style={{ borderLeftColor: typeColors[type] }}
-              >
-                <h3 className="text-sm text-[#333333] mb-2">{type}</h3>
-                <p className="text-xs text-[#666666]">
-                  {type === 'Graffiti' && 'Report vandalism and graffiti'}
-                  {type === 'Anti-Social Behaviour' && 'Report disturbances and noise'}
-                  {type === 'Safety Hazard' && 'Report dangerous conditions'}
-                  {type === 'Maintenance Issue' && 'Report building maintenance needs'}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white rounded shadow-sm p-8 text-center">
-          <h2 className="text-[#333333] mb-4">Ready to report?</h2>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => navigate('/report')}
-              className="px-6 py-2 bg-[#1976d2] hover:bg-[#1565c0] text-white rounded transition-colors"
-            >
-              Report an Incident
-            </button>
-            <button
-              onClick={() => navigate('/incidents')}
-              className="px-6 py-2 border border-[#1976d2] text-[#1976d2] hover:bg-[#e3f2fd] rounded transition-colors"
-            >
-              View All Incidents
-            </button>
-          </div>
-        </div>
       </main>
     </div>
   );

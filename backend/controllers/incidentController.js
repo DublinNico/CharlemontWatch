@@ -84,36 +84,16 @@ const createIncident = async (req, res) => {
   }
 };
 
-// Generate a short-lived presigned URL for a stored S3 photo URL
-const signPhotoUrl = (storedUrl) => {
-  try {
-    const key = new URL(storedUrl).pathname.slice(1);
-    return s3.getSignedUrl('getObject', {
-      Bucket: process.env.AWS_S3_BUCKET,
-      Key: key,
-      Expires: 3600 // 1 hour
-    });
-  } catch {
-    return storedUrl;
-  }
-};
-
-const signIncidentPhotos = (incident) => {
-  const obj = incident.toObject();
-  if (obj.photos && obj.photos.length > 0) {
-    obj.photos = obj.photos.map(p => ({ ...p, url: signPhotoUrl(p.url) }));
-  }
-  return obj;
-};
-
 // Get single incident (public - anyone can view)
 const getIncident = async (req, res) => {
   try {
-    const incident = await Incident.findOne({ shortId: req.params.id });
+    const { id } = req.params;
+    const incident = await Incident.findOne({ shortId: id }) ||
+                     await Incident.findById(id).catch(() => null);
     if (!incident) {
       return res.status(404).json({ error: 'Incident not found' });
     }
-    res.json(signIncidentPhotos(incident));
+    res.json(incident);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -129,7 +109,7 @@ const getAllIncidents = async (req, res) => {
     if (type) filter.incidentType = type;
 
     const incidents = await Incident.find(filter).sort({ reportedDate: -1 });
-    res.json(incidents.map(signIncidentPhotos));
+    res.json(incidents);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
