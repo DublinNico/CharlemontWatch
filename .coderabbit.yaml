@@ -1,0 +1,56 @@
+# .coderabbit.yaml
+# CodeRabbit configuration for CharlemontWatch — community incident reporting platform.
+# Docs: https://docs.coderabbit.ai/getting-started/configure-coderabbit
+
+language: "en-US"
+
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+
+  summary: true
+
+  review_comments:
+    enabled: true
+
+  path_instructions:
+    - path: "frontend/src/**"
+      instructions: >
+        This is a React 18 app using Vite, Tailwind CSS v4, shadcn/ui (Radix UI),
+        and React Router v7. Flag any direct DOM manipulation, missing loading/error
+        states on async operations, or hardcoded colours that should use Tailwind
+        utility classes. Check that all API calls handle errors gracefully.
+
+    - path: "frontend/src/app/context/AppContext.tsx"
+      instructions: >
+        This is the global state context. All API calls go through here using Axios
+        to a backend at http://localhost:5000. Check for missing error handling,
+        race conditions on concurrent requests, and ensure the JWT token is always
+        included in admin-only requests.
+
+    - path: "frontend/src/app/pages/**"
+      instructions: >
+        Pages use React Router v7 (browser history routing). Check that navigation
+        uses useNavigate, forms handle async submission with disabled submit buttons
+        during loading, and error messages are displayed to the user.
+
+    - path: "backend/**"
+      instructions: >
+        This is a Node.js/Express REST API using MongoDB/Mongoose. Check for missing
+        input validation, unhandled promise rejections, improper error status codes,
+        and any endpoints that should require authentication but don't. The admin
+        endpoints under /api/incidents/admin/* must use the authenticate middleware.
+
+    - path: "backend/models/**"
+      instructions: >
+        Mongoose models. Check that required fields are enforced, enums are used
+        where appropriate, and indexes are defined for frequently queried fields
+        like shortId and status.
+
+  ignore_files:
+    - "package-lock.json"
+    - "node_modules/**"
+    - "*.lock"
+    - "dist/**"
+    - "frontend/src/app/components/ui/**"
