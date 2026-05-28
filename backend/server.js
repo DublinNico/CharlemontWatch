@@ -7,13 +7,25 @@ const incidentRoutes = require('./routes/incidents');
 
 const app = express();
 
+const ALLOWED_ORIGIN = /^http:\/\/localhost(:\d+)?$/;
+
 // Middleware
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || /^http:\/\/localhost(:\d+)?$/.test(origin)) return cb(null, true);
-    cb(new Error('Not allowed by CORS'));
+    if (!origin || ALLOWED_ORIGIN.test(origin)) return cb(null, true);
+    cb(null, false);
   }
 }));
+
+// Block requests from disallowed origins with 403 instead of letting them fall
+// through to the global error handler as a 500
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && !ALLOWED_ORIGIN.test(origin)) {
+    return res.status(403).send('Forbidden');
+  }
+  next();
+});
 app.use(express.json());
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 

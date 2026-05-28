@@ -74,13 +74,13 @@ describe('Incident model validation', () => {
     expect(err.errors.status).toBeDefined();
   });
 
-  test('UT-016-B: defaults status to "NEW" when not provided', () => {
+  test('UT-016-B: defaults status to "PENDING_REVIEW" when not provided', () => {
     const doc = new Incident({
       incidentType: 'graffiti',
       location: 'Block A',
       description: 'Test',
     });
-    expect(doc.status).toBe('NEW');
+    expect(doc.status).toBe('PENDING_REVIEW');
   });
 
   test('UT-016-C: accepts "IN_PROGRESS" as a valid status', () => {

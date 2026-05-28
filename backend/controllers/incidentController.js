@@ -4,14 +4,19 @@ const crypto = require('crypto');
 const { generateShortId } = require('../utils/idUtils');
 const { sendResidentConfirmation, sendAdminNotification, sendStatusUpdate } = require('../services/emailService');
 
+const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
+
+const findByAnyId = async (id) => {
+  return await Incident.findOne({ shortId: id }) ||
+         await Incident.findById(id).catch(() => null);
+};
+
 // Create incident (report)
 const createIncident = async (req, res) => {
   try {
     const { incidentType, location, description, reporterEmail } = req.body;
-    
-    // Parse type-specific fields
+
     const typeData = {};
-    
     if (incidentType === 'graffiti') {
       typeData.surfaceType = req.body.surfaceType;
       typeData.estimatedArea = req.body.estimatedArea;
@@ -30,32 +35,30 @@ const createIncident = async (req, res) => {
       typeData.customIssueDescription = req.body.customIssueDescription;
       typeData.workCategory = req.body.workCategory;
     }
-    
-    // Upload photos to S3 if provided
+
     const photos = [];
     if (req.files && req.files.length > 0) {
       for (const file of req.files.slice(0, 10)) {
         const key = `incidents/${Date.now()}-${crypto.randomBytes(4).toString('hex')}.jpg`;
-        
         const params = {
           Bucket: process.env.AWS_S3_BUCKET,
           Key: key,
           Body: file.buffer,
           ContentType: file.mimetype
         };
-        
         try {
           await s3.upload(params).promise();
           photos.push({
             url: `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
-            uploadedAt: new Date()
+            uploadedAt: new Date(),
+            approved: false
           });
         } catch (error) {
           console.error('S3 upload error:', error);
         }
       }
     }
-    
+
     const incident = new Incident({
       shortId: generateShortId(),
       incidentType,
@@ -65,13 +68,12 @@ const createIncident = async (req, res) => {
       photos,
       ...typeData
     });
-    
+
     await incident.save();
-    
-    // Send confirmation emails (async, don't wait)
+
     sendResidentConfirmation(incident, incident.reporterEmail);
     sendAdminNotification(incident);
-    
+
     res.status(201).json({
       success: true,
       incidentId: incident.shortId,
@@ -83,7 +85,7 @@ const createIncident = async (req, res) => {
   }
 };
 
-// Get single incident (public - anyone can view)
+// Get single incident (public — reporters can track their own pending submission)
 const getIncident = async (req, res) => {
   try {
     const { id } = req.params;
@@ -98,13 +100,18 @@ const getIncident = async (req, res) => {
   }
 };
 
-// Get all incidents (public - anyone can view)
+// Get all incidents (public — PENDING_REVIEW and REJECTED are never returned)
 const getAllIncidents = async (req, res) => {
   try {
     const { status, type } = req.query;
     const filter = {};
 
-    if (status) filter.status = status;
+    if (status && ACTIVE_STATUSES.includes(status)) {
+      filter.status = status;
+    } else {
+      filter.status = { $in: ACTIVE_STATUSES };
+    }
+
     if (type) filter.incidentType = type;
 
     const incidents = await Incident.find(filter).sort({ reportedDate: -1 });
@@ -114,28 +121,79 @@ const getAllIncidents = async (req, res) => {
   }
 };
 
-// Update incident status (admin only)
+// Get all pending incidents (admin only)
+const getPendingIncidents = async (req, res) => {
+  try {
+    const incidents = await Incident.find({ status: 'PENDING_REVIEW' }).sort({ reportedDate: -1 });
+    res.json(incidents);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Approve or reject a pending incident (admin only)
+const reviewIncident = async (req, res) => {
+  try {
+    const { action } = req.body;
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ error: 'action must be "approve" or "reject"' });
+    }
+
+    const incident = await findByAnyId(req.params.id);
+    if (!incident) return res.status(404).json({ error: 'Incident not found' });
+
+    if (action === 'approve') {
+      incident.status = 'NEW';
+      incident.photos.forEach(photo => { photo.approved = true; });
+    } else {
+      incident.status = 'REJECTED';
+    }
+
+    incident.updatedAt = new Date();
+    await incident.save();
+
+    res.json({ success: true, incident });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Approve or reject an individual photo while incident is in review (admin only)
+const reviewPhoto = async (req, res) => {
+  try {
+    const incident = await findByAnyId(req.params.id);
+    if (!incident) return res.status(404).json({ error: 'Incident not found' });
+
+    const photo = incident.photos.id(req.params.photoId);
+    if (!photo) return res.status(404).json({ error: 'Photo not found' });
+
+    photo.approved = Boolean(req.body.approved);
+    await incident.save();
+
+    res.json({ success: true, incident });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Update incident status (admin only — active statuses only)
 const updateIncidentStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    
-    if (!['NEW', 'IN_PROGRESS', 'RESOLVED'].includes(status)) {
+
+    if (!ACTIVE_STATUSES.includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
-    
-    const incident = await Incident.findByIdAndUpdate(
-      req.params.id,
-      { status, updatedAt: new Date() },
-      { new: true }
-    );
-    
-    if (!incident) {
-      return res.status(404).json({ error: 'Incident not found' });
-    }
-    
-    // Notify resident of status change
+
+    const incident = await findByAnyId(req.params.id);
+    if (!incident) return res.status(404).json({ error: 'Incident not found' });
+
+    incident.status = status;
+    incident.updatedAt = new Date();
+    await incident.save();
+
     sendStatusUpdate(incident, incident.reporterEmail);
-    
+
     res.json({ success: true, incident });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -145,19 +203,17 @@ const updateIncidentStatus = async (req, res) => {
 // Add photo to existing incident
 const addPhoto = async (req, res) => {
   try {
-    const incident = await Incident.findById(req.params.id);
-    if (!incident) {
-      return res.status(404).json({ error: 'Incident not found' });
-    }
-    
+    const incident = await findByAnyId(req.params.id);
+    if (!incident) return res.status(404).json({ error: 'Incident not found' });
+
     if (incident.photos.length >= 10) {
       return res.status(400).json({ error: 'Maximum 10 photos allowed' });
     }
-    
+
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });
     }
-    
+
     const key = `incidents/${Date.now()}-${crypto.randomBytes(4).toString('hex')}.jpg`;
     const params = {
       Bucket: process.env.AWS_S3_BUCKET,
@@ -165,15 +221,16 @@ const addPhoto = async (req, res) => {
       Body: req.file.buffer,
       ContentType: req.file.mimetype
     };
-    
+
     await s3.upload(params).promise();
-    
+
     incident.photos.push({
       url: `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
       uploadedAt: new Date(),
-      caption: req.body.caption || ''
+      caption: req.body.caption || '',
+      approved: false
     });
-    
+
     await incident.save();
     res.json({ success: true, incident });
   } catch (error) {
@@ -184,10 +241,10 @@ const addPhoto = async (req, res) => {
 // Delete incident (admin only)
 const deleteIncident = async (req, res) => {
   try {
-    const incident = await Incident.findByIdAndDelete(req.params.id);
-    if (!incident) {
-      return res.status(404).json({ error: 'Incident not found' });
-    }
+    const incident = await findByAnyId(req.params.id);
+    if (!incident) return res.status(404).json({ error: 'Incident not found' });
+
+    await incident.deleteOne();
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -198,6 +255,9 @@ module.exports = {
   createIncident,
   getIncident,
   getAllIncidents,
+  getPendingIncidents,
+  reviewIncident,
+  reviewPhoto,
   updateIncidentStatus,
   deleteIncident,
   addPhoto

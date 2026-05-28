@@ -4,11 +4,12 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const API_BASE = 'http://localhost:5000/api';
 
 export type IncidentType = 'Graffiti' | 'Anti-Social Behaviour' | 'Safety Hazard' | 'Maintenance Issue';
-export type IncidentStatus = 'NEW' | 'IN_PROGRESS' | 'RESOLVED';
+export type IncidentStatus = 'PENDING_REVIEW' | 'NEW' | 'IN_PROGRESS' | 'RESOLVED' | 'REJECTED';
 
 export interface Photo {
   id: string;
   url: string;
+  approved?: boolean;
   file?: File;
 }
 
@@ -37,9 +38,13 @@ interface AppContextType {
   updateIncidentStatus: (id: string, status: IncidentStatus) => Promise<void>;
   deleteIncident: (id: string) => Promise<void>;
   getIncidentById: (id: string) => Incident | undefined;
+  pendingIncidents: Incident[];
+  refreshPendingIncidents: () => Promise<void>;
+  reviewIncident: (id: string, action: 'approve' | 'reject') => Promise<void>;
+  reviewPhoto: (incidentId: string, photoId: string, approved: boolean) => Promise<void>;
   user: User | null;
   token: string | null;
-  login: (email: string, password: string, name?: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -95,13 +100,14 @@ function mapApiToIncident(api: any): Incident {
     reporterEmail: api.reporterEmail,
     status: api.status,
     date: api.reportedDate || api.createdAt,
-    photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url })),
+    photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url, approved: p.approved })),
     typeSpecificData: Object.keys(typeSpecificData).length > 0 ? typeSpecificData : undefined,
   };
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [pendingIncidents, setPendingIncidents] = useState<Incident[]>([]);
   const [isLoadingIncidents, setIsLoadingIncidents] = useState(false);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
   const [user, setUser] = useState<User | null>(() => {
@@ -118,6 +124,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // silently fail — network may be unavailable
     } finally {
       setIsLoadingIncidents(false);
+    }
+  };
+
+  const refreshPendingIncidents = async () => {
+    if (!token) return;
+    try {
+      const response = await axios.get(`${API_BASE}/incidents/admin/pending`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPendingIncidents(response.data.map(mapApiToIncident));
+    } catch {
+      // silently fail
     }
   };
 
@@ -154,9 +172,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
 
-    const newIncident = mapApiToIncident(response.data);
-    setIncidents(prev => [newIncident, ...prev]);
-    return newIncident.id;
+    // Incident is now PENDING_REVIEW — not added to public incidents state
+    return response.data.incidentId;
   };
 
   const updateIncidentStatus = async (id: string, status: IncidentStatus): Promise<void> => {
@@ -173,22 +190,42 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       headers: { Authorization: `Bearer ${token}` },
     });
     setIncidents(prev => prev.filter(i => i.id !== id));
+    setPendingIncidents(prev => prev.filter(i => i.id !== id));
+  };
+
+  const reviewIncident = async (id: string, action: 'approve' | 'reject'): Promise<void> => {
+    await axios.patch(
+      `${API_BASE}/incidents/admin/${id}/review`,
+      { action },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setPendingIncidents(prev => prev.filter(i => i.id !== id));
+    if (action === 'approve') await refreshIncidents();
+  };
+
+  const reviewPhoto = async (incidentId: string, photoId: string, approved: boolean): Promise<void> => {
+    await axios.patch(
+      `${API_BASE}/incidents/admin/${incidentId}/photos/${photoId}/review`,
+      { approved },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setPendingIncidents(prev => prev.map(i => {
+      if (i.id !== incidentId) return i;
+      return { ...i, photos: i.photos.map(p => p.id === photoId ? { ...p, approved } : p) };
+    }));
   };
 
   const getIncidentById = (id: string) => {
     return incidents.find(i => i.id.toLowerCase() === id.toLowerCase());
   };
 
-  const login = async (email: string, password: string, name?: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const isRegister = Boolean(name);
-      const endpoint = isRegister ? `${API_BASE}/auth/register` : `${API_BASE}/auth/login`;
-      const body = isRegister ? { email, password, name } : { email, password };
-      const response = await axios.post(endpoint, body);
+      const response = await axios.post(`${API_BASE}/auth/login`, { email, password });
       const { token: newToken, user: apiUser } = response.data;
       setToken(newToken);
       localStorage.setItem('token', newToken);
-      setUser({ email, name: apiUser?.name || name || email.split('@')[0] });
+      setUser({ email, name: apiUser?.name || email.split('@')[0] });
       return true;
     } catch {
       return false;
@@ -198,6 +235,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setToken(null);
     setUser(null);
+    setPendingIncidents([]);
     localStorage.removeItem('token');
     localStorage.removeItem('charlemont-user');
   };
@@ -212,6 +250,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updateIncidentStatus,
         deleteIncident,
         getIncidentById,
+        pendingIncidents,
+        refreshPendingIncidents,
+        reviewIncident,
+        reviewPhoto,
         user,
         token,
         login,

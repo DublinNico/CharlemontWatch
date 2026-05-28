@@ -4,6 +4,9 @@ const {
   createIncident,
   getIncident,
   getAllIncidents,
+  getPendingIncidents,
+  reviewIncident,
+  reviewPhoto,
   updateIncidentStatus,
   deleteIncident,
   addPhoto
@@ -11,22 +14,31 @@ const {
 const { authenticate, adminOnly } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
-// Public: Report incident (anyone, anonymous or logged in)
+// Public: Report incident
 router.post('/report', upload.array('photos', 10), createIncident);
 
-// Admin only: Update incident status
+// Admin: Get review queue (must be before /:id to avoid param conflict)
+router.get('/admin/pending', authenticate, adminOnly, getPendingIncidents);
+
+// Admin: Approve or reject a pending incident
+router.patch('/admin/:id/review', authenticate, adminOnly, reviewIncident);
+
+// Admin: Approve or reject an individual photo
+router.patch('/admin/:id/photos/:photoId/review', authenticate, adminOnly, reviewPhoto);
+
+// Admin: Update status of an approved incident
 router.patch('/admin/:id/status', authenticate, adminOnly, updateIncidentStatus);
 
-// Admin only: Delete incident
+// Admin: Delete incident
 router.delete('/admin/:id', authenticate, adminOnly, deleteIncident);
 
-// Public: Get all incidents (with optional filters)
+// Public: Get all incidents (PENDING_REVIEW and REJECTED excluded)
 router.get('/', getAllIncidents);
 
-// Public: Get single incident
+// Public: Get single incident (reporters can track their pending submission)
 router.get('/:id', getIncident);
 
-// Logged in: Add photo to incident
+// Authenticated: Add photo to incident
 router.post('/:id/photos', authenticate, upload.single('photo'), addPhoto);
 
 module.exports = router;

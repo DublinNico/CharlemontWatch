@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { StatusBadge } from '../components/StatusBadge';
@@ -12,22 +12,44 @@ const typeColors: Record<IncidentType, string> = {
   'Maintenance Issue': '#388e3c',
 };
 
+type ActiveTab = 'queue' | 'manage';
+
 export function AdminDashboard() {
   const navigate = useNavigate();
-  const { incidents, updateIncidentStatus, deleteIncident, isAuthenticated } = useApp();
+  const {
+    incidents,
+    updateIncidentStatus,
+    deleteIncident,
+    isAuthenticated,
+    pendingIncidents,
+    refreshPendingIncidents,
+    reviewIncident,
+    reviewPhoto,
+  } = useApp();
+
+  const [activeTab, setActiveTab] = useState<ActiveTab>('queue');
   const [statusFilter, setStatusFilter] = useState<IncidentStatus>('NEW');
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [newStatus, setNewStatus] = useState<IncidentStatus>('NEW');
   const [isUpdating, setIsUpdating] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/auth');
-    }
+    if (!isAuthenticated) navigate('/auth');
   }, [isAuthenticated, navigate]);
 
+  useEffect(() => {
+    if (activeTab === 'queue') refreshPendingIncidents();
+  }, [activeTab]);
+
   const filteredIncidents = incidents.filter(i => i.status === statusFilter);
+
+  const statusCounts = {
+    NEW: incidents.filter(i => i.status === 'NEW').length,
+    IN_PROGRESS: incidents.filter(i => i.status === 'IN_PROGRESS').length,
+    RESOLVED: incidents.filter(i => i.status === 'RESOLVED').length,
+  };
 
   const handleUpdateStatus = async () => {
     if (!selectedIncident) return;
@@ -53,28 +75,175 @@ export function AdminDashboard() {
     }
   };
 
-  const statusCounts = {
-    NEW: incidents.filter(i => i.status === 'NEW').length,
-    IN_PROGRESS: incidents.filter(i => i.status === 'IN_PROGRESS').length,
-    RESOLVED: incidents.filter(i => i.status === 'RESOLVED').length,
+  const handleReview = async (id: string, action: 'approve' | 'reject') => {
+    setReviewingId(id);
+    setActionError('');
+    try {
+      await reviewIncident(id, action);
+    } catch {
+      setActionError(`Failed to ${action} incident. Please try again.`);
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+  const handlePhotoReview = async (incidentId: string, photoId: string, approved: boolean) => {
+    try {
+      await reviewPhoto(incidentId, photoId, approved);
+    } catch {
+      setActionError('Failed to update photo. Please try again.');
+    }
+  };
+
+  const IncidentRow = ({ incident, isQueue = false }: { incident: Incident; isQueue?: boolean }) => {
+    const formattedDate = new Date(incident.date).toLocaleDateString('en-GB', {
+      day: 'numeric', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+
+    return (
+      <div
+        className="bg-white rounded shadow-sm border-l-4 p-4"
+        style={{ borderLeftColor: typeColors[incident.type] }}
+      >
+        <div className="flex flex-col lg:flex-row justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex flex-wrap items-center gap-3 mb-3">
+              <h3 className="text-sm uppercase tracking-wide" style={{ color: typeColors[incident.type] }}>
+                {incident.type}
+              </h3>
+              <span className="text-xs text-white bg-[#1976d2] px-2 py-1 rounded">{incident.id}</span>
+              {!isQueue && <StatusBadge status={incident.status} />}
+            </div>
+
+            <p className="text-sm text-[#333333] mb-2">
+              <span className="font-medium">Location:</span> {incident.location}
+            </p>
+            <p className="text-sm text-[#666666] mb-2">{incident.description}</p>
+
+            <div className="flex flex-wrap gap-4 text-xs text-[#666666] mb-2">
+              <span>Reported: {formattedDate}</span>
+              {incident.reporterEmail
+                ? <span>Email: {incident.reporterEmail}</span>
+                : <span className="italic">Anonymous</span>}
+            </div>
+
+            {incident.typeSpecificData && Object.keys(incident.typeSpecificData).length > 0 && (
+              <div className="bg-[#f5f5f5] rounded p-2 text-xs text-[#666666] mb-3">
+                {Object.entries(incident.typeSpecificData).map(([key, value]) => (
+                  <span key={key} className="mr-3">
+                    <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span> {value as string}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Photos */}
+            {incident.photos.length > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-medium text-[#666666] mb-2">
+                  Photos ({incident.photos.length})
+                  {isQueue && ' — toggle to approve before publishing'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {incident.photos.map(photo => (
+                    <div key={photo.id} className="relative group">
+                      <img
+                        src={photo.url}
+                        alt="Incident photo"
+                        className={`w-20 h-20 object-cover rounded border-2 transition-all ${
+                          isQueue
+                            ? photo.approved
+                              ? 'border-green-500 opacity-100'
+                              : 'border-red-300 opacity-60'
+                            : 'border-[#eeeeee]'
+                        }`}
+                      />
+                      {isQueue && (
+                        <button
+                          onClick={() => handlePhotoReview(incident.id, photo.id, !photo.approved)}
+                          title={photo.approved ? 'Click to reject photo' : 'Click to approve photo'}
+                          className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow text-white transition-colors ${
+                            photo.approved ? 'bg-green-500 hover:bg-red-500' : 'bg-red-400 hover:bg-green-500'
+                          }`}
+                        >
+                          {photo.approved
+                            ? <Eye className="w-3 h-3" />
+                            : <EyeOff className="w-3 h-3" />}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-row lg:flex-col gap-2 shrink-0">
+            {isQueue ? (
+              <>
+                <button
+                  onClick={() => handleReview(incident.id, 'approve')}
+                  disabled={reviewingId === incident.id}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2 disabled:opacity-60"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Approve
+                </button>
+                <button
+                  onClick={() => handleReview(incident.id, 'reject')}
+                  disabled={reviewingId === incident.id}
+                  className="px-4 py-2 border border-[#d32f2f] text-[#d32f2f] hover:bg-[#ffebee] rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2 disabled:opacity-60"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Reject
+                </button>
+                <button
+                  onClick={() => handleDelete(incident.id)}
+                  className="px-4 py-2 border border-[#666666] text-[#666666] hover:bg-[#f5f5f5] rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => { setSelectedIncident(incident); setNewStatus(incident.status); }}
+                  className="px-4 py-2 border border-[#1976d2] text-[#1976d2] hover:bg-[#e3f2fd] rounded transition-colors text-sm whitespace-nowrap"
+                >
+                  Update Status
+                </button>
+                <button
+                  onClick={() => handleDelete(incident.id)}
+                  className="px-4 py-2 border border-[#d32f2f] text-[#d32f2f] hover:bg-[#ffebee] rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       <Header />
-      
+
       <div className="bg-white shadow-sm border-b border-[#eeeeee]">
         <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <h1 className="text-[#333333]">Admin Dashboard</h1>
-          <div className="flex gap-2">
-            <button
-              onClick={() => navigate('/')}
-              className="px-4 py-2 border border-[#1976d2] text-[#1976d2] hover:bg-[#e3f2fd] rounded transition-colors text-sm flex items-center gap-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Home
-            </button>
-          </div>
+          <button
+            onClick={() => navigate('/')}
+            className="px-4 py-2 border border-[#1976d2] text-[#1976d2] hover:bg-[#e3f2fd] rounded transition-colors text-sm flex items-center gap-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </button>
         </div>
       </div>
 
@@ -84,128 +253,96 @@ export function AdminDashboard() {
             {actionError}
           </div>
         )}
-        {/* Status filter tabs */}
-        <div className="flex flex-wrap gap-3">
+
+        {/* Top-level tabs */}
+        <div className="flex gap-3 border-b border-[#eeeeee] pb-0">
           <button
-            onClick={() => setStatusFilter('NEW')}
-            className={`px-6 py-2 rounded-full transition-colors ${
-              statusFilter === 'NEW'
-                ? 'bg-[#1976d2] text-white'
-                : 'border border-[#1976d2] text-[#1976d2] hover:bg-[#e3f2fd]'
+            onClick={() => setActiveTab('queue')}
+            className={`px-5 py-2 rounded-t transition-colors text-sm font-medium flex items-center gap-2 ${
+              activeTab === 'queue'
+                ? 'bg-white border border-b-white border-[#eeeeee] -mb-px text-[#1976d2]'
+                : 'text-[#666666] hover:text-[#333333]'
             }`}
           >
-            NEW ({statusCounts.NEW})
+            Review Queue
+            {pendingIncidents.length > 0 && (
+              <span className="bg-[#d32f2f] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {pendingIncidents.length}
+              </span>
+            )}
           </button>
           <button
-            onClick={() => setStatusFilter('IN_PROGRESS')}
-            className={`px-6 py-2 rounded-full transition-colors ${
-              statusFilter === 'IN_PROGRESS'
-                ? 'bg-[#f57c00] text-white'
-                : 'border border-[#f57c00] text-[#f57c00] hover:bg-[#fff3e0]'
+            onClick={() => setActiveTab('manage')}
+            className={`px-5 py-2 rounded-t transition-colors text-sm font-medium ${
+              activeTab === 'manage'
+                ? 'bg-white border border-b-white border-[#eeeeee] -mb-px text-[#1976d2]'
+                : 'text-[#666666] hover:text-[#333333]'
             }`}
           >
-            IN PROGRESS ({statusCounts.IN_PROGRESS})
-          </button>
-          <button
-            onClick={() => setStatusFilter('RESOLVED')}
-            className={`px-6 py-2 rounded-full transition-colors ${
-              statusFilter === 'RESOLVED'
-                ? 'bg-[#388e3c] text-white'
-                : 'border border-[#388e3c] text-[#388e3c] hover:bg-[#e8f5e9]'
-            }`}
-          >
-            RESOLVED ({statusCounts.RESOLVED})
+            Manage Incidents
           </button>
         </div>
 
-        {/* Incidents list */}
-        {filteredIncidents.length === 0 ? (
-          <div className="bg-white rounded shadow-sm p-12 text-center">
-            <p className="text-[#666666]">No incidents with status {statusFilter}</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredIncidents.map(incident => {
-              const formattedDate = new Date(incident.date).toLocaleDateString('en-GB', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              });
+        {/* ── Review Queue ── */}
+        {activeTab === 'queue' && (
+          <>
+            {pendingIncidents.length === 0 ? (
+              <div className="bg-white rounded shadow-sm p-12 text-center">
+                <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
+                <p className="text-[#666666]">No incidents awaiting review</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-[#666666]">
+                  {pendingIncidents.length} incident{pendingIncidents.length !== 1 ? 's' : ''} awaiting review.
+                  Toggle individual photos before approving, or approve all at once.
+                </p>
+                {pendingIncidents.map(incident => (
+                  <IncidentRow key={incident.id} incident={incident} isQueue />
+                ))}
+              </div>
+            )}
+          </>
+        )}
 
-              return (
-                <div
-                  key={incident.id}
-                  className="bg-white rounded shadow-sm border-l-4 p-4"
-                  style={{ borderLeftColor: typeColors[incident.type] }}
-                >
-                  <div className="flex flex-col lg:flex-row justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex flex-wrap items-center gap-3 mb-3">
-                        <h3
-                          className="text-sm uppercase tracking-wide"
-                          style={{ color: typeColors[incident.type] }}
-                        >
-                          {incident.type}
-                        </h3>
-                        <span className="text-xs text-white bg-[#1976d2] px-2 py-1 rounded">
-                          {incident.id}
-                        </span>
-                        <StatusBadge status={incident.status} />
-                      </div>
+        {/* ── Manage Incidents ── */}
+        {activeTab === 'manage' && (
+          <>
+            <div className="flex flex-wrap gap-3">
+              {(['NEW', 'IN_PROGRESS', 'RESOLVED'] as IncidentStatus[]).map(s => {
+                const colors: Record<string, string> = {
+                  NEW: '#1976d2', IN_PROGRESS: '#f57c00', RESOLVED: '#388e3c'
+                };
+                const color = colors[s];
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setStatusFilter(s)}
+                    className="px-6 py-2 rounded-full transition-colors text-sm"
+                    style={
+                      statusFilter === s
+                        ? { backgroundColor: color, color: '#fff' }
+                        : { border: `1px solid ${color}`, color }
+                    }
+                  >
+                    {s.replace('_', ' ')} ({statusCounts[s as keyof typeof statusCounts]})
+                  </button>
+                );
+              })}
+            </div>
 
-                      <p className="text-sm text-[#333333] mb-2">
-                        <span className="font-medium">Location:</span> {incident.location}
-                      </p>
-                      <p className="text-sm text-[#666666] mb-2">{incident.description}</p>
-
-                      <div className="flex flex-wrap gap-4 text-xs text-[#666666] mb-2">
-                        <span>Reported: {formattedDate}</span>
-                        {incident.reporterEmail ? (
-                          <span>Email: {incident.reporterEmail}</span>
-                        ) : (
-                          <span className="italic">Anonymous</span>
-                        )}
-                        {incident.photos.length > 0 && (
-                          <span>{incident.photos.length} photo{incident.photos.length > 1 ? 's' : ''}</span>
-                        )}
-                      </div>
-
-                      {incident.typeSpecificData && Object.keys(incident.typeSpecificData).length > 0 && (
-                        <div className="bg-[#f5f5f5] rounded p-2 text-xs text-[#666666] mb-2">
-                          {Object.entries(incident.typeSpecificData).map(([key, value]) => (
-                            <span key={key} className="mr-3">
-                              <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span> {value as string}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex flex-row lg:flex-col gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedIncident(incident);
-                          setNewStatus(incident.status);
-                        }}
-                        className="px-4 py-2 border border-[#1976d2] text-[#1976d2] hover:bg-[#e3f2fd] rounded transition-colors text-sm whitespace-nowrap"
-                      >
-                        Update Status
-                      </button>
-                      <button
-                        onClick={() => handleDelete(incident.id)}
-                        className="px-4 py-2 border border-[#d32f2f] text-[#d32f2f] hover:bg-[#ffebee] rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+            {filteredIncidents.length === 0 ? (
+              <div className="bg-white rounded shadow-sm p-12 text-center">
+                <p className="text-[#666666]">No incidents with status {statusFilter}</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredIncidents.map(incident => (
+                  <IncidentRow key={incident.id} incident={incident} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </main>
 
@@ -217,7 +354,6 @@ export function AdminDashboard() {
             <p className="text-sm text-[#666666] mb-4">
               Incident ID: <span className="font-mono text-[#1976d2]">{selectedIncident.id}</span>
             </p>
-
             <div className="mb-6">
               <label className="block text-sm text-[#333333] mb-2">Select Status</label>
               <select
@@ -230,7 +366,6 @@ export function AdminDashboard() {
                 <option value="RESOLVED">RESOLVED</option>
               </select>
             </div>
-
             <div className="flex gap-3">
               <button
                 onClick={handleUpdateStatus}
