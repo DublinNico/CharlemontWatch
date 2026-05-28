@@ -73,9 +73,9 @@ export function Home() {
     },
     {
       icon: User,
-      title: isAuthenticated ? 'Account' : 'Sign In',
+      title: 'Account',
       onClick: () => navigate('/auth'),
-      show: true,
+      show: isAuthenticated,
     },
   ];
 
@@ -195,12 +195,12 @@ export function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { type: 'Graffiti', description: 'Report vandalism and graffiti in public spaces', accent: '#f97316', bg: 'bg-orange-100', text: 'text-orange-700' },
-              { type: 'Anti-Social Behaviour', description: 'Report disturbances, noise, and antisocial activity', accent: '#ef4444', bg: 'bg-red-100', text: 'text-red-700' },
-              { type: 'Safety Hazard', description: 'Report dangerous conditions that risk injury', accent: '#f59e0b', bg: 'bg-amber-100', text: 'text-amber-700' },
-              { type: 'Maintenance Issue', description: 'Report building and infrastructure maintenance needs', accent: '#10b981', bg: 'bg-emerald-100', text: 'text-emerald-700' },
+              { type: 'Graffiti', description: 'Report vandalism and graffiti in public spaces', border: 'border-l-orange-500', bg: 'bg-orange-100', text: 'text-orange-700' },
+              { type: 'Anti-Social Behaviour', description: 'Report disturbances, noise, and antisocial activity', border: 'border-l-red-500', bg: 'bg-red-100', text: 'text-red-700' },
+              { type: 'Safety Hazard', description: 'Report dangerous conditions that risk injury', border: 'border-l-amber-500', bg: 'bg-amber-100', text: 'text-amber-700' },
+              { type: 'Maintenance Issue', description: 'Report building and infrastructure maintenance needs', border: 'border-l-emerald-500', bg: 'bg-emerald-100', text: 'text-emerald-700' },
             ].map(item => (
-              <Card key={item.type} className="shadow-lg" style={{ borderLeft: `4px solid ${item.accent}` }}>
+              <Card key={item.type} className={`shadow-lg border-l-4 ${item.border}`}>
                 <CardContent className="p-6">
                   <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${item.bg} ${item.text} mb-3`}>
                     {item.type}

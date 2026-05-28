@@ -62,6 +62,7 @@ export function TrackReport() {
   const [searchedIncident, setSearchedIncident] = useState<Incident | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [notFound, setNotFound] = useState(false);
+  const [searchError, setSearchError] = useState(false);
 
   useEffect(() => {
     const id = searchParams.get('id');
@@ -79,6 +80,7 @@ export function TrackReport() {
 
     setIsSearching(true);
     setNotFound(false);
+    setSearchError(false);
     setSearchedIncident(null);
 
     const cached = getIncidentById(normalized);
@@ -91,8 +93,12 @@ export function TrackReport() {
     try {
       const response = await axios.get(`${API_BASE}/incidents/${normalized}`);
       setSearchedIncident(mapApiToIncident(response.data));
-    } catch {
-      setNotFound(true);
+    } catch (err: any) {
+      if (err.response?.status === 404) {
+        setNotFound(true);
+      } else {
+        setSearchError(true);
+      }
     } finally {
       setIsSearching(false);
     }
@@ -134,6 +140,12 @@ export function TrackReport() {
         {notFound && (
           <div className="bg-white rounded shadow-sm p-6 text-center">
             <p className="text-[#d32f2f]">No incident found with ID: <strong>{searchId.toUpperCase()}</strong></p>
+          </div>
+        )}
+
+        {searchError && (
+          <div className="bg-white rounded shadow-sm p-6 text-center">
+            <p className="text-[#d32f2f]">Something went wrong. Please check your connection and try again.</p>
           </div>
         )}
 

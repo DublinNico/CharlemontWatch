@@ -1,16 +1,7 @@
-import { Shield, LogOut, User } from 'lucide-react';
+import { Shield, LogOut } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router';
 import { Button } from './ui/button';
-import { Avatar, AvatarFallback } from './ui/avatar';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from './ui/dropdown-menu';
 
 export function Header() {
   const { isAuthenticated, logout, user } = useApp();
@@ -38,43 +29,28 @@ export function Header() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2">
-                    <Avatar className="w-8 h-8">
-                      <AvatarFallback className="bg-indigo-100 text-indigo-700">
-                        {user?.name.substring(0, 2).toUpperCase() || 'AD'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden sm:inline">{user?.name}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/admin')}>
-                    <User className="w-4 h-4 mr-2" />
-                    Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button
-                variant="outline"
-                onClick={() => navigate('/auth')}
-                className="gap-2"
-              >
-                <User className="w-4 h-4" />
-                <span className="hidden sm:inline">Sign In</span>
-              </Button>
-            )}
+              <>
+                <span className="text-sm text-[#666666] hidden sm:inline">{user?.name}</span>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/admin')}
+                  className="gap-2 text-[#1976d2] border-[#1976d2] hover:bg-[#e3f2fd]"
+                >
+                  <Shield className="w-4 h-4" />
+                  <span className="hidden sm:inline">Dashboard</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleLogout}
+                  className="gap-2 text-[#d32f2f] border-[#d32f2f] hover:bg-[#ffebee]"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden sm:inline">Sign Out</span>
+                </Button>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
