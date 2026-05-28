@@ -10,7 +10,7 @@
 After changing the Incident model's default status from `NEW` to `PENDING_REVIEW` as part of the dual-stage moderation feature, the existing unit test `UT-016-B` began failing.
 
 ## Error Message
-```
+```text
 ● Incident model validation › UT-016-B: defaults status to "PENDING_REVIEW" when not provided
 
   expect(received).toBe(expected)

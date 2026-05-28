@@ -32,11 +32,11 @@ export function Header() {
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
               <>
-                <span className="text-sm text-[#666666] hidden sm:inline">{user?.name}</span>
+                <span className="text-sm text-muted-foreground hidden sm:inline">{user?.name}</span>
                 <Button
                   variant="outline"
                   onClick={() => navigate('/admin')}
-                  className="gap-2 text-[#1976d2] border-[#1976d2] hover:bg-[#e3f2fd]"
+                  className="gap-2 text-indigo-600 border-indigo-600 hover:bg-indigo-50"
                 >
                   <Shield className="w-4 h-4" />
                   <span className="hidden sm:inline">Dashboard</span>
@@ -44,7 +44,7 @@ export function Header() {
                 <Button
                   variant="outline"
                   onClick={handleLogout}
-                  className="gap-2 text-[#d32f2f] border-[#d32f2f] hover:bg-[#ffebee]"
+                  className="gap-2 text-destructive border-destructive hover:bg-destructive/10"
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">Sign Out</span>

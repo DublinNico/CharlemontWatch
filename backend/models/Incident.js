@@ -31,7 +31,8 @@ const incidentSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['PENDING_REVIEW', 'NEW', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'],
-    default: 'PENDING_REVIEW'
+    default: 'PENDING_REVIEW',
+    index: true
   },
   reportedDate: {
     type: Date,

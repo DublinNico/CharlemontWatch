@@ -31,8 +31,7 @@
 - [ ] **PATCH /api/incidents/admin/:id/status** — resident JWT → 403
 - [ ] **DELETE /api/incidents/admin/:id** — admin JWT → 200, incident removed
 - [ ] **DELETE /api/incidents/admin/:id** — no JWT → 401
-- [ ] **POST /api/auth/register** — new email → 201 + JWT
-- [ ] **POST /api/auth/register** — duplicate email → 400
+- [ ] **POST /api/auth/register** — route removed → 404 (registration is disabled; admin accounts created directly in DB)
 - [ ] **POST /api/auth/login** — correct credentials → 200 + JWT
 - [ ] **POST /api/auth/login** — wrong password → 401
 - [ ] **POST /api/auth/login** — unknown email → 401

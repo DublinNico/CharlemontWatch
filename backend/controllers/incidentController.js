@@ -142,9 +142,12 @@ const reviewIncident = async (req, res) => {
     const incident = await findByAnyId(req.params.id);
     if (!incident) return res.status(404).json({ error: 'Incident not found' });
 
+    if (incident.status !== 'PENDING_REVIEW') {
+      return res.status(409).json({ error: 'Incident is not pending review' });
+    }
+
     if (action === 'approve') {
       incident.status = 'NEW';
-      incident.photos.forEach(photo => { photo.approved = true; });
     } else {
       incident.status = 'REJECTED';
     }
@@ -164,10 +167,18 @@ const reviewPhoto = async (req, res) => {
     const incident = await findByAnyId(req.params.id);
     if (!incident) return res.status(404).json({ error: 'Incident not found' });
 
+    if (typeof req.body.approved !== 'boolean') {
+      return res.status(400).json({ error: 'approved must be a boolean' });
+    }
+
+    if (incident.status !== 'PENDING_REVIEW') {
+      return res.status(409).json({ error: 'Incident is not pending review' });
+    }
+
     const photo = incident.photos.id(req.params.photoId);
     if (!photo) return res.status(404).json({ error: 'Photo not found' });
 
-    photo.approved = Boolean(req.body.approved);
+    photo.approved = req.body.approved;
     await incident.save();
 
     res.json({ success: true, incident });

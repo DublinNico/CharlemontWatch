@@ -14,6 +14,149 @@ const typeColors: Record<IncidentType, string> = {
 
 type ActiveTab = 'queue' | 'manage';
 
+interface IncidentRowProps {
+  incident: Incident;
+  isQueue?: boolean;
+  reviewingId: string | null;
+  onReview: (id: string, action: 'approve' | 'reject') => void;
+  onPhotoReview: (incidentId: string, photoId: string, approved: boolean) => void;
+  onDelete: (id: string) => void;
+  onSelectIncident: (incident: Incident) => void;
+}
+
+function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhotoReview, onDelete, onSelectIncident }: IncidentRowProps) {
+  const formattedDate = new Date(incident.date).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+
+  return (
+    <div
+      className="bg-white rounded shadow-sm border-l-4 p-4"
+      style={{ borderLeftColor: typeColors[incident.type] }}
+    >
+      <div className="flex flex-col lg:flex-row justify-between gap-4">
+        <div className="flex-1">
+          <div className="flex flex-wrap items-center gap-3 mb-3">
+            <h3 className="text-sm uppercase tracking-wide" style={{ color: typeColors[incident.type] }}>
+              {incident.type}
+            </h3>
+            <span className="text-xs text-white bg-indigo-600 px-2 py-1 rounded">{incident.id}</span>
+            {!isQueue && <StatusBadge status={incident.status} />}
+          </div>
+
+          <p className="text-sm text-gray-800 mb-2">
+            <span className="font-medium">Location:</span> {incident.location}
+          </p>
+          <p className="text-sm text-gray-500 mb-2">{incident.description}</p>
+
+          <div className="flex flex-wrap gap-4 text-xs text-gray-500 mb-2">
+            <span>Reported: {formattedDate}</span>
+            {incident.reporterEmail
+              ? <span>Email: {incident.reporterEmail}</span>
+              : <span className="italic">Anonymous</span>}
+          </div>
+
+          {incident.typeSpecificData && Object.keys(incident.typeSpecificData).length > 0 && (
+            <div className="bg-gray-50 rounded p-2 text-xs text-gray-500 mb-3">
+              {Object.entries(incident.typeSpecificData).map(([key, value]) => (
+                <span key={key} className="mr-3">
+                  <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span> {value as string}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {incident.photos.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs font-medium text-gray-500 mb-2">
+                Photos ({incident.photos.length})
+                {isQueue && ' — toggle to approve before publishing'}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {incident.photos.map(photo => (
+                  <div key={photo.id} className="relative group">
+                    <img
+                      src={photo.url}
+                      alt="Incident photo"
+                      className={`w-20 h-20 object-cover rounded border-2 transition-all ${
+                        isQueue
+                          ? photo.approved
+                            ? 'border-green-500 opacity-100'
+                            : 'border-red-300 opacity-60'
+                          : 'border-border'
+                      }`}
+                    />
+                    {isQueue && (
+                      <button
+                        onClick={() => onPhotoReview(incident.id, photo.id, !photo.approved)}
+                        title={photo.approved ? 'Click to reject photo' : 'Click to approve photo'}
+                        className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow text-white transition-colors ${
+                          photo.approved ? 'bg-green-500 hover:bg-red-500' : 'bg-red-400 hover:bg-green-500'
+                        }`}
+                      >
+                        {photo.approved
+                          ? <Eye className="w-3 h-3" />
+                          : <EyeOff className="w-3 h-3" />}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex flex-row lg:flex-col gap-2 shrink-0">
+          {isQueue ? (
+            <>
+              <button
+                onClick={() => onReview(incident.id, 'approve')}
+                disabled={reviewingId === incident.id}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2 disabled:opacity-60"
+              >
+                <CheckCircle className="w-4 h-4" />
+                Approve
+              </button>
+              <button
+                onClick={() => onReview(incident.id, 'reject')}
+                disabled={reviewingId === incident.id}
+                className="px-4 py-2 border border-destructive text-destructive hover:bg-destructive/10 rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2 disabled:opacity-60"
+              >
+                <XCircle className="w-4 h-4" />
+                Reject
+              </button>
+              <button
+                onClick={() => onDelete(incident.id)}
+                className="px-4 py-2 border border-gray-400 text-gray-500 hover:bg-gray-100 rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => onSelectIncident(incident)}
+                className="px-4 py-2 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 rounded transition-colors text-sm whitespace-nowrap"
+              >
+                Update Status
+              </button>
+              <button
+                onClick={() => onDelete(incident.id)}
+                className="px-4 py-2 border border-destructive text-destructive hover:bg-destructive/10 rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AdminDashboard() {
   const navigate = useNavigate();
   const {
@@ -95,141 +238,6 @@ export function AdminDashboard() {
     }
   };
 
-  const IncidentRow = ({ incident, isQueue = false }: { incident: Incident; isQueue?: boolean }) => {
-    const formattedDate = new Date(incident.date).toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'short', year: 'numeric',
-      hour: '2-digit', minute: '2-digit',
-    });
-
-    return (
-      <div
-        className="bg-white rounded shadow-sm border-l-4 p-4"
-        style={{ borderLeftColor: typeColors[incident.type] }}
-      >
-        <div className="flex flex-col lg:flex-row justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex flex-wrap items-center gap-3 mb-3">
-              <h3 className="text-sm uppercase tracking-wide" style={{ color: typeColors[incident.type] }}>
-                {incident.type}
-              </h3>
-              <span className="text-xs text-white bg-[#1976d2] px-2 py-1 rounded">{incident.id}</span>
-              {!isQueue && <StatusBadge status={incident.status} />}
-            </div>
-
-            <p className="text-sm text-[#333333] mb-2">
-              <span className="font-medium">Location:</span> {incident.location}
-            </p>
-            <p className="text-sm text-[#666666] mb-2">{incident.description}</p>
-
-            <div className="flex flex-wrap gap-4 text-xs text-[#666666] mb-2">
-              <span>Reported: {formattedDate}</span>
-              {incident.reporterEmail
-                ? <span>Email: {incident.reporterEmail}</span>
-                : <span className="italic">Anonymous</span>}
-            </div>
-
-            {incident.typeSpecificData && Object.keys(incident.typeSpecificData).length > 0 && (
-              <div className="bg-[#f5f5f5] rounded p-2 text-xs text-[#666666] mb-3">
-                {Object.entries(incident.typeSpecificData).map(([key, value]) => (
-                  <span key={key} className="mr-3">
-                    <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span> {value as string}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Photos */}
-            {incident.photos.length > 0 && (
-              <div className="mt-3">
-                <p className="text-xs font-medium text-[#666666] mb-2">
-                  Photos ({incident.photos.length})
-                  {isQueue && ' — toggle to approve before publishing'}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {incident.photos.map(photo => (
-                    <div key={photo.id} className="relative group">
-                      <img
-                        src={photo.url}
-                        alt="Incident photo"
-                        className={`w-20 h-20 object-cover rounded border-2 transition-all ${
-                          isQueue
-                            ? photo.approved
-                              ? 'border-green-500 opacity-100'
-                              : 'border-red-300 opacity-60'
-                            : 'border-[#eeeeee]'
-                        }`}
-                      />
-                      {isQueue && (
-                        <button
-                          onClick={() => handlePhotoReview(incident.id, photo.id, !photo.approved)}
-                          title={photo.approved ? 'Click to reject photo' : 'Click to approve photo'}
-                          className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow text-white transition-colors ${
-                            photo.approved ? 'bg-green-500 hover:bg-red-500' : 'bg-red-400 hover:bg-green-500'
-                          }`}
-                        >
-                          {photo.approved
-                            ? <Eye className="w-3 h-3" />
-                            : <EyeOff className="w-3 h-3" />}
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-row lg:flex-col gap-2 shrink-0">
-            {isQueue ? (
-              <>
-                <button
-                  onClick={() => handleReview(incident.id, 'approve')}
-                  disabled={reviewingId === incident.id}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2 disabled:opacity-60"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  Approve
-                </button>
-                <button
-                  onClick={() => handleReview(incident.id, 'reject')}
-                  disabled={reviewingId === incident.id}
-                  className="px-4 py-2 border border-[#d32f2f] text-[#d32f2f] hover:bg-[#ffebee] rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2 disabled:opacity-60"
-                >
-                  <XCircle className="w-4 h-4" />
-                  Reject
-                </button>
-                <button
-                  onClick={() => handleDelete(incident.id)}
-                  className="px-4 py-2 border border-[#666666] text-[#666666] hover:bg-[#f5f5f5] rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => { setSelectedIncident(incident); setNewStatus(incident.status); }}
-                  className="px-4 py-2 border border-[#1976d2] text-[#1976d2] hover:bg-[#e3f2fd] rounded transition-colors text-sm whitespace-nowrap"
-                >
-                  Update Status
-                </button>
-                <button
-                  onClick={() => handleDelete(incident.id)}
-                  className="px-4 py-2 border border-[#d32f2f] text-[#d32f2f] hover:bg-[#ffebee] rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       <Header />
@@ -298,7 +306,16 @@ export function AdminDashboard() {
                   Toggle individual photos before approving, or approve all at once.
                 </p>
                 {pendingIncidents.map(incident => (
-                  <IncidentRow key={incident.id} incident={incident} isQueue />
+                  <IncidentRow
+                    key={incident.id}
+                    incident={incident}
+                    isQueue
+                    reviewingId={reviewingId}
+                    onReview={handleReview}
+                    onPhotoReview={handlePhotoReview}
+                    onDelete={handleDelete}
+                    onSelectIncident={(i) => { setSelectedIncident(i); setNewStatus(i.status); }}
+                  />
                 ))}
               </div>
             )}
@@ -338,7 +355,15 @@ export function AdminDashboard() {
             ) : (
               <div className="space-y-4">
                 {filteredIncidents.map(incident => (
-                  <IncidentRow key={incident.id} incident={incident} />
+                  <IncidentRow
+                    key={incident.id}
+                    incident={incident}
+                    reviewingId={reviewingId}
+                    onReview={handleReview}
+                    onPhotoReview={handlePhotoReview}
+                    onDelete={handleDelete}
+                    onSelectIncident={(i) => { setSelectedIncident(i); setNewStatus(i.status); }}
+                  />
                 ))}
               </div>
             )}
