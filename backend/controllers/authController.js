@@ -6,6 +6,10 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -32,7 +36,8 @@ const login = async (req, res) => {
       user: { _id: user._id, email: user.email, name: user.name, role: user.role }
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Authentication failed' });
   }
 };
 

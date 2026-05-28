@@ -18,7 +18,7 @@ The MongoDB connection string used the `mongodb+srv://` SRV format, which requir
 
 ## Fix Applied
 Switched from the SRV connection string to a direct host connection string in the `.env` file:
-```
+```env
 # Before
 MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/dbname
 

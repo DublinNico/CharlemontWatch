@@ -7,23 +7,24 @@ const incidentRoutes = require('./routes/incidents');
 
 const app = express();
 
-const ALLOWED_ORIGIN = /^http:\/\/localhost(:\d+)?$/;
+const LOCALHOST_RE = /^http:\/\/localhost(:\d+)?$/;
+const extraOrigins = process.env.CORS_ALLOWED_ORIGINS
+  ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+  : [];
+const isAllowedOrigin = (origin) =>
+  LOCALHOST_RE.test(origin) || extraOrigins.includes(origin);
 
 // Middleware
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || ALLOWED_ORIGIN.test(origin)) return cb(null, true);
+    if (!origin || isAllowedOrigin(origin)) return cb(null, true);
     cb(null, false);
   }
 }));
 
-// Block requests from disallowed origins with 403 instead of letting them fall
-// through to the global error handler as a 500
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin && !ALLOWED_ORIGIN.test(origin)) {
-    return res.status(403).send('Forbidden');
-  }
+  if (origin && !isAllowedOrigin(origin)) return res.status(403).send('Forbidden');
   next();
 });
 app.use(express.json());

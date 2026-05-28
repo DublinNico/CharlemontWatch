@@ -18,7 +18,7 @@ Clicking on an incident card on the All Incidents page did nothing. Users had no
 The `IncidentCard` component in `AllIncidents.tsx` was rendered without an `onClick` handler. The navigation logic was never wired up.
 
 ## Fix Applied
-Added `onClick={() => navigate('/track?id=${incident.id}')}` to each card, routing the user to the Track Report page pre-filled with the incident's shortId.
+Added `` onClick={() => navigate(`/track?id=${incident.id}`)} `` to each card, routing the user to the Track Report page pre-filled with the incident's shortId.
 
 ## Files Changed
 - `frontend/src/app/pages/AllIncidents.tsx`

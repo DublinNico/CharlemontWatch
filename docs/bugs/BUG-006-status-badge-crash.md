@@ -10,7 +10,7 @@
 The application crashed with an unhandled TypeError when any incident with a status of `PENDING_REVIEW` or `REJECTED` was rendered. This made the admin Review Queue completely unusable.
 
 ## Error Message
-```
+```text
 Unexpected Application Error!
 Cannot read properties of undefined (reading 'icon')
 TypeError: Cannot read properties of undefined (reading 'icon')
