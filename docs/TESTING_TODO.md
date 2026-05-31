@@ -46,8 +46,8 @@
 - [x] **AppContext** — `logout` clears token and user state (FT-004)
 - [x] **AppContext** — `updateIncidentStatus` calls PATCH with correct status and updates local state (FT-005)
 - [x] **AppContext** — `deleteIncident` calls DELETE and removes item from state (FT-006)
-- [ ] **ReportIncident form** — submit with all graffiti fields → calls `addIncident` with correct data
-- [ ] **ReportIncident form** — submit without required fields → shows validation error, does not submit
+- [x] **ReportIncident form** — submit with all graffiti fields → calls `addIncident` with correct data (FT-013, FT-013-B)
+- [x] **ReportIncident form** — submit button disabled without type; addIncident not called without type (FT-014, FT-014-B, FT-014-C)
 - [x] **TrackReport** — search with valid CW-XXXXXX ID → displays incident card (FT-009, FT-009-B cache hit)
 - [x] **TrackReport** — search with unknown ID → shows "not found" message (FT-010, FT-010-B network error)
 - [x] **AdminDashboard** — renders incidents list for authenticated admin (FT-011, FT-011-B)
