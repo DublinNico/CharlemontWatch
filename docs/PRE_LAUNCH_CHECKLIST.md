@@ -28,7 +28,7 @@
 ## 🟠 Important — Should fix before going live
 
 ### Backend
-- [ ] **Don't expose raw error messages in production** — `res.status(500).json({ error: error.message })` leaks stack details; replace with a generic message when `NODE_ENV === 'production'`
+- [x] **Don't expose raw error messages in production** — `err.message` replaced with `'Internal Server Error'` in global error handler; `createIncident` now returns 400 for `ValidationError` and generic 500 for all other errors (BUG-015, BUG-016)
 - [ ] **Add request logging** — `morgan` middleware to log every request; essential for debugging production issues
 - [ ] **Add MongoDB indexes** — `incidentType`, `status`, and `reportedDate` should be indexed for query performance as data grows
 - [x] **Explicit 400 when >10 photos submitted on create** — `MulterError` handler added to Express app; now returns 400 consistently (IT-005)
@@ -53,8 +53,8 @@
 
 ### Testing
 - [x] **Add Supertest integration tests** — 21 integration tests covering all incident and auth routes (IT-001 – IT-021)
-- [x] **Add frontend unit tests** — 19 Vitest + React Testing Library tests covering AppContext, Header, TrackReport, AdminDashboard (FT-001 – FT-012)
-- [ ] **Add E2E tests (Playwright)** — automate: submit report → receive ID → track → admin resolves
+- [x] **Add frontend unit tests** — 25 Vitest + React Testing Library tests covering AppContext, Header, TrackReport, AdminDashboard, ReportIncident (FT-001 – FT-014)
+- [x] **Add E2E tests (Playwright)** — 15 test cases × 2 browser profiles = 30 runs; covers report, track, browse, admin login/update/delete, mobile viewport (ET-001 – ET-014)
 - [ ] **Set up GitHub Actions CI** — run `npm test` automatically on every push to `dev` and every PR to `main`
 
 ### Legal (GDPR — Ireland)
@@ -75,6 +75,6 @@
 | Priority | Total | Done | Remaining |
 |----------|-------|------|-----------|
 | 🔴 Critical | 12 | 2 | 10 |
-| 🟠 Important | 8 | 2 | 6 |
-| 🟡 Nice to have | 13 | 2 | 11 |
-| **Total** | **33** | **6** | **27** |
+| 🟠 Important | 8 | 3 | 5 |
+| 🟡 Nice to have | 13 | 3 | 10 |
+| **Total** | **33** | **8** | **25** |

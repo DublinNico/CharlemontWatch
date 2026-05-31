@@ -2,6 +2,7 @@
 
 | Field | Detail |
 |---|---|
+| **Date** | 31/05/26 |
 | **Status** | Fixed |
 | **Severity** | High |
 | **Area** | Backend / Data |
@@ -40,4 +41,4 @@ typeData.reportedToTuath = req.body.reportedToTuath === 'true';
 
 ## Discovered By
 
-Code review (automated review pass, 31 May 2026)
+Code review (31/05/26)

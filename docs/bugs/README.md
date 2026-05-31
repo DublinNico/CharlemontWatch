@@ -18,3 +18,6 @@ All bugs discovered during development and testing.
 | [BUG-012](BUG-012-magic-bytes-multiupload-bypass.md) | Magic-Byte Validation Only Checked First File in Multi-Upload | High | Fixed | Backend / Security |
 | [BUG-013](BUG-013-reportedtogarda-field-mismatch.md) | Anti-Social Incident Data Silently Dropped (Field Name Mismatch) | High | Fixed | Backend / Data |
 | [BUG-014](BUG-014-copy-id-optimistic-ui.md) | Copy ID Button Showed Success Before Clipboard Write Resolved | Low | Fixed | Frontend / UX |
+| [BUG-015](BUG-015-error-message-leaked-to-client.md) | Internal Error Message Leaked to Client in 500 Responses | Medium | Fixed | Backend / Security |
+| [BUG-016](BUG-016-validation-error-returns-500.md) | Mongoose ValidationError Returned as 500 Instead of 400 | Medium | Fixed | Backend / API |
+| [BUG-017](BUG-017-vitest-glob-picked-up-e2e-specs.md) | Vitest Picked Up Playwright E2E Spec Files | Low | Fixed | Frontend / Test Infrastructure |

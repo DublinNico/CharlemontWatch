@@ -58,15 +58,15 @@
 
 ## 🟡 End-to-End Tests — Add Playwright
 
-- [ ] **Submit a graffiti report** — fill form, attach photo, submit → confirmation page shows incident ID
-- [ ] **Track a report by ID** — enter ID on TrackReport page → incident details displayed with photos
-- [ ] **Browse all incidents** — navigate to /incidents → list renders, type filter works, status filter works
-- [ ] **Click incident card** — navigates to TrackReport with correct incident loaded
-- [ ] **Admin login** — enter credentials → redirected to admin dashboard
-- [ ] **Admin update status** — change status NEW → IN_PROGRESS → RESOLVED
-- [ ] **Admin delete incident** — incident removed from list after delete
-- [ ] **Anonymous report** — submit without email → incident saved, no crash
-- [ ] **Mobile responsiveness** — run above flows at 375px viewport (iPhone SE)
+- [x] **Submit a graffiti report** — fill form, submit → confirmation page shows incident ID (ET-001)
+- [x] **Track a report by ID** — enter ID on TrackReport page → incident details displayed (ET-003)
+- [x] **Browse all incidents** — navigate to /incidents → list renders, type filter works (ET-005, ET-006)
+- [x] **Click incident card** — navigates to TrackReport with correct incident loaded (ET-007)
+- [x] **Admin login** — enter credentials → redirected to admin dashboard (ET-008, ET-008-B)
+- [x] **Admin update status** — change status NEW → IN_PROGRESS (ET-009)
+- [x] **Admin delete incident** — incident removed from list after delete (ET-010)
+- [x] **Anonymous report** — submit without email → success page, no crash (ET-002)
+- [x] **Mobile responsiveness** — all flows verified at 375px viewport with Chromium mobile emulation (ET-011–ET-014)
 
 ---
 

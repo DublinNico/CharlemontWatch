@@ -3,10 +3,10 @@
 | | |
 |---|---|
 | 
-| **Name: Tony Nicoletti** | Tony Nicoletti |
+| **Name:** | Tony Nicoletti |
 | 
 | **GitHub Repository** | https://github.com/DublinNico/CharlemontWatch |
-| **Date** | 27 May 2026 (updated 31 May 2026) |
+| **Date** | 27/05/26 (updated 31/05/26) |
 
 ---
 
@@ -58,10 +58,8 @@ The application is a full-stack system comprising:
 - ID generation utility
 
 **Out of scope:**
-- Frontend React components (no Vitest/React Testing Library tests in this submission)
-- AWS S3 upload pipeline (requires live cloud credentials)
+- AWS S3 upload pipeline (requires live cloud credentials; mocked in integration tests)
 - SendGrid live email delivery (mocked in unit tests)
-- End-to-end browser flows (no Playwright/Cypress in this submission)
 - Performance and load testing
 
 ### 2.2 Test Types
@@ -75,6 +73,7 @@ The application is a full-stack system comprising:
 | Automated Unit Tests (Jest) | Programmatic backend tests run via `npm test` in `/backend` | Section 5 |
 | Automated Integration Tests (Supertest) | Full HTTP request/response cycle against an in-memory MongoDB database | Section 5 |
 | Automated Frontend Unit Tests (Vitest + RTL) | React component and context logic tests run via `npm test` in `/frontend` | Section 5 |
+| Automated E2E Tests (Playwright) | Full browser flows against the Vite dev server with API route interception; run on Desktop Chrome and 375px mobile viewport | Section 5 |
 
 ### 2.3 Test Environment
 
@@ -105,7 +104,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 125 automated tests pass (79 backend unit + 21 backend integration + 25 frontend unit)
+- All 140 automated tests pass (79 backend unit + 21 backend integration + 25 frontend unit + 15 E2E)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -121,6 +120,7 @@ The application is a full-stack system comprising:
 | Vitest 4 | Frontend unit test runner (Vite-native, Jest-compatible API) |
 | React Testing Library | Component rendering and interaction for frontend tests |
 | jsdom | Browser-like DOM environment for Vitest |
+| Playwright 1.60 | E2E browser automation; runs on Desktop Chrome and Chromium mobile (375px) |
 | Postman | Manual API endpoint testing |
 | MongoDB Compass | Database state inspection |
 | Chrome DevTools | Frontend network request inspection |
@@ -152,9 +152,9 @@ Equivalence Partitioning divides the input domain into classes where all values 
 | EP1-2 | `incidentType: "antisocial"` | HTTP 201 | PASS |
 | EP1-3 | `incidentType: "safetyhazard"` | HTTP 201 | PASS |
 | EP1-4 | `incidentType: "maintenance"` | HTTP 201 | PASS |
-| EP2-1 | `incidentType: "vandalism"` | HTTP 500, validation error | PASS |
-| EP2-2 | `incidentType: ""` | HTTP 500, validation error | PASS |
-| EP3-1 | field omitted | HTTP 500, required error | PASS |
+| EP2-1 | `incidentType: "vandalism"` | HTTP 400, validation error | PASS |
+| EP2-2 | `incidentType: ""` | HTTP 400, validation error | PASS |
+| EP3-1 | field omitted | HTTP 400, required error | PASS |
 
 *Full test case detail: [TC-BB-EP-001.md](test-cases/TC-BB-EP-001.md)*
 
@@ -313,13 +313,21 @@ npm run test:watch    # re-run on file change
 npm run test:coverage # run with detailed coverage output
 ```
 
-**Frontend** tests use **Vitest 4** with **React Testing Library**, run via `npm test` in the `frontend/` directory. Components are rendered into a **jsdom** environment. Axios and context hooks are mocked with `vi.mock()` to isolate the unit under test.
+**Frontend unit** tests use **Vitest 4** with **React Testing Library**, run via `npm test` in the `frontend/` directory. Components are rendered into a **jsdom** environment. Axios and context hooks are mocked with `vi.mock()` to isolate the unit under test.
 
 ```bash
 # frontend/
 npm test              # run all frontend unit tests
 npm run test:watch    # re-run on file change
 npm run test:coverage # run with V8 coverage output
+```
+
+**E2E tests** use **Playwright 1.60**, run via `npm run test:e2e` in the `frontend/` directory. Tests run against the Vite dev server (auto-started by Playwright's `webServer` config). All API calls to `http://localhost:5000` are intercepted by a single catch-all `page.route()` handler that returns controlled mock responses — no live backend required. Two browser profiles are tested: Desktop Chrome and Chromium at 375×667px (iPhone SE).
+
+```bash
+# frontend/
+npm run test:e2e      # run all E2E tests (headless)
+npm run test:e2e:ui   # open Playwright visual dashboard
 ```
 
 ### 5.2 Test Files and Functionalities Tested
@@ -359,7 +367,19 @@ npm run test:coverage # run with V8 coverage output
 
 **Frontend unit test total: 25 tests across 5 test suites**
 
-**Grand total: 125 tests across 16 test suites**
+#### E2E Tests (Playwright)
+
+| File | Flows Covered | Tests |
+|------|--------------|-------|
+| `e2e/report-incident.spec.ts` | Graffiti report submission → success page; anonymous report | ET-001 – ET-002 (2 tests) |
+| `e2e/track-report.spec.ts` | Track by ID → incident card displayed; unknown ID → not-found message | ET-003 – ET-004 (2 tests) |
+| `e2e/all-incidents.spec.ts` | Incident list renders; type filter pills; card click navigates to track | ET-005 – ET-007 (3 tests) |
+| `e2e/admin.spec.ts` | Admin login (correct/wrong credentials); update status NEW → IN_PROGRESS; delete incident | ET-008 – ET-010 (4 tests) |
+| `e2e/mobile.spec.ts` | Incident list, report form, track search, header — all at 375px viewport | ET-011 – ET-014 (4 tests) |
+
+**E2E total: 15 test cases across 5 spec files — 30 total runs (each case runs on Desktop Chrome + 375px mobile)**
+
+**Grand total: 140 tests across 21 test suites**
 
 ---
 
@@ -504,7 +524,7 @@ describe('User model — comparePassword', () => {
 
 ### 5.4 Test Execution Results
 
-All 125 tests were executed on 31 May 2026.
+All 140 tests were executed on 31/05/26.
 
 **Backend** (`npm test` in `/backend`):
 
@@ -535,6 +555,21 @@ PASS src/test/AdminDashboard.test.tsx         (3 tests)
 Test Files:  5 passed (5)
 Tests:       25 passed (25)
 Time:        4.56 s
+```
+
+**E2E** (`npm run test:e2e` in `/frontend`):
+
+```
+Running 30 tests using 5 workers
+
+[chromium] e2e/report-incident.spec.ts  ✓ ET-001 ✓ ET-002
+[chromium] e2e/track-report.spec.ts     ✓ ET-003 ✓ ET-004
+[chromium] e2e/all-incidents.spec.ts    ✓ ET-005 ✓ ET-006 ✓ ET-007
+[chromium] e2e/admin.spec.ts            ✓ ET-008 ✓ ET-008-B ✓ ET-009 ✓ ET-010
+[chromium] e2e/mobile.spec.ts           ✓ ET-011 ✓ ET-012 ✓ ET-013 ✓ ET-014
+[mobile]   (same 15 tests at 375px viewport — all pass)
+
+30 passed (18.1s)
 ```
 
 ### 5.5 Coverage Reports
@@ -583,7 +618,7 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | `components/Header.tsx` | Both auth states covered by FT-007–FT-008 |
 | `pages/TrackReport.tsx` | Happy path, cache hit, 404, and network error covered by FT-009–FT-010 |
 | `pages/AdminDashboard.tsx` | Incidents list and status update flow covered by FT-011–FT-012 |
-| `pages/ReportIncident.tsx` | Not yet covered — complex multi-step form left for future test iteration |
+| `pages/ReportIncident.tsx` | Unit tests cover submit logic and validation guards (FT-013–FT-014); E2E tests cover full form submission flow (ET-001–ET-002) |
 
 ---
 
@@ -627,7 +662,7 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | High | Return explicit 400 when >10 photos submitted on create | ✅ Done — `MulterError` handler in `app.js`, IT-005 |
 | Medium | Add **integration tests** using Supertest | ✅ Done — IT-001 – IT-021 (21 tests) |
 | Medium | Add **frontend unit tests** using Vitest and React Testing Library | ✅ Done — FT-001–FT-012 (19 tests) |
-| Medium | Add **E2E tests** using Playwright to cover full user journeys | Pending |
+| Medium | Add **E2E tests** using Playwright to cover full user journeys | ✅ Done — ET-001–ET-014 (15 cases, 30 runs) |
 | Low | Add **GitHub Actions** CI workflow to auto-run `npm test` on every PR | Pending |
 | Low | Backfill missing `shortId` values on legacy database documents | Pending |
 | Low | Add load testing with k6 to verify performance under concurrent submissions | Pending |

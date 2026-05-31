@@ -13,18 +13,3 @@ export function renderWithProviders(ui: React.ReactElement, options?: RenderOpti
   });
 }
 
-export function renderWithMockContext(
-  ui: React.ReactElement,
-  contextValue: Record<string, unknown>,
-  options?: RenderOptions
-) {
-  const { AppContext } = require('../app/context/AppContext');
-  return render(ui, {
-    wrapper: ({ children }) => (
-      <MemoryRouter>
-        <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
-      </MemoryRouter>
-    ),
-    ...options,
-  });
-}

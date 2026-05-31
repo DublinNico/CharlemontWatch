@@ -81,7 +81,10 @@ const createIncident = async (req, res) => {
     });
   } catch (error) {
     console.error('Create incident error:', error);
-    res.status(500).json({ error: error.message });
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ error: error.message });
+    }
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
