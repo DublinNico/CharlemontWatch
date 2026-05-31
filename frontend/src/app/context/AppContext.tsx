@@ -1,7 +1,14 @@
 import axios from 'axios';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
+
+export interface ComplaintData {
+  name: string;
+  email: string;
+  phone: string;
+  sendTo: ('tuath' | 'dcc')[];
+}
 
 export type IncidentType = 'Graffiti' | 'Anti-Social Behaviour' | 'Safety Hazard' | 'Maintenance Issue';
 export type IncidentStatus = 'PENDING_REVIEW' | 'NEW' | 'IN_PROGRESS' | 'RESOLVED' | 'REJECTED';
@@ -34,7 +41,7 @@ interface AppContextType {
   incidents: Incident[];
   isLoadingIncidents: boolean;
   refreshIncidents: () => Promise<void>;
-  addIncident: (incident: Omit<Incident, 'id' | 'date'>) => Promise<string>;
+  addIncident: (incident: Omit<Incident, 'id' | 'date'>, complaint?: ComplaintData) => Promise<string>;
   updateIncidentStatus: (id: string, status: IncidentStatus) => Promise<void>;
   deleteIncident: (id: string) => Promise<void>;
   getIncidentById: (id: string) => Incident | undefined;
@@ -151,7 +158,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
-  const addIncident = async (incident: Omit<Incident, 'id' | 'date'>): Promise<string> => {
+  const addIncident = async (incident: Omit<Incident, 'id' | 'date'>, complaint?: ComplaintData): Promise<string> => {
     const form = new FormData();
     form.append('incidentType', typeToApi[incident.type]);
     form.append('location', incident.location);
@@ -167,6 +174,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     incident.photos.forEach(photo => {
       if (photo.file) form.append('photos', photo.file);
     });
+
+    if (complaint && complaint.sendTo.length > 0) {
+      form.append('complainantName', complaint.name);
+      form.append('complainantEmail', complaint.email);
+      form.append('complainantPhone', complaint.phone);
+      form.append('sendComplaintTo', complaint.sendTo.join(','));
+    }
 
     const response = await axios.post(`${API_BASE}/incidents/report`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },

@@ -17,7 +17,8 @@ const incidentSchema = new mongoose.Schema({
   incidentType: {
     type: String,
     enum: ['graffiti', 'antisocial', 'safetyhazard', 'maintenance'],
-    required: true
+    required: true,
+    index: true
   },
 
   location: {
@@ -37,7 +38,8 @@ const incidentSchema = new mongoose.Schema({
   },
   reportedDate: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true
   },
   reporterEmail: {
     type: String,
@@ -69,6 +71,12 @@ const incidentSchema = new mongoose.Schema({
   workCategory: String,
 
   photos: [photoSchema],
+
+  // Formal complaint fields — only populated when user opts to send a complaint
+  complainantName: String,
+  complainantEmail: String,
+  complainantPhone: String,
+  sendComplaintTo: [{ type: String, enum: ['tuath', 'dcc'] }],
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

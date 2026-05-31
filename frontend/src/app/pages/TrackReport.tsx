@@ -7,7 +7,7 @@ import { IncidentCard } from '../components/IncidentCard';
 import { useApp, IncidentType, Incident } from '../context/AppContext';
 import { useNavigate, useSearchParams } from 'react-router';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
 
 const typeFromApi: Record<string, IncidentType> = {
   graffiti: 'Graffiti',

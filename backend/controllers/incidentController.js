@@ -2,7 +2,7 @@ const Incident = require('../models/Incident');
 const s3 = require('../config/s3');
 const crypto = require('crypto');
 const { generateShortId } = require('../utils/idUtils');
-const { sendResidentConfirmation, sendAdminNotification, sendStatusUpdate } = require('../services/emailService');
+const { sendResidentConfirmation, sendAdminNotification, sendStatusUpdate, sendComplaintEmails } = require('../services/emailService');
 
 const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
 
@@ -14,7 +14,12 @@ const findByAnyId = async (id) => {
 // Create incident (report)
 const createIncident = async (req, res) => {
   try {
-    const { incidentType, location, description, reporterEmail } = req.body;
+    const { incidentType, location, description, reporterEmail,
+            complainantName, complainantEmail, complainantPhone } = req.body;
+
+    const sendComplaintTo = req.body.sendComplaintTo
+      ? req.body.sendComplaintTo.split(',').filter(v => ['tuath', 'dcc'].includes(v))
+      : [];
 
     const typeData = {};
     if (incidentType === 'graffiti') {
@@ -66,13 +71,27 @@ const createIncident = async (req, res) => {
       description,
       reporterEmail: reporterEmail || null,
       photos,
-      ...typeData
+      ...typeData,
+      ...(sendComplaintTo.length > 0 && complainantName ? {
+        complainantName,
+        complainantEmail,
+        complainantPhone,
+        sendComplaintTo,
+      } : {})
     });
 
     await incident.save();
 
     sendResidentConfirmation(incident, incident.reporterEmail);
     sendAdminNotification(incident);
+
+    if (sendComplaintTo.length > 0 && complainantName) {
+      sendComplaintEmails(incident, {
+        name: complainantName,
+        email: complainantEmail,
+        phone: complainantPhone,
+      }, sendComplaintTo);
+    }
 
     res.status(201).json({
       success: true,

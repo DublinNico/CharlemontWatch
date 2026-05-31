@@ -1,8 +1,15 @@
 require('dotenv').config();
+const Sentry = require('@sentry/node');
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
 const multer = require('multer');
 const mongoSanitize = require('express-mongo-sanitize');
+
+if (process.env.SENTRY_DSN) {
+  Sentry.init({ dsn: process.env.SENTRY_DSN });
+}
 const authRoutes = require('./routes/auth');
 const incidentRoutes = require('./routes/incidents');
 
@@ -15,6 +22,8 @@ const extraOrigins = process.env.CORS_ALLOWED_ORIGINS
 const isAllowedOrigin = (origin) =>
   LOCALHOST_RE.test(origin) || extraOrigins.includes(origin);
 
+app.use(helmet());
+if (process.env.NODE_ENV !== 'test') app.use(morgan('combined'));
 app.use(cors({
   origin: (origin, cb) => {
     if (!origin || isAllowedOrigin(origin)) return cb(null, true);
@@ -45,6 +54,7 @@ app.use((err, req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
+  if (process.env.SENTRY_DSN) Sentry.captureException(err);
   console.error(err);
   res.status(500).json({ error: 'Internal Server Error' });
 });

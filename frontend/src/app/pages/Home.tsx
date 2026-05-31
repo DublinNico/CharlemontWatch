@@ -272,6 +272,17 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      <footer className="py-6 text-center text-sm text-muted-foreground border-t border-border bg-white">
+        <button
+          onClick={() => navigate('/privacy')}
+          className="underline hover:text-indigo-600 transition-colors"
+        >
+          Privacy Policy
+        </button>
+        <span className="mx-2">·</span>
+        © {new Date().getFullYear()} CharlemontWatch
+      </footer>
     </div>
   );
 }

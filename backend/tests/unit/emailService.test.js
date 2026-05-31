@@ -13,6 +13,7 @@ const {
   sendResidentConfirmation,
   sendAdminNotification,
   sendStatusUpdate,
+  sendComplaintEmails,
 } = require('../../services/emailService');
 
 const mockIncident = {
@@ -106,6 +107,59 @@ describe('sendAdminNotification', () => {
     await sendAdminNotification(mockIncident);
     const msg = sgMail.send.mock.calls[0][0];
     expect(msg.subject).toContain('Block A, Charlemont Street');
+  });
+});
+
+// ─── sendComplaintEmails ──────────────────────────────────────────────────────
+
+const mockComplainant = {
+  name: 'Jane Resident',
+  email: 'jane@example.com',
+  phone: '087 123 4567',
+};
+
+describe('sendComplaintEmails', () => {
+  test('UT-038-A: sends to Tuath only when recipients is ["tuath"]', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
+    expect(sgMail.send).toHaveBeenCalledTimes(1);
+    const msg = sgMail.send.mock.calls[0][0];
+    expect(msg.subject).toContain('CW-ABC123');
+  });
+
+  test('UT-038-B: sends to DCC only when recipients is ["dcc"]', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['dcc']);
+    expect(sgMail.send).toHaveBeenCalledTimes(1);
+    const msg = sgMail.send.mock.calls[0][0];
+    expect(msg.subject).toContain('CW-ABC123');
+  });
+
+  test('UT-038-C: sends two emails when recipients is ["tuath", "dcc"]', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['tuath', 'dcc']);
+    expect(sgMail.send).toHaveBeenCalledTimes(2);
+  });
+
+  test('UT-038-D: sends no emails when recipients is empty', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, []);
+    expect(sgMail.send).not.toHaveBeenCalled();
+  });
+
+  test('UT-038-E: Tuath email contains complainant name', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
+    const msg = sgMail.send.mock.calls[0][0];
+    expect(msg.html).toContain('Jane Resident');
+  });
+
+  test('UT-038-F: DCC email contains incident location', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['dcc']);
+    const msg = sgMail.send.mock.calls[0][0];
+    expect(msg.html).toContain('Block A, Charlemont Street');
+  });
+
+  test('UT-038-G: swallows SendGrid errors silently', async () => {
+    sgMail.send.mockRejectedValue(new Error('SendGrid down'));
+    await expect(
+      sendComplaintEmails(mockIncident, mockComplainant, ['tuath', 'dcc'])
+    ).resolves.toBeUndefined();
   });
 });
 
