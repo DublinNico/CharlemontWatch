@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { ArrowLeft, Upload, X, AlertCircle, MapPin, FileText, Mail, ImageIcon } from 'lucide-react';
+import { ArrowLeft, Upload, X, AlertCircle, MapPin, FileText, Mail, ImageIcon, Phone, User, Send } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { useApp, IncidentType, Photo } from '../context/AppContext';
+import { useApp, IncidentType, Photo, ComplaintData } from '../context/AppContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -27,6 +27,15 @@ export function ReportIncident() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
+  const [complaint, setComplaint] = useState({
+    sendToTuath: false,
+    sendToDCC: false,
+    name: '',
+    email: '',
+    phone: '',
+  });
+  const sendingComplaint = complaint.sendToTuath || complaint.sendToDCC;
+
   const updateSpecific = (key: string, value: any) =>
     setTypeSpecificData((prev: any) => ({ ...prev, [key]: value }));
 
@@ -34,8 +43,23 @@ export function ReportIncident() {
     e.preventDefault();
     if (!formData.type) return;
 
+    if (sendingComplaint && (!complaint.name || !complaint.email || !complaint.phone)) {
+      setSubmitError('Please provide your name, email, and phone number to send a formal complaint.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError('');
+
+    const complaintData: ComplaintData | undefined = sendingComplaint ? {
+      name: complaint.name,
+      email: complaint.email,
+      phone: complaint.phone,
+      sendTo: [
+        ...(complaint.sendToTuath ? ['tuath' as const] : []),
+        ...(complaint.sendToDCC ? ['dcc' as const] : []),
+      ],
+    } : undefined;
 
     try {
       const incidentId = await addIncident({
@@ -46,7 +70,7 @@ export function ReportIncident() {
         status: 'NEW',
         photos,
         typeSpecificData,
-      });
+      }, complaintData);
       navigate(`/success/${incidentId}`);
     } catch {
       setSubmitError('Failed to submit report. Please check your connection and try again.');
@@ -484,6 +508,104 @@ export function ReportIncident() {
             </CardContent>
           </Card>
 
+          <Card className="border-amber-200 bg-amber-50/40">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-amber-900">
+                <Send className="w-5 h-5 text-amber-600" />
+                Send a Formal Complaint
+              </CardTitle>
+              <CardDescription className="text-amber-800/70">
+                Optionally escalate this report as a formal complaint to Tuath Housing or Dublin City Council.
+                Your details are required for the complaint and will not be published.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="send-tuath"
+                    checked={complaint.sendToTuath}
+                    onCheckedChange={v => setComplaint(c => ({ ...c, sendToTuath: !!v }))}
+                  />
+                  <Label htmlFor="send-tuath" className="cursor-pointer font-medium">
+                    Tuath Housing
+                    <span className="block text-xs text-muted-foreground font-normal">
+                      For issues in Tuath managed properties or estates
+                    </span>
+                  </Label>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="send-dcc"
+                    checked={complaint.sendToDCC}
+                    onCheckedChange={v => setComplaint(c => ({ ...c, sendToDCC: !!v }))}
+                  />
+                  <Label htmlFor="send-dcc" className="cursor-pointer font-medium">
+                    Dublin City Council
+                    <span className="block text-xs text-muted-foreground font-normal">
+                      For issues on public roads, footpaths, or council-managed areas
+                    </span>
+                  </Label>
+                </div>
+              </div>
+
+              {sendingComplaint && (
+                <div className="space-y-4 pt-2 border-t border-amber-200">
+                  <p className="text-sm text-amber-900 font-medium">
+                    Your contact details are required to submit a formal complaint:
+                  </p>
+                  <div>
+                    <Label htmlFor="complainant-name" className="flex items-center gap-2 mb-2">
+                      <User className="w-4 h-4" />
+                      Full Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="complainant-name"
+                      placeholder="Your full name"
+                      value={complaint.name}
+                      onChange={e => setComplaint(c => ({ ...c, name: e.target.value }))}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="complainant-email" className="flex items-center gap-2 mb-2">
+                      <Mail className="w-4 h-4" />
+                      Email Address <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="complainant-email"
+                      type="email"
+                      placeholder="your.email@example.com"
+                      value={complaint.email}
+                      onChange={e => setComplaint(c => ({ ...c, email: e.target.value }))}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="complainant-phone" className="flex items-center gap-2 mb-2">
+                      <Phone className="w-4 h-4" />
+                      Phone Number <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="complainant-phone"
+                      type="tel"
+                      placeholder="e.g. 087 123 4567"
+                      value={complaint.phone}
+                      onChange={e => setComplaint(c => ({ ...c, phone: e.target.value }))}
+                      className="bg-white"
+                    />
+                  </div>
+                  <p className="text-xs text-amber-800/70">
+                    A formal complaint will be sent on your behalf to {[
+                      complaint.sendToTuath ? 'Tuath Housing' : null,
+                      complaint.sendToDCC ? 'Dublin City Council' : null,
+                    ].filter(Boolean).join(' and ')} referencing this incident. You remain anonymous on the public CharlemontWatch board.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           <div className="flex gap-4">
             <Button
               type="button"
@@ -500,7 +622,7 @@ export function ReportIncident() {
               disabled={isSubmitting || !formData.type}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700"
             >
-              {isSubmitting ? 'Submitting…' : 'Submit Report'}
+              {isSubmitting ? 'Submitting…' : sendingComplaint ? 'Submit Report & Complaint' : 'Submit Report'}
             </Button>
           </div>
         </form>

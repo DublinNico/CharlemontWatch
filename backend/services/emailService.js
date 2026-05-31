@@ -21,7 +21,7 @@ const sendResidentConfirmation = async (incident, residentEmail) => {
     return;
   }
 
-  const trackingLink = `${process.env.FRONTEND_URL}/#track`;
+  const trackingLink = `${process.env.FRONTEND_URL}/track`;
 
   const msg = {
     to: residentEmail,
@@ -123,8 +123,98 @@ const sendStatusUpdate = async (incident, residentEmail) => {
   }
 };
 
+// Send formal complaint email(s) to Tuath Housing and/or Dublin City Council
+const sendComplaintEmails = async (incident, complainant, recipients) => {
+  const incidentTypeName = getIncidentTypeName(incident.incidentType);
+  const reportedDate = new Date(incident.reportedDate).toLocaleDateString('en-IE', {
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  });
+
+  const sharedIncidentBlock = `
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;width:160px;">Incident ID</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${incident.shortId}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Type</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${incidentTypeName}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Location</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${incident.location}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Date Reported</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${reportedDate}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Description</td><td style="padding:6px 12px;">${incident.description}</td></tr>
+    </table>
+  `;
+
+  const complainantBlock = `
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;">
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;width:160px;">Name</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${complainant.name}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Email</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${complainant.email}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Phone</td><td style="padding:6px 12px;">${complainant.phone}</td></tr>
+    </table>
+  `;
+
+  const sends = [];
+
+  if (recipients.includes('tuath')) {
+    const msg = {
+      to: process.env.TUATH_COMPLAINT_EMAIL || 'tonynico90@gmail.com',
+      from: process.env.SENDGRID_FROM_EMAIL || 'reports@charlemontwatch.ie',
+      subject: `Formal Complaint — ${incidentTypeName} at ${incident.location} [${incident.shortId}]`,
+      html: `
+        <h2 style="color:#1976d2;">Formal Complaint — Tuath Housing</h2>
+        <p>A formal complaint has been submitted via CharlemontWatch regarding an incident at a Tuath Housing managed area.</p>
+
+        <h3>Complainant Details</h3>
+        ${complainantBlock}
+
+        <h3>Incident Details</h3>
+        ${sharedIncidentBlock}
+
+        <h3>Nature of Complaint</h3>
+        <p>The complainant is reporting an unresolved issue within the Tuath Housing managed estate at <strong>${incident.location}</strong>.
+        They are requesting that Tuath Housing investigate and take appropriate action in line with the Tuath Housing Complaints Policy & Procedure (v6.0, October 2024).</p>
+
+        <h3>Desired Outcome</h3>
+        <p>The complainant requests a written acknowledgement within 5 working days and resolution within 30 working days, as per the Tuath Complaints Procedure.</p>
+
+        <hr style="margin:24px 0;border:none;border-top:1px solid #eee;" />
+        <p style="font-size:12px;color:#888;">This complaint was submitted automatically via CharlemontWatch (charlemontwatch.ie).
+        The incident reference is ${incident.shortId}. Please retain this for your complaints register.</p>
+      `
+    };
+    sends.push(sgMail.send(msg).catch(e => console.error('Tuath complaint email failed:', e)));
+  }
+
+  if (recipients.includes('dcc')) {
+    const msg = {
+      to: process.env.DCC_COMPLAINT_EMAIL || 'tonynico90@gmail.com',
+      from: process.env.SENDGRID_FROM_EMAIL || 'reports@charlemontwatch.ie',
+      subject: `Formal Complaint — ${incidentTypeName} at ${incident.location} [${incident.shortId}]`,
+      html: `
+        <h2 style="color:#1976d2;">Formal Complaint — Dublin City Council</h2>
+        <p>A formal complaint has been submitted via CharlemontWatch regarding an issue within the Dublin City Council area.</p>
+
+        <h3>Complainant Details</h3>
+        ${complainantBlock}
+
+        <h3>Incident Details</h3>
+        ${sharedIncidentBlock}
+
+        <h3>Nature of Complaint</h3>
+        <p>The complainant is reporting an unresolved issue at <strong>${incident.location}</strong> and requests that Dublin City Council investigate and take appropriate action.</p>
+
+        <h3>Desired Outcome</h3>
+        <p>The complainant requests a formal acknowledgement within 3 working days and a full response within 15 working days, in line with the Dublin City Council Customer Complaints procedure.</p>
+
+        <hr style="margin:24px 0;border:none;border-top:1px solid #eee;" />
+        <p style="font-size:12px;color:#888;">This complaint was submitted automatically via CharlemontWatch (charlemontwatch.ie).
+        The incident reference is ${incident.shortId}.</p>
+      `
+    };
+    sends.push(sgMail.send(msg).catch(e => console.error('DCC complaint email failed:', e)));
+  }
+
+  await Promise.all(sends);
+};
+
 module.exports = {
   sendResidentConfirmation,
   sendAdminNotification,
-  sendStatusUpdate
+  sendStatusUpdate,
+  sendComplaintEmails
 };

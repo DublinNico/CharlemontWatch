@@ -6,7 +6,7 @@
 | **Name:** | Tony Nicoletti |
 | 
 | **GitHub Repository** | https://github.com/DublinNico/CharlemontWatch |
-| **Date** | 27/05/26 (updated 31/05/26) |
+| **Date** | 27/05/26 (updated 31/05/26, updated 31/05/26 v2) |
 
 ---
 
@@ -35,6 +35,7 @@ The application is a full-stack system comprising:
 3. Residents can track their report status using the reference code
 4. Admin users authenticate via JWT and can update statuses (`NEW → IN_PROGRESS → RESOLVED`) or delete reports
 5. All incidents are publicly browsable at `/incidents`
+6. Residents can optionally send a formal complaint to Tuath Housing and/or Dublin City Council when submitting a report; a complaint email is dispatched on their behalf, containing their contact details and the incident summary
 
 ### 1.2 Testing Objectives
 
@@ -86,7 +87,7 @@ The application is a full-stack system comprising:
 | Database | MongoDB Atlas (production); `mongodb-memory-server` (integration tests); `validateSync` (unit tests) |
 | Browser | Chrome (manual black-box tests) |
 | API client | Postman / curl (manual API tests); Supertest (automated integration tests) |
-| Frontend test environment | jsdom (via Vitest) |
+| Frontend test environment | happy-dom (via Vitest) — switched from jsdom due to ESM incompatibility in Ubuntu CI |
 
 ### 2.4 Test Data
 
@@ -105,7 +106,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 145 automated tests pass (79 backend unit + 21 backend integration + 5 security + 25 frontend unit + 15 E2E)
+- All 152 automated tests pass (86 backend unit + 21 backend integration + 5 security + 25 frontend unit + 15 E2E)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -340,13 +341,13 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 |------|---------------------|-------|
 | `tests/unit/generateShortId.test.js` | ID format, prefix, length, uniqueness | UT-001 – UT-002 (5 tests) |
 | `tests/unit/auth.middleware.test.js` | authenticate middleware (all branches), adminOnly middleware (all branches) | UT-005 – UT-010 (9 tests) |
-| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, SendGrid error catch-paths | UT-011 – UT-013, UT-035 – UT-037 (15 tests) |
+| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, SendGrid error catch-paths, sendComplaintEmails (Tuath/DCC/both/empty/content/error) | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-G (22 tests) |
 | `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array, reporterEmail format | UT-014 – UT-018, UT-033 (17 tests) |
 | `tests/unit/userModel.test.js` | Pre-save bcrypt hook, comparePassword, schema validation, role default/enum | UT-019 – UT-025, UT-034 (10 tests) |
 | `tests/unit/authController.test.js` | Login input validation, credential checks, JWT generation, email normalisation, 500 error path | UT-026 – UT-032 (15 tests) |
 | `tests/unit/upload.middleware.test.js` | MIME type filter, 5MB size limit, magic-byte validation (JPEG/PNG/WebP/spoofed PDF), no-file passthrough | UT-038 – UT-042 (8 tests) |
 
-**Unit test total: 79 tests across 7 test suites**
+**Unit test total: 86 tests across 7 test suites**
 
 #### Integration Tests
 
@@ -403,7 +404,7 @@ Artillery scenarios run against a live backend (`npm run dev` in `/backend` firs
 
 Observed results on 31/05/26: GET p95 = 72ms, POST p95 = 95ms — both well inside thresholds.
 
-**Grand total: 145 automated tests across 22 test suites**
+**Grand total: 152 automated tests across 22 test suites**
 
 ---
 
@@ -548,24 +549,25 @@ describe('User model — comparePassword', () => {
 
 ### 5.4 Test Execution Results
 
-All 145 tests were executed on 31/05/26.
+All 152 tests were executed on 31/05/26.
 
 **Backend** (`npm test` in `/backend`):
 
 ```
 PASS tests/unit/generateShortId.test.js        (5 tests)
 PASS tests/unit/auth.middleware.test.js        (9 tests)
-PASS tests/unit/emailService.test.js          (15 tests)
+PASS tests/unit/emailService.test.js          (22 tests)
 PASS tests/unit/incidentModel.test.js         (17 tests)
 PASS tests/unit/userModel.test.js             (10 tests)
 PASS tests/unit/authController.test.js        (15 tests)
 PASS tests/unit/upload.middleware.test.js      (8 tests)
 PASS tests/integration/incidents.test.js      (17 tests)
 PASS tests/integration/auth.test.js            (4 tests)
+PASS tests/security/security.test.js           (5 tests)
 
-Test Suites: 9 passed, 9 total
-Tests:       100 passed, 100 total
-Time:        12.965 s
+Test Suites: 10 passed, 10 total
+Tests:       112 passed, 112 total
+Time:        11.285 s
 ```
 
 **Frontend** (`npm test` in `/frontend`):
@@ -628,7 +630,7 @@ All files               |   75.08 |    68.61 |   71.87 |   76.68 |
 **Key observations:**
 - `auth.js`, `authController.js`, `Incident.js`, `User.js`, `idUtils.js`, `routes/*` — 100% across all metrics
 - `upload.js` — 95% statements (one unreachable branch in the WebP multi-file path; all critical paths covered by UT-038–UT-042)
-- `emailService.js` — 100% statements/functions/lines; 75% branch (untested branches are template literal ternary expressions for optional photo count display — not logic branches)
+- `emailService.js` — 100% statements/functions/lines; 78.57% branch (untested branches are template literal ternary expressions for optional photo count display and conditional SENDGRID_DSN env checks — not logic branches). `sendComplaintEmails` covered by UT-038-A – UT-038-G
 - `incidentController.js` — 52.7% statements; the uncovered paths are type-specific field extraction branches (graffiti, antisocial, safetyhazard, maintenance sub-fields), S3 error handling, and `addPhoto`/`reviewIncident`/`reviewPhoto` endpoints not yet covered by integration tests
 - `app.js` — 77% statements; CORS rejection path and error handlers not exercised in current integration tests (tested manually)
 
@@ -687,9 +689,19 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | Medium | Add **integration tests** using Supertest | ✅ Done — IT-001 – IT-021 (21 tests) |
 | Medium | Add **frontend unit tests** using Vitest and React Testing Library | ✅ Done — FT-001–FT-012 (19 tests) |
 | Medium | Add **E2E tests** using Playwright to cover full user journeys | ✅ Done — ET-001–ET-014 (15 cases, 30 runs) |
-| Low | Add **GitHub Actions** CI workflow to auto-run `npm test` on every PR | ✅ Done — `.github/workflows/ci.yml`; runs backend (105 tests + coverage threshold) and frontend (tsc + 25 Vitest tests) on push to `dev` and PRs to `main` |
+| Low | Add **GitHub Actions** CI workflow to auto-run `npm test` on every PR | ✅ Done — `.github/workflows/ci.yml`; runs backend (112 tests + coverage threshold) and frontend (tsc + 25 Vitest tests) on push to `dev` and PRs to `main` |
 | Low | Backfill missing `shortId` values on legacy database documents | Pending |
 | Low | Add load testing with k6 to verify performance under concurrent submissions | ✅ Done — Artillery scenarios, GET p95=72ms, POST p95=95ms |
+| Low | Add `helmet` secure HTTP headers to Express | ✅ Done — `helmet` added to `app.js` |
+| Low | Add `morgan` request logging | ✅ Done — `morgan` added to `app.js` (skipped in test env) |
+| Low | Replace hardcoded `localhost:5000` in frontend with env var | ✅ Done — `VITE_API_URL` used in `AppContext.tsx` and `TrackReport.tsx` |
+| Low | Add Sentry error monitoring | ✅ Done — `@sentry/node` and `@sentry/react` installed, gated on `SENTRY_DSN` / `VITE_SENTRY_DSN` env vars |
+| Low | Add MongoDB indexes for `incidentType` and `reportedDate` | ✅ Done — `index: true` added to Incident schema |
+| Low | Fix email tracking link `/#track` → `/track` | ✅ Done — corrected in `emailService.js` |
+| Low | Add React error boundary | ✅ Done — `ErrorBoundary.tsx` wraps entire app; shows fallback on crash |
+| Low | Add scroll-to-top on route navigation | ✅ Done — `ScrollToTop.tsx` layout route resets scroll on every navigation |
+| Low | Add GDPR privacy policy page | ✅ Done — `/privacy` page with data collected, retention policy, rights, and contact details |
+| Low | Formal complaint forwarding to Tuath Housing / Dublin City Council | ✅ Done — optional complaint section on report form; `sendComplaintEmails` dispatches formatted complaint emails to selected organisations |
 
 ---
 
@@ -714,6 +726,9 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | FR-13 | Admin authentication shall be enforced via JWT with a 7-day expiry |
 | FR-14 | New admin accounts shall be created via the `/api/auth/register` endpoint |
 | FR-15 | Incident reference IDs shall be unique and collision-resistant |
+| FR-16 | Users shall be able to optionally send a formal complaint to Tuath Housing and/or Dublin City Council when submitting an incident report |
+| FR-17 | If a complaint is selected, the user must provide their full name, email address, and phone number; anonymous reporting without a complaint shall remain available |
+| FR-18 | The system shall display a GDPR-compliant privacy policy at `/privacy` covering data collected, retention periods, user rights, and contact details |
 
 ### A.2 Non-Functional Requirements
 
@@ -731,3 +746,6 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | NFR-10 | The system shall function correctly when the email service (SendGrid) is unavailable, logging the error silently | Reliability |
 | NFR-11 | The frontend shall be fully usable on Chrome, Firefox, and Safari on both desktop and mobile | Usability |
 | NFR-12 | Anonymous reporting shall be supported — no account or personal information shall be required to submit a report | Usability |
+| NFR-13 | The application shall publish a privacy policy compliant with GDPR (Ireland), covering data collected, retention periods, and user rights | Legal / Compliance |
+| NFR-14 | The backend shall set secure HTTP headers (CSP, HSTS, X-Frame-Options) via `helmet` in production | Security |
+| NFR-15 | All unhandled exceptions in production shall be captured by Sentry; monitoring is gated on the presence of `SENTRY_DSN` / `VITE_SENTRY_DSN` env vars | Observability |
