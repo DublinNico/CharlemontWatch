@@ -57,7 +57,6 @@ const incidentSchema = new mongoose.Schema({
   // Anti-social-specific fields
   antisocialType: String,
   estimatedPeopleInvolved: Number,
-  reportedToTuath: Boolean,
 
   // Safety hazard-specific fields
   hazardType: String,

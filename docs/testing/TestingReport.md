@@ -106,7 +106,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 152 automated tests pass (86 backend unit + 21 backend integration + 5 security + 25 frontend unit + 15 E2E)
+- All 156 automated tests pass (88 backend unit + 23 backend integration + 5 security + 25 frontend unit + 15 E2E)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -341,22 +341,22 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 |------|---------------------|-------|
 | `tests/unit/generateShortId.test.js` | ID format, prefix, length, uniqueness | UT-001 – UT-002 (5 tests) |
 | `tests/unit/auth.middleware.test.js` | authenticate middleware (all branches), adminOnly middleware (all branches) | UT-005 – UT-010 (9 tests) |
-| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, SendGrid error catch-paths, sendComplaintEmails (Tuath/DCC/both/empty/content/error) | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-G (22 tests) |
+| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, SendGrid error catch-paths, sendComplaintEmails (Tuath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I (24 tests) |
 | `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array, reporterEmail format | UT-014 – UT-018, UT-033 (17 tests) |
 | `tests/unit/userModel.test.js` | Pre-save bcrypt hook, comparePassword, schema validation, role default/enum | UT-019 – UT-025, UT-034 (10 tests) |
 | `tests/unit/authController.test.js` | Login input validation, credential checks, JWT generation, email normalisation, 500 error path | UT-026 – UT-032 (15 tests) |
 | `tests/unit/upload.middleware.test.js` | MIME type filter, 5MB size limit, magic-byte validation (JPEG/PNG/WebP/spoofed PDF), no-file passthrough | UT-038 – UT-042 (8 tests) |
 
-**Unit test total: 86 tests across 7 test suites**
+**Unit test total: 88 tests across 7 test suites**
 
 #### Integration Tests
 
 | File | Functionality Tested | Tests |
 |------|---------------------|-------|
-| `tests/integration/incidents.test.js` | POST/GET/PATCH/DELETE incident routes; auth guards; photo upload; 11-file limit; status filtering | IT-001 – IT-017 (17 tests) |
+| `tests/integration/incidents.test.js` | POST/GET/PATCH/DELETE incident routes; auth guards; photo upload; 11-file limit; status filtering; complaintReady validation (invalid email and missing phone both block complaint persistence) | IT-001 – IT-017, IT-022 – IT-023 (19 tests) |
 | `tests/integration/auth.test.js` | Login (correct/wrong/unknown); register route removed (404) | IT-018 – IT-021 (4 tests) |
 
-**Integration test total: 21 tests across 2 test suites**
+**Integration test total: 23 tests across 2 test suites**
 
 #### Frontend Unit Tests (Vitest + React Testing Library)
 
@@ -404,7 +404,7 @@ Artillery scenarios run against a live backend (`npm run dev` in `/backend` firs
 
 Observed results on 31/05/26: GET p95 = 72ms, POST p95 = 95ms — both well inside thresholds.
 
-**Grand total: 152 automated tests across 22 test suites**
+**Grand total: 156 automated tests across 22 test suites**
 
 ---
 
@@ -549,25 +549,25 @@ describe('User model — comparePassword', () => {
 
 ### 5.4 Test Execution Results
 
-All 152 tests were executed on 31/05/26.
+All 156 tests were executed on 31/05/26.
 
 **Backend** (`npm test` in `/backend`):
 
 ```
 PASS tests/unit/generateShortId.test.js        (5 tests)
 PASS tests/unit/auth.middleware.test.js        (9 tests)
-PASS tests/unit/emailService.test.js          (22 tests)
+PASS tests/unit/emailService.test.js          (24 tests)
 PASS tests/unit/incidentModel.test.js         (17 tests)
 PASS tests/unit/userModel.test.js             (10 tests)
 PASS tests/unit/authController.test.js        (15 tests)
 PASS tests/unit/upload.middleware.test.js      (8 tests)
-PASS tests/integration/incidents.test.js      (17 tests)
+PASS tests/integration/incidents.test.js      (19 tests)
 PASS tests/integration/auth.test.js            (4 tests)
 PASS tests/security/security.test.js           (5 tests)
 
 Test Suites: 10 passed, 10 total
-Tests:       112 passed, 112 total
-Time:        11.285 s
+Tests:       116 passed, 116 total
+Time:        13.114 s
 ```
 
 **Frontend** (`npm test` in `/frontend`):
@@ -630,7 +630,7 @@ All files               |   75.08 |    68.61 |   71.87 |   76.68 |
 **Key observations:**
 - `auth.js`, `authController.js`, `Incident.js`, `User.js`, `idUtils.js`, `routes/*` — 100% across all metrics
 - `upload.js` — 95% statements (one unreachable branch in the WebP multi-file path; all critical paths covered by UT-038–UT-042)
-- `emailService.js` — 100% statements/functions/lines; 78.57% branch (untested branches are template literal ternary expressions for optional photo count display and conditional SENDGRID_DSN env checks — not logic branches). `sendComplaintEmails` covered by UT-038-A – UT-038-G
+- `emailService.js` — 100% statements/functions/lines; ~76% branch (untested branches are template literal ternary expressions for optional photo count display — not logic branches). `sendComplaintEmails` covered by UT-038-A – UT-038-I including HTML-injection escaping (UT-038-H/I)
 - `incidentController.js` — 52.7% statements; the uncovered paths are type-specific field extraction branches (graffiti, antisocial, safetyhazard, maintenance sub-fields), S3 error handling, and `addPhoto`/`reviewIncident`/`reviewPhoto` endpoints not yet covered by integration tests
 - `app.js` — 77% statements; CORS rejection path and error handlers not exercised in current integration tests (tested manually)
 
@@ -668,6 +668,10 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
    - **BUG-014 — Optimistic clipboard UI (Low):** `handleCopy` in `IncidentCard` called `setCopied(true)` synchronously before `navigator.clipboard.writeText()` resolved. Fixed by moving the state update into `.then()`.
 
 6. **Legacy incidents without shortId** — 8 of 9 incidents in the live database pre-date the `shortId` field. A database migration script to backfill `shortId` values would prevent future lookup ambiguity.
+
+### 6.1.1 Accepted Test Gap
+
+**`ErrorBoundary.componentDidCatch`** — the Sentry capture hook in the class error boundary is not covered by automated tests. Testing it requires throwing an exception from a child component inside React Testing Library, then asserting on a mocked Sentry call. The project has no existing ErrorBoundary test file and the setup cost is disproportionate to the risk: `Sentry.captureException` is a no-op when Sentry is uninitialised (no DSN set), so there is no reachable failure mode in development or CI. Accepted as a known gap.
 
 ### 6.2 Lessons Learned
 

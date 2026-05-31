@@ -1,4 +1,4 @@
-import { Shield, Search, List, Info, Lock, User, ArrowRight, Bell, MapPin, Users, FileText, Eye, CheckCircle } from 'lucide-react';
+import { Shield, Search, List, Info, Lock, User, ArrowRight, Bell, MapPin, Users, FileText, Eye, CheckCircle, Send } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { useApp } from '../context/AppContext';
@@ -51,7 +51,7 @@ export function Home() {
     {
       icon: List,
       title: 'View All Incidents',
-      description: 'Browse all community reports and stay informed about your neighborhood',
+      description: 'Browse all community reports and stay informed about your neighbourhood',
       onClick: () => navigate('/incidents'),
       variant: 'secondary' as const,
       show: true,
@@ -163,14 +163,15 @@ export function Home() {
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
-          <p className="text-lg text-muted-foreground">Four simple steps to a safer community</p>
+          <p className="text-lg text-muted-foreground">Five simple steps to a safer community</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {[
             { number: 1, title: 'Report', description: 'Submit an incident with photos and details', icon: FileText },
-            { number: 2, title: 'Track', description: 'Use your incident ID to monitor progress', icon: Eye },
-            { number: 3, title: 'Review', description: 'Admin reviews and updates status', icon: Shield },
-            { number: 4, title: 'Resolve', description: 'Issue is addressed and marked complete', icon: CheckCircle },
+            { number: 2, title: 'Escalate', description: 'Optionally send a formal complaint directly to Tuath Housing or Dublin City Council', icon: Send },
+            { number: 3, title: 'Track', description: 'Use your incident ID to monitor progress', icon: Eye },
+            { number: 4, title: 'Review', description: 'Admin reviews and updates status', icon: Shield },
+            { number: 5, title: 'Resolve', description: 'Issue is addressed and marked complete', icon: CheckCircle },
           ].map(step => (
             <Card key={step.number} className="text-center border-0 shadow-lg">
               <CardContent className="p-6">

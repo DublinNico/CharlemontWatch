@@ -1,4 +1,4 @@
-import { Shield, LogOut } from 'lucide-react';
+import { Shield, LogOut, Info } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router';
 import { Button } from './ui/button';
@@ -30,6 +30,14 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/about')}
+              className="gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <Info className="w-4 h-4" />
+              <span className="hidden sm:inline">About Us</span>
+            </Button>
             {isAuthenticated ? (
               <>
                 <span className="text-sm text-muted-foreground hidden sm:inline">{user?.name}</span>

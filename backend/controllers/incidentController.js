@@ -21,6 +21,12 @@ const createIncident = async (req, res) => {
       ? req.body.sendComplaintTo.split(',').filter(v => ['tuath', 'dcc'].includes(v))
       : [];
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const complaintReady = sendComplaintTo.length > 0
+      && !!complainantName
+      && !!complainantEmail && emailRegex.test(complainantEmail)
+      && !!complainantPhone;
+
     const typeData = {};
     if (incidentType === 'graffiti') {
       typeData.surfaceType = req.body.surfaceType;
@@ -29,7 +35,6 @@ const createIncident = async (req, res) => {
     } else if (incidentType === 'antisocial') {
       typeData.antisocialType = req.body.antisocialType;
       typeData.estimatedPeopleInvolved = req.body.estimatedPeopleInvolved;
-      typeData.reportedToTuath = req.body.reportedToTuath === 'true';
     } else if (incidentType === 'safetyhazard') {
       typeData.hazardType = req.body.hazardType;
       typeData.riskLevel = req.body.riskLevel;
@@ -72,7 +77,7 @@ const createIncident = async (req, res) => {
       reporterEmail: reporterEmail || null,
       photos,
       ...typeData,
-      ...(sendComplaintTo.length > 0 && complainantName ? {
+      ...(complaintReady ? {
         complainantName,
         complainantEmail,
         complainantPhone,
@@ -85,7 +90,7 @@ const createIncident = async (req, res) => {
     sendResidentConfirmation(incident, incident.reporterEmail);
     sendAdminNotification(incident);
 
-    if (sendComplaintTo.length > 0 && complainantName) {
+    if (complaintReady) {
       sendComplaintEmails(incident, {
         name: complainantName,
         email: complainantEmail,

@@ -25,7 +25,7 @@ export function About() {
                 CharlemontWatch is a community-led incident reporting and tracking platform for residents 
                 of Charlemont Street, Dublin. We empower residents to document safety, maintenance, and 
                 quality-of-life issues, creating a transparent evidence base that holds Tuath Housing and 
-                Dublin City Council accountable for maintaining our neighborhood.
+                Dublin City Council accountable for maintaining our neighbourhood.
               </p>
             </div>
           </div>
@@ -37,9 +37,10 @@ export function About() {
           <div className="space-y-4">
             {[
               { number: 1, title: 'Report an Issue', description: 'Residents document incidents with photos and detailed descriptions' },
-              { number: 2, title: 'Receive an ID', description: 'Get a unique tracking ID to monitor your report\'s progress' },
-              { number: 3, title: 'Admin Reviews', description: 'Housing administrators review submissions and update status' },
-              { number: 4, title: 'Track Resolution', description: 'Follow the incident from submission to resolution' },
+              { number: 2, title: 'Escalate Formally', description: 'Optionally send a formal complaint directly to Tuath Housing, Dublin City Council, or both — on your behalf, automatically' },
+              { number: 3, title: 'Receive an ID', description: 'Get a unique tracking ID to monitor your report\'s progress' },
+              { number: 4, title: 'Admin Reviews', description: 'Housing administrators review submissions and update status' },
+              { number: 5, title: 'Track Resolution', description: 'Follow the incident from submission to resolution' },
             ].map(step => (
               <div key={step.number} className="flex gap-4">
                 <div className="w-10 h-10 bg-[#1976d2] text-white rounded-full flex items-center justify-center flex-shrink-0">
@@ -61,13 +62,13 @@ export function About() {
             <div className="border border-[#eeeeee] rounded p-4">
               <h3 className="text-[#1976d2] mb-2">Tuath Housing</h3>
               <p className="text-sm text-[#666666]">
-                Our housing association, responsible for building maintenance, repairs, and resident safety
+                The housing association, responsible for building maintenance, repairs, and resident safety
               </p>
             </div>
             <div className="border border-[#eeeeee] rounded p-4">
               <h3 className="text-[#1976d2] mb-2">Dublin City Council</h3>
               <p className="text-sm text-[#666666]">
-                Local government authority overseeing public safety, street cleaning, and community services
+                The local government authority overseeing public safety, street cleaning, and community services
               </p>
             </div>
           </div>
@@ -80,7 +81,7 @@ export function About() {
             <div>
               <h2 className="text-[#333333] mb-3">Why This Matters</h2>
               <p className="text-[#666666]">
-                Individual complaints can be ignored or lost. A public, organized record of community concerns 
+                Individual complaints can be ignored or lost. A public, organised record of community concerns
                 builds collective evidence that demands response. CharlemontWatch ensures transparency, creates 
                 accountability, and gives residents a unified voice to improve our living conditions.
               </p>

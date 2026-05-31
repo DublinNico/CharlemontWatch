@@ -97,7 +97,7 @@ export function ReportIncident() {
 
   const incidentTypes = [
     { value: 'Graffiti', label: 'Graffiti', description: 'Vandalism or unwanted markings' },
-    { value: 'Anti-Social Behaviour', label: 'Anti-Social Behaviour', description: 'Disruptive or threatening behavior' },
+    { value: 'Anti-Social Behaviour', label: 'Anti-Social Behaviour', description: 'Disruptive or threatening behaviour' },
     { value: 'Safety Hazard', label: 'Safety Hazard', description: 'Immediate danger to public safety' },
     { value: 'Maintenance Issue', label: 'Maintenance Issue', description: 'Repair or upkeep needed' },
   ];
@@ -172,31 +172,11 @@ export function ReportIncident() {
                     <SelectValue placeholder="Select behaviour type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {['Loitering', 'Noise / Disturbance', 'Vandalism', 'Fighting', 'Other'].map(v => (
+                    {['Loitering', 'Noise / Disturbance', 'Vandalism', 'Urination / Defecation', 'Other'].map(v => (
                       <SelectItem key={v} value={v}>{v}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <Label htmlFor="people-involved">Estimated Number of People</Label>
-                <Input
-                  id="people-involved"
-                  type="number"
-                  min="1"
-                  placeholder="e.g. 3"
-                  className="bg-white"
-                  value={typeSpecificData.estimatedPeopleInvolved || ''}
-                  onChange={e => updateSpecific('estimatedPeopleInvolved', e.target.value)}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="reported-garda"
-                  checked={!!typeSpecificData.reportedToGarda}
-                  onCheckedChange={v => updateSpecific('reportedToGarda', v)}
-                />
-                <Label htmlFor="reported-garda" className="cursor-pointer">Already reported to Garda</Label>
               </div>
             </CardContent>
           </Card>
@@ -548,6 +528,10 @@ export function ReportIncident() {
                   </Label>
                 </div>
               </div>
+
+              <p className="text-xs text-amber-800 font-medium">
+                Formal complaints can't be ignored. Unlike a standard report, they require an official response from Tuath Housing or the Council.
+              </p>
 
               {sendingComplaint && (
                 <div className="space-y-4 pt-2 border-t border-amber-200">

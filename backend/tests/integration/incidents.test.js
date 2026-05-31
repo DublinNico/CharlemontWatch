@@ -231,3 +231,42 @@ describe('DELETE /api/incidents/admin/:id', () => {
     expect(res.status).toBe(401);
   });
 });
+
+// ─── complaintReady validation ────────────────────────────────────────────────
+
+describe('POST /api/incidents/report — complaint field validation', () => {
+  beforeEach(async () => { await Incident.deleteMany({}); });
+
+  test('IT-022: invalid complainant email blocks complaint fields from being persisted', async () => {
+    const res = await request(app)
+      .post('/api/incidents/report')
+      .field('incidentType', 'graffiti')
+      .field('location', 'Block A')
+      .field('description', 'Test')
+      .field('sendComplaintTo', 'tuath')
+      .field('complainantName', 'Jane')
+      .field('complainantEmail', 'not-an-email')
+      .field('complainantPhone', '087 123 4567');
+
+    expect(res.status).toBe(201);
+    const saved = await Incident.findOne({ shortId: res.body.incidentId });
+    expect(saved.complainantName).toBeUndefined();
+    expect(saved.sendComplaintTo).toHaveLength(0);
+  });
+
+  test('IT-023: missing complainant phone blocks complaint fields from being persisted', async () => {
+    const res = await request(app)
+      .post('/api/incidents/report')
+      .field('incidentType', 'graffiti')
+      .field('location', 'Block A')
+      .field('description', 'Test')
+      .field('sendComplaintTo', 'tuath')
+      .field('complainantName', 'Jane')
+      .field('complainantEmail', 'jane@example.com');
+
+    expect(res.status).toBe(201);
+    const saved = await Incident.findOne({ shortId: res.body.incidentId });
+    expect(saved.complainantName).toBeUndefined();
+    expect(saved.sendComplaintTo).toHaveLength(0);
+  });
+});
