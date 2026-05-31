@@ -24,9 +24,10 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(incident.id);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    navigator.clipboard.writeText(incident.id).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   };
   const styles = typeStyles[incident.type];
   const formattedDate = new Date(incident.date).toLocaleDateString('en-GB', {
