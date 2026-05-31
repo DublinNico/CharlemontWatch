@@ -27,6 +27,8 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
     navigator.clipboard.writeText(incident.id).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }).catch(() => {
+      // clipboard write failed — silently ignore (permission denied, insecure context)
     });
   };
   const styles = typeStyles[incident.type];
@@ -59,6 +61,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
             <button
               onClick={handleCopy}
               title="Copy ID"
+              aria-label="Copy ID"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -154,6 +157,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
         onClick={() => setLightboxIndex(null)}
       >
         <button
+          aria-label="Close"
           className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
           onClick={() => setLightboxIndex(null)}
         >
@@ -162,6 +166,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
 
         {lightboxIndex > 0 && (
           <button
+            aria-label="Previous"
             className="absolute left-4 text-white hover:text-gray-300 transition-colors"
             onClick={e => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
           >
@@ -178,6 +183,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
 
         {lightboxIndex < incident.photos.length - 1 && (
           <button
+            aria-label="Next"
             className="absolute right-4 text-white hover:text-gray-300 transition-colors"
             onClick={e => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
           >

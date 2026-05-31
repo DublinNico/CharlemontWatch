@@ -7,10 +7,10 @@
 ### Security
 - [ ] **Replace JWT_SECRET** — current value in `.env` is a weak placeholder; generate a strong 256-bit random secret for production
 - [ ] **Restrict CORS to production domain** — `server.js` currently allows all `localhost:*` origins; must be changed to the actual deployed frontend URL
-- [ ] **Add rate limiting** — no protection against brute-force on `/api/auth/login` or flood on `/api/incidents/report`; add `express-rate-limit` (admin login has no public link but the `/auth` URL is guessable)
+- [x] **Add rate limiting** — `express-rate-limit` added to `/api/auth/login` (10 req/min per IP, skipped in test env); ST-005 confirms 429 after threshold
 - [ ] **Enable HTTPS** — without it, admin credentials travel in plaintext; use a host that provides TLS (Vercel, Render, Railway all do this for free)
 - [ ] **Add `helmet`** — sets secure HTTP headers (CSP, HSTS, X-Frame-Options, etc.); one-line install on the Express app
-- [ ] **Add NoSQL injection protection** — `express-mongo-sanitize` strips `$` operators from request bodies; prevents MongoDB operator injection attacks
+- [x] **Add NoSQL injection protection** — `express-mongo-sanitize` added to `app.js`; ST-003 confirms operator payloads are rejected before reaching the DB
 - [x] **Add email format validation** to the Incident schema (`reporterEmail`) — regex validator added; `"notanemail"` now rejected (UT-033)
 - [x] **Add magic-byte MIME verification** on uploads — `validateMagicBytes` middleware checks actual file buffer bytes; PDF-disguised-as-JPEG now rejected (UT-041)
 
@@ -28,7 +28,7 @@
 ## 🟠 Important — Should fix before going live
 
 ### Backend
-- [ ] **Don't expose raw error messages in production** — `res.status(500).json({ error: error.message })` leaks stack details; replace with a generic message when `NODE_ENV === 'production'`
+- [x] **Don't expose raw error messages in production** — `err.message` replaced with `'Internal Server Error'` in global error handler; `createIncident` now returns 400 for `ValidationError` and generic 500 for all other errors (BUG-015, BUG-016)
 - [ ] **Add request logging** — `morgan` middleware to log every request; essential for debugging production issues
 - [ ] **Add MongoDB indexes** — `incidentType`, `status`, and `reportedDate` should be indexed for query performance as data grows
 - [x] **Explicit 400 when >10 photos submitted on create** — `MulterError` handler added to Express app; now returns 400 consistently (IT-005)
@@ -53,9 +53,9 @@
 
 ### Testing
 - [x] **Add Supertest integration tests** — 21 integration tests covering all incident and auth routes (IT-001 – IT-021)
-- [x] **Add frontend unit tests** — 19 Vitest + React Testing Library tests covering AppContext, Header, TrackReport, AdminDashboard (FT-001 – FT-012)
-- [ ] **Add E2E tests (Playwright)** — automate: submit report → receive ID → track → admin resolves
-- [ ] **Set up GitHub Actions CI** — run `npm test` automatically on every push to `dev` and every PR to `main`
+- [x] **Add frontend unit tests** — 25 Vitest + React Testing Library tests covering AppContext, Header, TrackReport, AdminDashboard, ReportIncident (FT-001 – FT-014)
+- [x] **Add E2E tests (Playwright)** — 15 test cases × 2 browser profiles = 30 runs; covers report, track, browse, admin login/update/delete, mobile viewport (ET-001 – ET-014)
+- [x] **Set up GitHub Actions CI** — `.github/workflows/ci.yml` runs backend tests + coverage threshold + frontend tsc + Vitest on push to `dev` and PRs to `main`
 
 ### Legal (GDPR — Ireland)
 - [ ] **Write a privacy policy** — the app collects reporter emails and incident descriptions; GDPR requires a published policy
@@ -74,7 +74,7 @@
 
 | Priority | Total | Done | Remaining |
 |----------|-------|------|-----------|
-| 🔴 Critical | 12 | 2 | 10 |
-| 🟠 Important | 8 | 2 | 6 |
-| 🟡 Nice to have | 13 | 2 | 11 |
-| **Total** | **33** | **6** | **27** |
+| 🔴 Critical | 12 | 4 | 8 |
+| 🟠 Important | 8 | 3 | 5 |
+| 🟡 Nice to have | 13 | 4 | 9 |
+| **Total** | **33** | **11** | **22** |

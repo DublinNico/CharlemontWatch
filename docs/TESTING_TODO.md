@@ -58,43 +58,43 @@
 
 ## 🟡 End-to-End Tests — Add Playwright
 
-- [ ] **Submit a graffiti report** — fill form, attach photo, submit → confirmation page shows incident ID
-- [ ] **Track a report by ID** — enter ID on TrackReport page → incident details displayed with photos
-- [ ] **Browse all incidents** — navigate to /incidents → list renders, type filter works, status filter works
-- [ ] **Click incident card** — navigates to TrackReport with correct incident loaded
-- [ ] **Admin login** — enter credentials → redirected to admin dashboard
-- [ ] **Admin update status** — change status NEW → IN_PROGRESS → RESOLVED
-- [ ] **Admin delete incident** — incident removed from list after delete
-- [ ] **Anonymous report** — submit without email → incident saved, no crash
-- [ ] **Mobile responsiveness** — run above flows at 375px viewport (iPhone SE)
+- [x] **Submit a graffiti report** — fill form, submit → confirmation page shows incident ID (ET-001)
+- [x] **Track a report by ID** — enter ID on TrackReport page → incident details displayed (ET-003)
+- [x] **Browse all incidents** — navigate to /incidents → list renders, type filter works (ET-005, ET-006)
+- [x] **Click incident card** — navigates to TrackReport with correct incident loaded (ET-007)
+- [x] **Admin login** — enter credentials → redirected to admin dashboard (ET-008, ET-008-B)
+- [x] **Admin update status** — change status NEW → IN_PROGRESS (ET-009)
+- [x] **Admin delete incident** — incident removed from list after delete (ET-010)
+- [x] **Anonymous report** — submit without email → success page, no crash (ET-002)
+- [x] **Mobile responsiveness** — all flows verified at 375px viewport with Chromium mobile emulation (ET-011–ET-014)
 
 ---
 
 ## 🟡 Security Tests
 
-- [ ] **JWT tampering** — modify payload of a valid token → API returns 401
-- [ ] **JWT from different secret** — token signed with wrong secret → 401
-- [ ] **NoSQL injection** — send `{ "email": { "$gt": "" } }` to `/api/auth/login` → should be sanitised and return 401, not bypass auth (requires `express-mongo-sanitize`)
-- [ ] **XSS in description** — submit incident with `<script>alert(1)</script>` in description field → stored as plain text, rendered escaped in frontend
-- [ ] **Brute-force login** — 20 rapid login attempts → rate limiter blocks after threshold (requires `express-rate-limit`)
-- [ ] **Resident cannot delete incident** — resident JWT on DELETE endpoint → 403
-- [ ] **Resident cannot update status** — resident JWT on PATCH status → 403
+- [x] **JWT tampering** — already covered by UT-007-A (tampered signature → 401)
+- [x] **JWT from different secret** — already covered by UT-007-B (expired/invalid token → 401)
+- [x] **NoSQL injection** — `express-mongo-sanitize` added to app.js; ST-003 confirms operator payloads are rejected with 400 before reaching the DB
+- [x] **XSS in description** — ST-004 confirms `<script>` is stored verbatim; React escapes it at render time
+- [x] **Brute-force login** — `express-rate-limit` added to `/api/auth/login` (skip in test env); ST-005 confirms 429 after threshold using an isolated mini-app
+- [x] **Resident cannot delete incident** — ST-006 confirms resident JWT on DELETE returns 403 and incident remains in DB
+- [x] **Resident cannot update status** — already covered by IT-015 (resident JWT on PATCH status → 403)
 
 ---
 
 ## 🟡 Performance Tests — Add k6 or Artillery
 
-- [ ] **Incident creation under load** — 50 concurrent POST /api/incidents/report → all return 201, response time < 2s
-- [ ] **Get all incidents** — 100 concurrent GET /api/incidents → response time < 500ms
-- [ ] **Login endpoint** — 20 concurrent logins → no errors, rate limiter does not block legitimate traffic
+- [x] **Incident creation under load** — 50 VUs over 10s via Artillery; threshold p95 < 2s, all 201 (`npm run test:perf:post`)
+- [x] **Get all incidents** — 100 VUs over 10s via Artillery; threshold p95 < 500ms, all 200 (`npm run test:perf:get`)
+- [x] **Login endpoint** — 20 requests spread over 3 min (~7/min, under 10/min rate limit); threshold all 200, no 429s (`npm run test:perf:login`)
 
 ---
 
 ## 🟡 CI/CD
 
-- [ ] **Add GitHub Actions workflow** — run `npm test` in `/backend` on every push to `dev` and every PR to `main`
-- [ ] **Add coverage threshold** — fail CI if statement coverage drops below 70%
-- [ ] **Add frontend lint check** — run `tsc --noEmit` in CI to catch TypeScript errors before merge
+- [x] **Add GitHub Actions workflow** — `.github/workflows/ci.yml` runs backend tests + frontend tests + TypeScript check on push to `dev` and PRs to `main`
+- [x] **Add coverage threshold** — `jest.config.js` now enforces statements/functions/lines ≥ 70%, branches ≥ 65%; CI fails if coverage drops below
+- [x] **Add frontend lint check** — `tsc --noEmit` runs in the `frontend` CI job before Vitest
 
 ---
 

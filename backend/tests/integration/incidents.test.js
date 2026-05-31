@@ -62,18 +62,18 @@ describe('POST /api/incidents/report', () => {
     expect(res.body.incidentId).toMatch(/^CW-/);
   });
 
-  test('IT-002: missing required field (location) returns 500', async () => {
+  test('IT-002: missing required field (location) returns 400', async () => {
     const res = await request(app)
       .post('/api/incidents/report')
       .send({ incidentType: 'graffiti', description: 'Test' });
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
   });
 
-  test('IT-003: invalid incidentType returns 500', async () => {
+  test('IT-003: invalid incidentType returns 400', async () => {
     const res = await request(app)
       .post('/api/incidents/report')
       .send({ ...validBody, incidentType: 'vandalism' });
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(400);
   });
 
   test('IT-004: photo attachment stores photo URL in the incident', async () => {

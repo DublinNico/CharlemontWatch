@@ -2,6 +2,7 @@
 
 | Field | Detail |
 |---|---|
+| **Date** | 31/05/26 |
 | **Status** | Fixed |
 | **Severity** | Low |
 | **Area** | Frontend / UX |
@@ -38,4 +39,4 @@ navigator.clipboard.writeText(incident.id).then(() => {
 
 ## Discovered By
 
-Code review (automated review pass, 31 May 2026)
+Code review (31/05/26)

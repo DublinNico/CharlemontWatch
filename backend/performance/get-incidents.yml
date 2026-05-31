@@ -1,0 +1,19 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - name: "100 concurrent GET requests"
+      duration: 10
+      arrivalRate: 10       # 10 virtual users/second × 10s = 100 total
+  ensure:
+    thresholds:
+      - http.response_time.p95: 500   # 95th percentile must be < 500ms
+  plugins:
+    ensure: {}
+
+scenarios:
+  - name: "Get all incidents"
+    flow:
+      - get:
+          url: "/api/incidents"
+          expect:
+            - statusCode: 200

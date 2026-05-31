@@ -2,6 +2,7 @@
 
 | Field | Detail |
 |---|---|
+| **Date** | 27/05/26 |
 | **Status** | Fixed |
 | **Severity** | Medium |
 | **Area** | Frontend / Navigation |
