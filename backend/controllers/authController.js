@@ -6,11 +6,13 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    if (typeof email !== 'string' || typeof password !== 'string' ||
+        email.trim().length === 0 || password.trim().length === 0) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const user = await User.findOne({ email });
+    const normalisedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalisedEmail });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }

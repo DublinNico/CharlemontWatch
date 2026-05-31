@@ -15,3 +15,6 @@ All bugs discovered during development and testing.
 | [BUG-009](BUG-009-trackreport-masking-network-errors.md) | Track Report Masking Network Errors as "Not Found" | Low | Fixed | Frontend / Errors |
 | [BUG-010](BUG-010-jest-test-status-default.md) | Jest Test Failing After Status Default Change | Low | Fixed | Tests |
 | [BUG-011](BUG-011-admin-header-dropdown.md) | Admin Header Dropdown Not Responding | Medium | Fixed | Frontend / Navigation |
+| [BUG-012](BUG-012-magic-bytes-multiupload-bypass.md) | Magic-Byte Validation Only Checked First File in Multi-Upload | High | Fixed | Backend / Security |
+| [BUG-013](BUG-013-reportedtogarda-field-mismatch.md) | Anti-Social Incident Data Silently Dropped (Field Name Mismatch) | High | Fixed | Backend / Data |
+| [BUG-014](BUG-014-copy-id-optimistic-ui.md) | Copy ID Button Showed Success Before Clipboard Write Resolved | Low | Fixed | Frontend / UX |

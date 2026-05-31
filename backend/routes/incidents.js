@@ -12,10 +12,10 @@ const {
   addPhoto
 } = require('../controllers/incidentController');
 const { authenticate, adminOnly } = require('../middleware/auth');
-const upload = require('../middleware/upload');
+const { upload, validateMagicBytes } = require('../middleware/upload');
 
 // Public: Report incident
-router.post('/report', upload.array('photos', 10), createIncident);
+router.post('/report', upload.array('photos', 10), validateMagicBytes, createIncident);
 
 // Admin: Get review queue (must be before /:id to avoid param conflict)
 router.get('/admin/pending', authenticate, adminOnly, getPendingIncidents);
@@ -39,6 +39,6 @@ router.get('/', getAllIncidents);
 router.get('/:id', getIncident);
 
 // Authenticated: Add photo to incident
-router.post('/:id/photos', authenticate, upload.single('photo'), addPhoto);
+router.post('/:id/photos', authenticate, upload.single('photo'), validateMagicBytes, addPhoto);
 
 module.exports = router;

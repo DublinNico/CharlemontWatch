@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { Incident, IncidentType } from '../context/AppContext';
 import { StatusBadge } from './StatusBadge';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Badge } from './ui/badge';
-import { MapPin, Calendar, Image as ImageIcon } from 'lucide-react';
+import { MapPin, Calendar, Image as ImageIcon, X, ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
 
 interface IncidentCardProps {
   incident: Incident;
@@ -18,6 +19,16 @@ const typeStyles: Record<IncidentType, { badge: string; accent: string }> = {
 };
 
 export function IncidentCard({ incident, onClick, showFullDetails = false }: IncidentCardProps) {
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(incident.id).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
   const styles = typeStyles[incident.type];
   const formattedDate = new Date(incident.date).toLocaleDateString('en-GB', {
     day: 'numeric',
@@ -26,6 +37,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
   });
 
   return (
+    <>
     <Card
       className={`border-l-4 ${styles.accent} transition-all hover:shadow-lg ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
@@ -39,10 +51,18 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
         </div>
 
         {showFullDetails && (
-          <div className="mt-3">
+          <div className="mt-3 flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Track Your Report:</span>
             <Badge variant="secondary" className="text-xs font-mono">
               {incident.id}
             </Badge>
+            <button
+              onClick={handleCopy}
+              title="Copy ID"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
           </div>
         )}
       </CardHeader>
@@ -57,12 +77,34 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
           {incident.description}
         </p>
 
+        {!showFullDetails && incident.photos.length > 0 && (
+          <div className="flex gap-2">
+            {incident.photos.slice(0, 3).map((photo, index) => {
+              const isLast = index === 2 && incident.photos.length > 3;
+              return (
+                <div key={photo.id} className="relative w-20 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
+                  <img
+                    src={photo.url}
+                    alt="Incident photo"
+                    className="w-full h-full object-cover"
+                  />
+                  {isLast && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <span className="text-white text-sm font-semibold">+{incident.photos.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
             <span>{formattedDate}</span>
           </div>
-          {incident.photos.length > 0 && (
+          {incident.photos.length > 0 && showFullDetails && (
             <div className="flex items-center gap-1.5">
               <ImageIcon className="w-3.5 h-3.5" />
               <span>{incident.photos.length} photo{incident.photos.length > 1 ? 's' : ''}</span>
@@ -88,8 +130,12 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
 
         {showFullDetails && incident.photos.length > 0 && (
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {incident.photos.map(photo => (
-              <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden bg-slate-100">
+            {incident.photos.map((photo, index) => (
+              <div
+                key={photo.id}
+                className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 cursor-zoom-in"
+                onClick={e => { e.stopPropagation(); setLightboxIndex(index); }}
+              >
                 <img
                   src={photo.url}
                   alt="Incident evidence"
@@ -101,5 +147,49 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
         )}
       </CardContent>
     </Card>
+
+    {lightboxIndex !== null && (
+      <div
+        className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+        onClick={() => setLightboxIndex(null)}
+      >
+        <button
+          className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
+          onClick={() => setLightboxIndex(null)}
+        >
+          <X className="w-8 h-8" />
+        </button>
+
+        {lightboxIndex > 0 && (
+          <button
+            className="absolute left-4 text-white hover:text-gray-300 transition-colors"
+            onClick={e => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
+          >
+            <ChevronLeft className="w-10 h-10" />
+          </button>
+        )}
+
+        <img
+          src={incident.photos[lightboxIndex].url}
+          alt="Incident evidence"
+          className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg"
+          onClick={e => e.stopPropagation()}
+        />
+
+        {lightboxIndex < incident.photos.length - 1 && (
+          <button
+            className="absolute right-4 text-white hover:text-gray-300 transition-colors"
+            onClick={e => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+          >
+            <ChevronRight className="w-10 h-10" />
+          </button>
+        )}
+
+        <div className="absolute bottom-4 text-white text-sm">
+          {lightboxIndex + 1} / {incident.photos.length}
+        </div>
+      </div>
+    )}
+    </>
   );
 }

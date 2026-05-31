@@ -24,7 +24,7 @@ const createIncident = async (req, res) => {
     } else if (incidentType === 'antisocial') {
       typeData.antisocialType = req.body.antisocialType;
       typeData.estimatedPeopleInvolved = req.body.estimatedPeopleInvolved;
-      typeData.reportedToGarda = req.body.reportedToGarda === 'true';
+      typeData.reportedToTuath = req.body.reportedToTuath === 'true';
     } else if (incidentType === 'safetyhazard') {
       typeData.hazardType = req.body.hazardType;
       typeData.riskLevel = req.body.riskLevel;

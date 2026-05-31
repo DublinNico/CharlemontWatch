@@ -4,55 +4,55 @@
 
 ## 🔴 Critical — Fix identified gaps from current test suite
 
-- [ ] **Email format validation test** — add validator to `reporterEmail` field in Incident schema, then add EP test case confirming `"notanemail"` is rejected with HTTP 400 (currently stored as-is — gap found in TC-BB-EP-002)
-- [ ] **MIME magic-byte test** — add `file-type` package to upload middleware, then add BVA test confirming a PDF renamed to `.jpg` is rejected (gap found in TC-BB-BVA-002)
-- [ ] **Upload middleware unit test** — `upload.js` has 0% coverage; add Supertest test that sends a real multipart request to cover file type and size enforcement
-- [ ] **User model pre-save hook test** — `User.js` lines 26–28 (bcrypt hash on save) are uncovered; need an in-memory DB (mongodb-memory-server) to trigger `.save()` and verify password is hashed before storage
-- [ ] **Email service catch-path test** — lines 54, 86, 122 in `emailService.js` are the `catch` blocks; mock `sgMail.send` to reject and confirm the error is swallowed silently without crashing the request
+- [x] **Email format validation test** — added regex validator to `reporterEmail` in Incident schema; UT-033 confirms `"notanemail"` is rejected
+- [x] **MIME magic-byte test** — added `validateMagicBytes` middleware to `upload.js` (no external package); UT-041 confirms a PDF renamed to `.jpg` is rejected
+- [x] **Upload middleware unit test** — Supertest suite covering MIME filter, 5MB limit, magic-byte check, and no-file passthrough (UT-038–UT-042); upload.js now at 95% coverage
+- [x] **User model pre-save hook test** — mongodb-memory-server wired up; UT-034 confirms password is hashed on save and not re-hashed on unrelated updates
+- [x] **Email service catch-path test** — UT-035–UT-037 confirm all three catch blocks swallow SendGrid errors silently
 
 ---
 
 ## 🟠 Integration Tests — Add Supertest
 
-- [ ] **POST /api/incidents/report** — valid body → 201 + shortId returned
-- [ ] **POST /api/incidents/report** — missing required field → 500 validation error
-- [ ] **POST /api/incidents/report** — invalid incidentType → 500 validation error
-- [ ] **POST /api/incidents/report** — with photo attachment → photo URL stored in DB
-- [ ] **POST /api/incidents/report** — 11 photos submitted → explicit 400 (after fix)
-- [ ] **GET /api/incidents** — returns array of all incidents
-- [ ] **GET /api/incidents?status=NEW** — filters correctly
-- [ ] **GET /api/incidents?type=graffiti** — filters correctly
-- [ ] **GET /api/incidents/:id** — valid shortId → returns incident
-- [ ] **GET /api/incidents/:id** — valid MongoDB ObjectId → returns incident (fallback)
-- [ ] **GET /api/incidents/:id** — unknown ID → 404
-- [ ] **PATCH /api/incidents/admin/:id/status** — valid status + admin JWT → 200
-- [ ] **PATCH /api/incidents/admin/:id/status** — invalid status → 400
-- [ ] **PATCH /api/incidents/admin/:id/status** — no JWT → 401
-- [ ] **PATCH /api/incidents/admin/:id/status** — resident JWT → 403
-- [ ] **DELETE /api/incidents/admin/:id** — admin JWT → 200, incident removed
-- [ ] **DELETE /api/incidents/admin/:id** — no JWT → 401
-- [ ] **POST /api/auth/register** — route removed → 404 (registration is disabled; admin accounts created directly in DB)
-- [ ] **POST /api/auth/login** — correct credentials → 200 + JWT
-- [ ] **POST /api/auth/login** — wrong password → 401
-- [ ] **POST /api/auth/login** — unknown email → 401
+- [x] **POST /api/incidents/report** — valid body → 201 + shortId returned (IT-001)
+- [x] **POST /api/incidents/report** — missing required field → 500 validation error (IT-002)
+- [x] **POST /api/incidents/report** — invalid incidentType → 500 validation error (IT-003)
+- [x] **POST /api/incidents/report** — with photo attachment → photo URL stored in DB (IT-004)
+- [x] **POST /api/incidents/report** — 11 photos submitted → 400 (IT-005; fixed: multer error now caught and returned as 400)
+- [x] **GET /api/incidents** — returns array of all incidents, PENDING_REVIEW/REJECTED excluded (IT-006)
+- [x] **GET /api/incidents?status=NEW** — filters correctly (IT-007)
+- [x] **GET /api/incidents?type=graffiti** — filters correctly (IT-008)
+- [x] **GET /api/incidents/:id** — valid shortId → returns incident (IT-009)
+- [x] **GET /api/incidents/:id** — valid MongoDB ObjectId → returns incident (fallback) (IT-010)
+- [x] **GET /api/incidents/:id** — unknown ID → 404 (IT-011)
+- [x] **PATCH /api/incidents/admin/:id/status** — valid status + admin JWT → 200 (IT-012)
+- [x] **PATCH /api/incidents/admin/:id/status** — invalid status → 400 (IT-013)
+- [x] **PATCH /api/incidents/admin/:id/status** — no JWT → 401 (IT-014)
+- [x] **PATCH /api/incidents/admin/:id/status** — resident JWT → 403 (IT-015)
+- [x] **DELETE /api/incidents/admin/:id** — admin JWT → 200, incident removed (IT-016)
+- [x] **DELETE /api/incidents/admin/:id** — no JWT → 401 (IT-017)
+- [x] **POST /api/auth/register** — route removed → 404 (IT-021)
+- [x] **POST /api/auth/login** — correct credentials → 200 + JWT (IT-018, UT-030)
+- [x] **POST /api/auth/login** — wrong password → 401 (IT-019, UT-028)
+- [x] **POST /api/auth/login** — unknown email → 401 (IT-020, UT-027)
 
 ---
 
 ## 🟠 Frontend Unit Tests — Add Vitest + React Testing Library
 
-- [ ] **AppContext** — `addIncident` calls POST `/api/incidents/report` with correct payload
-- [ ] **AppContext** — `refreshIncidents` fetches and maps API response to frontend `Incident` type
-- [ ] **AppContext** — `login` stores JWT in localStorage and sets `isAuthenticated`
-- [ ] **AppContext** — `logout` clears token and user state
-- [ ] **AppContext** — `updateIncidentStatus` calls PATCH with correct status
-- [ ] **AppContext** — `deleteIncident` calls DELETE and removes item from state
-- [ ] **ReportIncident form** — submit with all graffiti fields → calls `addIncident` with correct data
-- [ ] **ReportIncident form** — submit without required fields → shows validation error, does not submit
-- [ ] **TrackReport** — search with valid CW-XXXXXX ID → displays incident card
-- [ ] **TrackReport** — search with unknown ID → shows "not found" message
-- [ ] **AdminDashboard** — renders incidents list for authenticated admin
-- [ ] **AdminDashboard** — status update button calls `updateIncidentStatus`
-- [ ] **Header** — shows Sign In when unauthenticated, username when authenticated
+- [x] **AppContext** — `addIncident` calls POST `/api/incidents/report` with correct payload and mapped incidentType (FT-002, FT-002-B)
+- [x] **AppContext** — `refreshIncidents` fetches and maps API response to frontend `Incident` type (FT-001)
+- [x] **AppContext** — `login` stores JWT in localStorage and sets `isAuthenticated` (FT-003, FT-003-B)
+- [x] **AppContext** — `logout` clears token and user state (FT-004)
+- [x] **AppContext** — `updateIncidentStatus` calls PATCH with correct status and updates local state (FT-005)
+- [x] **AppContext** — `deleteIncident` calls DELETE and removes item from state (FT-006)
+- [x] **ReportIncident form** — submit with all graffiti fields → calls `addIncident` with correct data (FT-013, FT-013-B)
+- [x] **ReportIncident form** — submit button disabled without type; addIncident not called without type (FT-014, FT-014-B, FT-014-C)
+- [x] **TrackReport** — search with valid CW-XXXXXX ID → displays incident card (FT-009, FT-009-B cache hit)
+- [x] **TrackReport** — search with unknown ID → shows "not found" message (FT-010, FT-010-B network error)
+- [x] **AdminDashboard** — renders incidents list for authenticated admin (FT-011, FT-011-B)
+- [x] **AdminDashboard** — status update button calls `updateIncidentStatus` (FT-012)
+- [x] **Header** — hides Dashboard/Sign Out when unauthenticated; shows username + buttons when authenticated (FT-007, FT-008)
 
 ---
 
