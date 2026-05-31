@@ -1,0 +1,32 @@
+# Login load test — 20 requests spread over 3 minutes (~7/min).
+# The production rate limiter allows 10 requests/minute per IP.
+# Staying at ~7/min ensures no 429s from legitimate traffic.
+#
+# Set credentials via environment variables before running:
+#   PERF_ADMIN_EMAIL=admin@example.com PERF_ADMIN_PASSWORD=yourpass npm run test:perf:login
+
+config:
+  target: "http://localhost:5000"
+  phases:
+    - name: "20 logins under rate limit threshold"
+      duration: 180         # 3 minutes
+      arrivalCount: 20      # 20 users spread evenly ≈ 1 every 9s ≈ 6.7/min
+  ensure:
+    thresholds:
+      - http.response_time.p95: 1000  # 95th percentile must be < 1s
+  plugins:
+    ensure: {}
+  variables:
+    adminEmail: "{{ $processEnvironment.PERF_ADMIN_EMAIL || 'admin@charlemontwatch.ie' }}"
+    adminPassword: "{{ $processEnvironment.PERF_ADMIN_PASSWORD || 'changeme' }}"
+
+scenarios:
+  - name: "Admin login"
+    flow:
+      - post:
+          url: "/api/auth/login"
+          json:
+            email: "{{ adminEmail }}"
+            password: "{{ adminPassword }}"
+          expect:
+            - statusCode: 200

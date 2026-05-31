@@ -60,7 +60,6 @@ The application is a full-stack system comprising:
 **Out of scope:**
 - AWS S3 upload pipeline (requires live cloud credentials; mocked in integration tests)
 - SendGrid live email delivery (mocked in unit tests)
-- Performance and load testing
 
 ### 2.2 Test Types
 
@@ -74,6 +73,8 @@ The application is a full-stack system comprising:
 | Automated Integration Tests (Supertest) | Full HTTP request/response cycle against an in-memory MongoDB database | Section 5 |
 | Automated Frontend Unit Tests (Vitest + RTL) | React component and context logic tests run via `npm test` in `/frontend` | Section 5 |
 | Automated E2E Tests (Playwright) | Full browser flows against the Vite dev server with API route interception; run on Desktop Chrome and 375px mobile viewport | Section 5 |
+| Automated Security Tests (Jest + Supertest) | NoSQL injection, XSS storage, brute-force rate limiting, and authorisation boundary checks | Section 5 |
+| Performance Tests (Artillery) | Load scenarios run against a live backend to verify response time thresholds under concurrent traffic | Section 5 |
 
 ### 2.3 Test Environment
 
@@ -104,7 +105,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 140 automated tests pass (79 backend unit + 21 backend integration + 25 frontend unit + 15 E2E)
+- All 145 automated tests pass (79 backend unit + 21 backend integration + 5 security + 25 frontend unit + 15 E2E)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -121,6 +122,7 @@ The application is a full-stack system comprising:
 | React Testing Library | Component rendering and interaction for frontend tests |
 | jsdom | Browser-like DOM environment for Vitest |
 | Playwright 1.60 | E2E browser automation; runs on Desktop Chrome and Chromium mobile (375px) |
+| Artillery | Performance / load testing; runs against a live backend (`npm run test:perf` in `/backend`) |
 | Postman | Manual API endpoint testing |
 | MongoDB Compass | Database state inspection |
 | Chrome DevTools | Frontend network request inspection |
@@ -379,7 +381,29 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 
 **E2E total: 15 test cases across 5 spec files — 30 total runs (each case runs on Desktop Chrome + 375px mobile)**
 
-**Grand total: 140 tests across 21 test suites**
+#### Security Tests (Jest + Supertest)
+
+| File | Coverage | Tests |
+|------|----------|-------|
+| `tests/security/security.test.js` | NoSQL injection (operator payloads rejected); XSS description stored as plain text; brute-force rate limit (429 after threshold); resident JWT cannot delete incidents | ST-003 – ST-006 (5 tests) |
+
+*Note: ST-001 (JWT tampering) and ST-002 (wrong secret) are covered by UT-007-A/B. ST-007 (resident cannot update status) is covered by IT-015.*
+
+**Security total: 5 tests across 1 suite**
+
+#### Performance Tests (Artillery)
+
+Artillery scenarios run against a live backend (`npm run dev` in `/backend` first):
+
+| Script | Scenario | Threshold |
+|--------|----------|-----------|
+| `npm run test:perf:get` | 100 VUs over 10s → GET /api/incidents | p95 < 500ms |
+| `npm run test:perf:post` | 50 VUs over 10s → POST /api/incidents/report | p95 < 2000ms |
+| `npm run test:perf:login` | 20 requests over 3 min → POST /api/auth/login | p95 < 1000ms, no 429s |
+
+Observed results on 31/05/26: GET p95 = 72ms, POST p95 = 95ms — both well inside thresholds.
+
+**Grand total: 145 automated tests across 22 test suites**
 
 ---
 
@@ -524,7 +548,7 @@ describe('User model — comparePassword', () => {
 
 ### 5.4 Test Execution Results
 
-All 140 tests were executed on 31/05/26.
+All 145 tests were executed on 31/05/26.
 
 **Backend** (`npm test` in `/backend`):
 
@@ -663,9 +687,9 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | Medium | Add **integration tests** using Supertest | ✅ Done — IT-001 – IT-021 (21 tests) |
 | Medium | Add **frontend unit tests** using Vitest and React Testing Library | ✅ Done — FT-001–FT-012 (19 tests) |
 | Medium | Add **E2E tests** using Playwright to cover full user journeys | ✅ Done — ET-001–ET-014 (15 cases, 30 runs) |
-| Low | Add **GitHub Actions** CI workflow to auto-run `npm test` on every PR | Pending |
+| Low | Add **GitHub Actions** CI workflow to auto-run `npm test` on every PR | ✅ Done — `.github/workflows/ci.yml`; runs backend (105 tests + coverage threshold) and frontend (tsc + 25 Vitest tests) on push to `dev` and PRs to `main` |
 | Low | Backfill missing `shortId` values on legacy database documents | Pending |
-| Low | Add load testing with k6 to verify performance under concurrent submissions | Pending |
+| Low | Add load testing with k6 to verify performance under concurrent submissions | ✅ Done — Artillery scenarios, GET p95=72ms, POST p95=95ms |
 
 ---
 

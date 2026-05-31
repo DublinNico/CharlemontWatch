@@ -3,6 +3,7 @@ module.exports = {
   testMatch: [
     '**/tests/unit/**/*.test.js',
     '**/tests/integration/**/*.test.js',
+    '**/tests/security/**/*.test.js',
   ],
   testTimeout: 30000,
   verbose: true,
@@ -18,4 +19,12 @@ module.exports = {
     'routes/**/*.js',
     'app.js',
   ],
+  coverageThreshold: {
+    global: {
+      statements: 70,
+      branches: 65,
+      functions: 70,
+      lines: 70,
+    },
+  },
 };

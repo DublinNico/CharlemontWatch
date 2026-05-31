@@ -1,0 +1,23 @@
+config:
+  target: "http://localhost:5000"
+  phases:
+    - name: "50 concurrent POST requests"
+      duration: 10
+      arrivalRate: 5        # 5 virtual users/second × 10s = 50 total
+  ensure:
+    thresholds:
+      - http.response_time.p95: 2000  # 95th percentile must be < 2s
+  plugins:
+    ensure: {}
+
+scenarios:
+  - name: "Submit incident report (no photos)"
+    flow:
+      - post:
+          url: "/api/incidents/report"
+          json:
+            incidentType: "graffiti"
+            location: "Performance Test — Block A"
+            description: "Automated performance test incident — safe to delete"
+          expect:
+            - statusCode: 201

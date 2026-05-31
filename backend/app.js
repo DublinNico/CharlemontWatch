@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
+const mongoSanitize = require('express-mongo-sanitize');
 const authRoutes = require('./routes/auth');
 const incidentRoutes = require('./routes/incidents');
 
@@ -28,6 +29,7 @@ app.use((req, res, next) => {
 });
 app.use(express.json());
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(mongoSanitize());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/incidents', incidentRoutes);
