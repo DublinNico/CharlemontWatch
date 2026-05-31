@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Search } from 'lucide-react';
+import axios from 'axios';
 import { Header } from '../components/Header';
 import { StatsCard } from '../components/StatsCard';
 import { IncidentCard } from '../components/IncidentCard';

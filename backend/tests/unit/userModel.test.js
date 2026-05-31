@@ -1,5 +1,45 @@
 const bcrypt = require('bcryptjs');
+const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const User = require('../../models/User');
+
+// ─── Pre-save hook (requires real DB) ────────────────────────────────────────
+
+describe('User model — pre-save password hashing', () => {
+  let mongod;
+
+  beforeAll(async () => {
+    mongod = await MongoMemoryServer.create();
+    await mongoose.connect(mongod.getUri());
+  });
+
+  afterAll(async () => {
+    await mongoose.disconnect();
+    await mongod.stop();
+  });
+
+  afterEach(async () => {
+    await User.deleteMany({});
+  });
+
+  test('UT-034-A: hashes the password before saving to the database', async () => {
+    const user = new User({ email: 'hook@test.com', password: 'PlainText123!' });
+    await user.save();
+    expect(user.password).not.toBe('PlainText123!');
+    expect(user.password).toMatch(/^\$2[ab]\$/); // bcrypt hash prefix
+  });
+
+  test('UT-034-B: does not re-hash the password when an unrelated field is updated', async () => {
+    const user = new User({ email: 'hook2@test.com', password: 'PlainText123!' });
+    await user.save();
+    const firstHash = user.password;
+
+    user.name = 'Updated Name';
+    await user.save();
+
+    expect(user.password).toBe(firstHash);
+  });
+});
 
 // comparePassword is an instance method — testable without a DB connection
 // by constructing a User document with a pre-hashed password.

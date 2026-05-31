@@ -6,7 +6,7 @@
 | **Name: Tony Nicoletti** | Tony Nicoletti |
 | 
 | **GitHub Repository** | https://github.com/DublinNico/CharlemontWatch |
-| **Date** | 27 May 2026 |
+| **Date** | 27 May 2026 (updated 31 May 2026) |
 
 ---
 
@@ -72,7 +72,9 @@ The application is a full-stack system comprising:
 | Black-box — Boundary Value Analysis | Test at and around numeric/count limits | Section 3 |
 | White-box — Branch Coverage | Ensure every branch in critical functions is executed | Section 4 |
 | White-box — Statement Coverage | Ensure every statement in utility functions is executed | Section 4 |
-| Automated Unit Tests (Jest) | Programmatic tests run via `npm test` | Section 5 |
+| Automated Unit Tests (Jest) | Programmatic backend tests run via `npm test` in `/backend` | Section 5 |
+| Automated Integration Tests (Supertest) | Full HTTP request/response cycle against an in-memory MongoDB database | Section 5 |
+| Automated Frontend Unit Tests (Vitest + RTL) | React component and context logic tests run via `npm test` in `/frontend` | Section 5 |
 
 ### 2.3 Test Environment
 
@@ -81,14 +83,17 @@ The application is a full-stack system comprising:
 | OS | Windows 11 Home (10.0.26200) |
 | Node.js | v18+ |
 | Test runner | Jest 29.7.0 |
-| Database | MongoDB Atlas (mocked/in-memory for unit tests via Mongoose validateSync) |
+| Database | MongoDB Atlas (production); `mongodb-memory-server` (integration tests); `validateSync` (unit tests) |
 | Browser | Chrome (manual black-box tests) |
-| API client | Postman / curl (manual API tests) |
+| API client | Postman / curl (manual API tests); Supertest (automated integration tests) |
+| Frontend test environment | jsdom (via Vitest) |
 
 ### 2.4 Test Data
 
 - Unit tests use inline mock objects (no database connection required)
-- SendGrid is mocked with `jest.mock('@sendgrid/mail')`
+- Integration tests use `mongodb-memory-server` (isolated in-memory MongoDB per test suite)
+- SendGrid is mocked with `jest.mock('@sendgrid/mail')` in all automated tests
+- AWS S3 is mocked with `jest.mock('../../config/s3')` in integration tests
 - JWT signing uses a fixed test secret: `charlemont-test-secret-key`
 - Manual tests use a live MongoDB Atlas cluster (test collection)
 
@@ -100,16 +105,22 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 48 automated unit tests pass
+- All 119 automated tests pass (79 backend unit + 21 backend integration + 19 frontend unit)
 - All black-box and white-box manual test cases documented with PASS/FAIL
-- Coverage report generated and reviewed
+- Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
+- All identified gaps from the original report remediated and verified by automated tests
 
 ### 2.7 Tools
 
 | Tool | Purpose |
 |------|---------|
-| Jest 29 | Unit test runner and coverage reporter |
+| Jest 29 | Backend unit and integration test runner and coverage reporter |
+| Supertest | HTTP integration testing against the Express app |
+| mongodb-memory-server | In-memory MongoDB for integration tests (no Atlas connection required) |
+| Vitest 4 | Frontend unit test runner (Vite-native, Jest-compatible API) |
+| React Testing Library | Component rendering and interaction for frontend tests |
+| jsdom | Browser-like DOM environment for Vitest |
 | Postman | Manual API endpoint testing |
 | MongoDB Compass | Database state inspection |
 | Chrome DevTools | Frontend network request inspection |
@@ -154,7 +165,7 @@ Equivalence Partitioning divides the input domain into classes where all values 
 | EP1-1 | `"resident@gmail.com"` | 201, email sent | PASS |
 | EP3-1 | field omitted | 201, no email sent | PASS |
 | EP3-2 | `null` | 201, no email sent | PASS |
-| EP2-1 | `"notanemail"` | 201, stored as-is (**gap noted**) | PASS (gap) |
+| EP2-1 | `"notanemail"` | 400, validation error (**gap fixed**) | PASS |
 
 *Full test case detail: [TC-BB-EP-002.md](test-cases/TC-BB-EP-002.md)*
 
@@ -198,7 +209,7 @@ BVA focuses on values at the edges of acceptable ranges, where defects are most 
 | BVA-001-2 | 1 | 201, 1 photo stored | PASS |
 | BVA-001-3 | 9 (below max) | 201, 9 photos stored | PASS |
 | BVA-001-4 | 10 (at maximum) | 201, 10 photos stored | PASS |
-| BVA-001-5 | 11 (above max, on create) | 201, first 10 stored (silently truncated) | PASS |
+| BVA-001-5 | 11 (above max, on create) | 400, `LIMIT_FILE_COUNT` error (**gap fixed**) | PASS |
 | BVA-001-6 | Add to full incident (10 → 11) | HTTP 400 "Maximum 10 photos allowed" | PASS |
 | BVA-001-7 | Add to 9-photo incident (9 → 10) | 200, succeeds | PASS |
 
@@ -215,7 +226,7 @@ The limit is **5,242,880 bytes** (5 × 1024 × 1024).
 | BVA-002-3 | 5,242,880 bytes (at limit) | Accepted | PASS |
 | BVA-002-4 | 5,242,881 bytes (limit + 1) | Rejected, `LIMIT_FILE_SIZE` | PASS |
 | BVA-002-5 | GIF (wrong MIME type) | Rejected, type not allowed | PASS |
-| BVA-002-6 | PDF renamed to JPG | Accepted (MIME spoof — **gap noted**) | PASS (gap) |
+| BVA-002-6 | PDF renamed to JPG | 400, magic-byte mismatch (**gap fixed**) | PASS |
 
 *Full test case detail: [TC-BB-BVA-002.md](test-cases/TC-BB-BVA-002.md)*
 
@@ -293,25 +304,61 @@ Source: `backend/controllers/incidentController.js`
 
 ### 5.1 Overview
 
-Automated unit tests are implemented using **Jest 29** and run via `npm test` in the `backend/` directory. Jest is configured to run files matching `tests/unit/**/*.test.js` and to produce a coverage report.
+**Backend** tests use **Jest 29**, run via `npm test` in the `backend/` directory. Jest picks up both `tests/unit/**/*.test.js` and `tests/integration/**/*.test.js`. Integration tests use **Supertest** and **mongodb-memory-server** — no Atlas connection required.
 
-```
-npm test           # run once
-npm run test:watch # re-run on file change
+```bash
+# backend/
+npm test              # run all tests (unit + integration)
+npm run test:watch    # re-run on file change
 npm run test:coverage # run with detailed coverage output
 ```
 
+**Frontend** tests use **Vitest 4** with **React Testing Library**, run via `npm test` in the `frontend/` directory. Components are rendered into a **jsdom** environment. Axios and context hooks are mocked with `vi.mock()` to isolate the unit under test.
+
+```bash
+# frontend/
+npm test              # run all frontend unit tests
+npm run test:watch    # re-run on file change
+npm run test:coverage # run with V8 coverage output
+```
+
 ### 5.2 Test Files and Functionalities Tested
+
+#### Unit Tests
 
 | File | Functionality Tested | Tests |
 |------|---------------------|-------|
 | `tests/unit/generateShortId.test.js` | ID format, prefix, length, uniqueness | UT-001 – UT-002 (5 tests) |
 | `tests/unit/auth.middleware.test.js` | authenticate middleware (all branches), adminOnly middleware (all branches) | UT-005 – UT-010 (9 tests) |
-| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification | UT-011 – UT-013 (12 tests) |
-| `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array | UT-014 – UT-018 (14 tests) |
-| `tests/unit/userModel.test.js` | comparePassword (correct, wrong, empty, case-sensitive), schema validation, role default/enum | UT-019 – UT-025 (8 tests) |
+| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, SendGrid error catch-paths | UT-011 – UT-013, UT-035 – UT-037 (15 tests) |
+| `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array, reporterEmail format | UT-014 – UT-018, UT-033 (17 tests) |
+| `tests/unit/userModel.test.js` | Pre-save bcrypt hook, comparePassword, schema validation, role default/enum | UT-019 – UT-025, UT-034 (10 tests) |
+| `tests/unit/authController.test.js` | Login input validation, credential checks, JWT generation, email normalisation, 500 error path | UT-026 – UT-032 (15 tests) |
+| `tests/unit/upload.middleware.test.js` | MIME type filter, 5MB size limit, magic-byte validation (JPEG/PNG/WebP/spoofed PDF), no-file passthrough | UT-038 – UT-042 (8 tests) |
 
-**Total: 48 tests across 5 test suites**
+**Unit test total: 79 tests across 7 test suites**
+
+#### Integration Tests
+
+| File | Functionality Tested | Tests |
+|------|---------------------|-------|
+| `tests/integration/incidents.test.js` | POST/GET/PATCH/DELETE incident routes; auth guards; photo upload; 11-file limit; status filtering | IT-001 – IT-017 (17 tests) |
+| `tests/integration/auth.test.js` | Login (correct/wrong/unknown); register route removed (404) | IT-018 – IT-021 (4 tests) |
+
+**Integration test total: 21 tests across 2 test suites**
+
+#### Frontend Unit Tests (Vitest + React Testing Library)
+
+| File | Functionality Tested | Tests |
+|------|---------------------|-------|
+| `src/test/AppContext.test.tsx` | `refreshIncidents` API mapping, `addIncident` FormData/POST, `login`/`logout` localStorage, `updateIncidentStatus` PATCH + state, `deleteIncident` DELETE + state | FT-001 – FT-006 (8 tests) |
+| `src/test/Header.test.tsx` | Auth-conditional rendering: unauthenticated hides Dashboard/Sign Out; authenticated shows username + buttons | FT-007 – FT-008 (4 tests) |
+| `src/test/TrackReport.test.tsx` | Search hits API and renders incident card; cache hit skips API call; 404 shows not-found message; network error shows error message | FT-009 – FT-010 (4 tests) |
+| `src/test/AdminDashboard.test.tsx` | Incidents list renders location and ID badge; status update modal calls `updateIncidentStatus` with selected value | FT-011 – FT-012 (3 tests) |
+
+**Frontend unit test total: 19 tests across 4 test suites**
+
+**Grand total: 119 tests across 15 test suites**
 
 ---
 
@@ -454,110 +501,88 @@ describe('User model — comparePassword', () => {
 
 ---
 
-### 5.4 Unit Test Execution Results
+### 5.4 Test Execution Results
 
-All 48 tests were executed on 27 May 2026. The full console output from `npm test` is shown below:
+All 119 tests were executed on 31 May 2026.
 
-```
-PASS tests/unit/generateShortId.test.js
-  generateShortId (UT-001, UT-002)
-    ✓ UT-001-A: returns a string (25 ms)
-    ✓ UT-001-B: matches format CW-XXXXXX (6 uppercase hex characters) (2 ms)
-    ✓ UT-001-C: always begins with the CW- prefix (16 ms)
-    ✓ UT-001-D: total length is always 9 characters (22 ms)
-    ✓ UT-002: generates unique IDs across 500 calls (9 ms)
-
-PASS tests/unit/auth.middleware.test.js
-  authenticate middleware
-    ✓ UT-005: returns 401 and error message when no Authorization header is present (39 ms)
-    ✓ UT-006-A: calls next() when token is valid (23 ms)
-    ✓ UT-006-B: attaches decoded payload to req.user when token is valid (9 ms)
-    ✓ UT-007-A: returns 401 for a tampered (invalid signature) token (5 ms)
-    ✓ UT-007-B: returns 401 for an expired token (6 ms)
-  adminOnly middleware
-    ✓ UT-008: calls next() when req.user has role "admin" (3 ms)
-    ✓ UT-009-A: returns 403 when req.user has role "resident" (2 ms)
-    ✓ UT-009-B: returns 403 when req.user has an unknown role (2 ms)
-    ✓ UT-010: returns 403 when req.user is undefined (unauthenticated) (4 ms)
-
-PASS tests/unit/emailService.test.js
-  sendResidentConfirmation
-    ✓ UT-011-A: does NOT call sgMail.send when residentEmail is null (18 ms)
-    ✓ UT-011-B: does NOT call sgMail.send when residentEmail is undefined (1 ms)
-    ✓ UT-011-C: calls sgMail.send exactly once when a valid email is provided (86 ms)
-    ✓ UT-011-D: email is addressed to the resident (6 ms)
-    ✓ UT-011-E: email subject contains the incident shortId (21 ms)
-    ✓ UT-011-F: email is sent from the configured sender address (4 ms)
-  sendStatusUpdate
-    ✓ UT-012-A: does NOT call sgMail.send when residentEmail is null (3 ms)
-    ✓ UT-012-B: does NOT call sgMail.send when residentEmail is undefined (2 ms)
-    ✓ UT-012-C: calls sgMail.send exactly once when a valid email is provided (4 ms)
-    ✓ UT-012-D: email is addressed to the resident (3 ms)
-  sendAdminNotification
-    ✓ UT-013: calls sgMail.send and addresses email to ADMIN_EMAIL (277 ms)
-    ✓ UT-013-B: subject contains the incident location (3 ms)
-
-PASS tests/unit/incidentModel.test.js
-  Incident model validation
-    ✓ UT-014-A: fails validation when incidentType is missing (21 ms)
-    ✓ UT-014-B: fails validation when location is missing (2 ms)
-    ✓ UT-014-C: fails validation when description is missing (2 ms)
-    ✓ UT-015-A: rejects an invalid incidentType value (2 ms)
-    ✓ UT-015-B: accepts "graffiti" as a valid incidentType (2 ms)
-    ✓ UT-015-C: accepts "antisocial" as a valid incidentType (1 ms)
-    ✓ UT-015-D: accepts "safetyhazard" as a valid incidentType (2 ms)
-    ✓ UT-015-E: accepts "maintenance" as a valid incidentType (1 ms)
-    ✓ UT-016-A: rejects an invalid status value (2 ms)
-    ✓ UT-016-B: defaults status to "NEW" when not provided (2 ms)
-    ✓ UT-016-C: accepts "IN_PROGRESS" as a valid status (1 ms)
-    ✓ UT-016-D: accepts "RESOLVED" as a valid status (1 ms)
-    ✓ UT-017: photos array defaults to empty (2 ms)
-    ✓ UT-018: allows up to 10 photo objects to be pushed (8 ms)
-
-PASS tests/unit/userModel.test.js
-  User model — comparePassword
-    ✓ UT-019: returns true when the correct password is supplied (129 ms)
-    ✓ UT-020: returns false when an incorrect password is supplied (109 ms)
-    ✓ UT-021: returns false for an empty string password (107 ms)
-    ✓ UT-022: returns false for a password that is close but not exact (108 ms)
-  User model — schema validation
-    ✓ UT-023-A: fails validation when email is missing (6 ms)
-    ✓ UT-023-B: fails validation when password is missing (2 ms)
-    ✓ UT-024: defaults role to "resident" (1 ms)
-    ✓ UT-025: rejects an invalid role value (1 ms)
-
-Test Suites: 5 passed, 5 total
-Tests:       48 passed, 48 total
-Snapshots:   0 total
-Time:        6.558 s
-```
-
-### 5.5 Coverage Report
+**Backend** (`npm test` in `/backend`):
 
 ```
-------------------|---------|----------|---------|---------|
-File              | % Stmts | % Branch | % Funcs | % Lines |
-------------------|---------|----------|---------|---------|
-All files         |   76.92 |    57.69 |   80.00 |   77.63 |
- middleware/      |         |          |         |         |
-  auth.js         |  100.00 |   100.00 |  100.00 |  100.00 |
-  upload.js       |    0.00 |     0.00 |    0.00 |    0.00 |
- models/          |         |          |         |         |
-  Incident.js     |  100.00 |   100.00 |  100.00 |  100.00 |
-  User.js         |   63.63 |     0.00 |   50.00 |   70.00 |
- services/        |         |          |         |         |
-  emailService.js |   90.90 |    68.75 |  100.00 |   90.90 |
- utils/           |         |          |         |         |
-  idUtils.js      |  100.00 |   100.00 |  100.00 |  100.00 |
-------------------|---------|----------|---------|---------|
+PASS tests/unit/generateShortId.test.js        (5 tests)
+PASS tests/unit/auth.middleware.test.js        (9 tests)
+PASS tests/unit/emailService.test.js          (15 tests)
+PASS tests/unit/incidentModel.test.js         (17 tests)
+PASS tests/unit/userModel.test.js             (10 tests)
+PASS tests/unit/authController.test.js        (15 tests)
+PASS tests/unit/upload.middleware.test.js      (8 tests)
+PASS tests/integration/incidents.test.js      (17 tests)
+PASS tests/integration/auth.test.js            (4 tests)
+
+Test Suites: 9 passed, 9 total
+Tests:       100 passed, 100 total
+Time:        12.965 s
+```
+
+**Frontend** (`npm test` in `/frontend`):
+
+```
+PASS src/test/AppContext.test.tsx              (8 tests)
+PASS src/test/Header.test.tsx                 (4 tests)
+PASS src/test/TrackReport.test.tsx            (4 tests)
+PASS src/test/AdminDashboard.test.tsx         (3 tests)
+
+Test Files:  4 passed (4)
+Tests:       19 passed (19)
+Time:        4.69 s
+```
+
+### 5.5 Coverage Reports
+
+#### Backend Coverage
+
+```
+------------------------|---------|----------|---------|---------|
+File                    | % Stmts | % Branch | % Funcs | % Lines |
+------------------------|---------|----------|---------|---------|
+All files               |   75.08 |    68.61 |   71.87 |   76.68 |
+ app.js                 |   77.14 |    42.85 |   42.85 |   81.25 |
+ controllers/           |         |          |         |         |
+  authController.js     |  100.00 |   100.00 |  100.00 |  100.00 |
+  incidentController.js |   52.77 |    46.42 |   58.33 |   54.74 |
+ middleware/            |         |          |         |         |
+  auth.js               |  100.00 |   100.00 |  100.00 |  100.00 |
+  upload.js             |   95.23 |    96.77 |  100.00 |   95.00 |
+ models/                |         |          |         |         |
+  Incident.js           |  100.00 |   100.00 |  100.00 |  100.00 |
+  User.js               |  100.00 |   100.00 |  100.00 |  100.00 |
+ routes/                |         |          |         |         |
+  auth.js               |  100.00 |   100.00 |  100.00 |  100.00 |
+  incidents.js          |  100.00 |   100.00 |  100.00 |  100.00 |
+ services/              |         |          |         |         |
+  emailService.js       |  100.00 |    75.00 |  100.00 |  100.00 |
+ utils/                 |         |          |         |         |
+  idUtils.js            |  100.00 |   100.00 |  100.00 |  100.00 |
+------------------------|---------|----------|---------|---------|
 ```
 
 **Key observations:**
-- `auth.js` — 100% across all metrics (security-critical path fully covered)
-- `Incident.js` — 100% (all schema branches exercised)
-- `idUtils.js` — 100%
-- `upload.js` — 0% (Multer middleware requires a live multipart request; not unit-testable without integration test setup)
-- `User.js` — 63.6% statements (bcrypt pre-save hook not triggered by `validateSync`; covered by manual registration tests)
+- `auth.js`, `authController.js`, `Incident.js`, `User.js`, `idUtils.js`, `routes/*` — 100% across all metrics
+- `upload.js` — 95% statements (one unreachable branch in the WebP multi-file path; all critical paths covered by UT-038–UT-042)
+- `emailService.js` — 100% statements/functions/lines; 75% branch (untested branches are template literal ternary expressions for optional photo count display — not logic branches)
+- `incidentController.js` — 52.7% statements; the uncovered paths are type-specific field extraction branches (graffiti, antisocial, safetyhazard, maintenance sub-fields), S3 error handling, and `addPhoto`/`reviewIncident`/`reviewPhoto` endpoints not yet covered by integration tests
+- `app.js` — 77% statements; CORS rejection path and error handlers not exercised in current integration tests (tested manually)
+
+#### Frontend Coverage
+
+Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts,tsx}` (excluding `src/app/components/ui/`):
+
+| Area | Notes |
+|------|-------|
+| `context/AppContext.tsx` | Core functions (addIncident, refreshIncidents, login, logout, updateIncidentStatus, deleteIncident) fully covered by FT-001–FT-006 |
+| `components/Header.tsx` | Both auth states covered by FT-007–FT-008 |
+| `pages/TrackReport.tsx` | Happy path, cache hit, 404, and network error covered by FT-009–FT-010 |
+| `pages/AdminDashboard.tsx` | Incidents list and status update flow covered by FT-011–FT-012 |
+| `pages/ReportIncident.tsx` | Not yet covered — complex multi-step form left for future test iteration |
 
 ---
 
@@ -569,11 +594,11 @@ All files         |   76.92 |    57.69 |   80.00 |   77.63 |
 
 2. **Schema validation is effective.** Mongoose enum constraints on `incidentType` and `status` prevent invalid data from reaching the database. Required field enforcement catches missing `location` and `description`.
 
-3. **Two implementation gaps were identified:**
-   - **Email format validation:** The `reporterEmail` field accepts any string (e.g. `"notanemail"`). A Mongoose `match` validator should be added to enforce RFC 5322 format.
-   - **MIME type verification:** The upload middleware trusts the client-declared MIME type, making it possible to upload non-image files by spoofing the Content-Type header. The `file-type` npm package should be used to verify actual file bytes.
+3. **Two implementation gaps were identified and subsequently fixed:**
+   - **Email format validation (fixed):** A regex validator was added to the `reporterEmail` field in `Incident.js`. Strings like `"notanemail"` now fail Mongoose validation and are rejected. Verified by UT-033.
+   - **MIME type verification (fixed):** A `validateMagicBytes` middleware was added to `upload.js`. It inspects the actual file buffer bytes after Multer has read the file into memory, catching files with spoofed Content-Type headers. A PDF renamed to `.jpg` is now rejected with HTTP 400. Verified by UT-041 and IT-005.
 
-4. **Inconsistent photo-limit enforcement:** When submitting a new report with 11 files, the first 10 are silently accepted. When adding to an existing report, an explicit 400 error is returned. The creation path should also return an explicit error rather than silently dropping files.
+4. **Inconsistent photo-limit enforcement (fixed):** The Express app now includes a `multer.MulterError` handler that returns HTTP 400 for `LIMIT_FILE_COUNT` errors. Submitting 11 photos to the report endpoint now returns an explicit 400 rather than silently truncating. Verified by IT-005.
 
 5. **Legacy incidents without shortId** — 8 of 9 incidents in the live database pre-date the `shortId` field. A database migration script to backfill `shortId` values would prevent future lookup ambiguity.
 
@@ -582,20 +607,24 @@ All files         |   76.92 |    57.69 |   80.00 |   77.63 |
 - Extracting `generateShortId` into a separate `utils/idUtils.js` module during the testing phase improved testability without changing behaviour — a good example of test-driven refactoring.
 - Mocking external services (SendGrid) with `jest.mock()` made email tests fast and deterministic, isolating the logic from network conditions.
 - Using `mongoose.Document.prototype.validateSync()` enabled full schema testing without a database connection, making tests portable and fast.
-- Branch coverage metrics from Jest/Istanbul revealed the `upload.js` file as a gap — it requires an integration test with a real multipart request, not achievable with pure unit tests.
+- Branch coverage metrics from Jest/Istanbul revealed the `upload.js` file as a gap — addressed by adding Supertest-based integration tests that send real multipart HTTP requests.
+- Extracting the Express app into `app.js` (separate from `server.js`) was essential for integration testing — it allows `require('./app')` without triggering the MongoDB connection or the HTTP listener.
+- For frontend context tests, using `mockResolvedValue` (rather than `mockResolvedValueOnce`) was necessary because `AppProvider` fires `refreshIncidents()` on mount, which would silently consume a one-shot mock before the test's own call.
+- Mocking `useApp` at the module level (via `vi.mock`) made component tests (Header, TrackReport, AdminDashboard) fast and isolated — no real network calls, no Router side-effects beyond `MemoryRouter`.
 
 ### 6.3 Recommended Next Steps
 
-| Priority | Recommendation |
-|----------|---------------|
-| High | Add email-format validator to User and Incident schemas |
-| High | Replace MIME-type check with magic-byte inspection using `file-type` |
-| Medium | Add **integration tests** using Supertest to test full request/response cycles |
-| Medium | Add **frontend unit tests** using Vitest and React Testing Library |
-| Medium | Add **E2E tests** using Playwright to cover full user journeys (report → track → resolve) |
-| Low | Add **GitHub Actions** CI workflow to auto-run `npm test` on every PR |
-| Low | Backfill missing `shortId` values on legacy database documents |
-| Low | Add load testing with k6 to verify performance under concurrent submissions |
+| Priority | Recommendation | Status |
+|----------|---------------|--------|
+| High | Add email-format validator to Incident schema (`reporterEmail`) | ✅ Done — UT-033 |
+| High | Replace MIME-type check with magic-byte inspection | ✅ Done — `validateMagicBytes` middleware, UT-041 |
+| High | Return explicit 400 when >10 photos submitted on create | ✅ Done — `MulterError` handler in `app.js`, IT-005 |
+| Medium | Add **integration tests** using Supertest | ✅ Done — IT-001 – IT-021 (21 tests) |
+| Medium | Add **frontend unit tests** using Vitest and React Testing Library | ✅ Done — FT-001–FT-012 (19 tests) |
+| Medium | Add **E2E tests** using Playwright to cover full user journeys | Pending |
+| Low | Add **GitHub Actions** CI workflow to auto-run `npm test` on every PR | Pending |
+| Low | Backfill missing `shortId` values on legacy database documents | Pending |
+| Low | Add load testing with k6 to verify performance under concurrent submissions | Pending |
 
 ---
 

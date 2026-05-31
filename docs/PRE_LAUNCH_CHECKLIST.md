@@ -11,8 +11,8 @@
 - [ ] **Enable HTTPS** — without it, admin credentials travel in plaintext; use a host that provides TLS (Vercel, Render, Railway all do this for free)
 - [ ] **Add `helmet`** — sets secure HTTP headers (CSP, HSTS, X-Frame-Options, etc.); one-line install on the Express app
 - [ ] **Add NoSQL injection protection** — `express-mongo-sanitize` strips `$` operators from request bodies; prevents MongoDB operator injection attacks
-- [ ] **Add email format validation** to the Incident schema (`reporterEmail`) — identified gap in testing (TC-BB-EP-002)
-- [ ] **Add magic-byte MIME verification** on uploads — current check trusts client-declared Content-Type; a PDF can masquerade as JPEG (TC-BB-BVA-002 gap)
+- [x] **Add email format validation** to the Incident schema (`reporterEmail`) — regex validator added; `"notanemail"` now rejected (UT-033)
+- [x] **Add magic-byte MIME verification** on uploads — `validateMagicBytes` middleware checks actual file buffer bytes; PDF-disguised-as-JPEG now rejected (UT-041)
 
 ### Environment & Config
 - [ ] **Replace all hardcoded `localhost:5000`** in the frontend — `AppContext.tsx:4` and `TrackReport.tsx:10` both hardcode the local API URL; move to `import.meta.env.VITE_API_URL`
@@ -31,7 +31,7 @@
 - [ ] **Don't expose raw error messages in production** — `res.status(500).json({ error: error.message })` leaks stack details; replace with a generic message when `NODE_ENV === 'production'`
 - [ ] **Add request logging** — `morgan` middleware to log every request; essential for debugging production issues
 - [ ] **Add MongoDB indexes** — `incidentType`, `status`, and `reportedDate` should be indexed for query performance as data grows
-- [ ] **Explicit 400 when >10 photos submitted on create** — currently silently truncates to 10; should match the explicit error behaviour of the `addPhoto` endpoint
+- [x] **Explicit 400 when >10 photos submitted on create** — `MulterError` handler added to Express app; now returns 400 consistently (IT-005)
 
 ### Frontend
 - [ ] **Test production build** — run `npm run build` in `/frontend` and verify output has no errors or missing assets
@@ -52,7 +52,8 @@
 - [ ] **Enable MongoDB Atlas automated backups** — set a daily backup schedule on the Atlas cluster
 
 ### Testing
-- [ ] **Add Supertest integration tests** — cover the full API request/response cycle including Multer, auth, and DB
+- [x] **Add Supertest integration tests** — 21 integration tests covering all incident and auth routes (IT-001 – IT-021)
+- [x] **Add frontend unit tests** — 19 Vitest + React Testing Library tests covering AppContext, Header, TrackReport, AdminDashboard (FT-001 – FT-012)
 - [ ] **Add E2E tests (Playwright)** — automate: submit report → receive ID → track → admin resolves
 - [ ] **Set up GitHub Actions CI** — run `npm test` automatically on every push to `dev` and every PR to `main`
 
@@ -71,9 +72,9 @@
 
 ## Summary
 
-| Priority | Items |
-|----------|-------|
-| 🔴 Critical | 12 |
-| 🟠 Important | 8 |
-| 🟡 Nice to have | 12 |
-| **Total** | **32** |
+| Priority | Total | Done | Remaining |
+|----------|-------|------|-----------|
+| 🔴 Critical | 12 | 2 | 10 |
+| 🟠 Important | 8 | 2 | 6 |
+| 🟡 Nice to have | 13 | 2 | 11 |
+| **Total** | **33** | **6** | **27** |

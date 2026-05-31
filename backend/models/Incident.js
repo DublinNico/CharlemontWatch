@@ -32,13 +32,20 @@ const incidentSchema = new mongoose.Schema({
     type: String,
     enum: ['PENDING_REVIEW', 'NEW', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'],
     default: 'PENDING_REVIEW',
+    required: true,
     index: true
   },
   reportedDate: {
     type: Date,
     default: Date.now
   },
-  reporterEmail: String,
+  reporterEmail: {
+    type: String,
+    validate: {
+      validator: v => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      message: 'Invalid email format'
+    }
+  },
 
   // Graffiti-specific fields
   surfaceType: String,

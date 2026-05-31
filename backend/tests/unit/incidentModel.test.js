@@ -119,4 +119,38 @@ describe('Incident model validation', () => {
     }
     expect(doc.photos).toHaveLength(10);
   });
+
+  // ─── reporterEmail validation ─────────────────────────────────────────────
+
+  test('UT-033-A: rejects an invalid reporterEmail format', () => {
+    const doc = new Incident({
+      incidentType: 'graffiti',
+      location: 'Block A',
+      description: 'Test',
+      reporterEmail: 'notanemail',
+    });
+    const err = doc.validateSync();
+    expect(err.errors.reporterEmail).toBeDefined();
+  });
+
+  test('UT-033-B: accepts a valid reporterEmail', () => {
+    const doc = new Incident({
+      incidentType: 'graffiti',
+      location: 'Block A',
+      description: 'Test',
+      reporterEmail: 'resident@test.com',
+    });
+    const err = doc.validateSync();
+    expect(err).toBeUndefined();
+  });
+
+  test('UT-033-C: allows reporterEmail to be omitted (anonymous report)', () => {
+    const doc = new Incident({
+      incidentType: 'graffiti',
+      location: 'Block A',
+      description: 'Test',
+    });
+    const err = doc.validateSync();
+    expect(err).toBeUndefined();
+  });
 });

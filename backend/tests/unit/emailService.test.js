@@ -108,3 +108,29 @@ describe('sendAdminNotification', () => {
     expect(msg.subject).toContain('Block A, Charlemont Street');
   });
 });
+
+// ─── catch-path coverage ──────────────────────────────────────────────────────
+
+describe('email service — catch paths (SendGrid failure)', () => {
+  beforeEach(() => {
+    sgMail.send.mockRejectedValue(new Error('SendGrid unavailable'));
+  });
+
+  test('UT-035: sendResidentConfirmation swallows SendGrid errors silently', async () => {
+    await expect(
+      sendResidentConfirmation(mockIncident, 'resident@test.com')
+    ).resolves.toBeUndefined();
+  });
+
+  test('UT-036: sendAdminNotification swallows SendGrid errors silently', async () => {
+    await expect(
+      sendAdminNotification(mockIncident)
+    ).resolves.toBeUndefined();
+  });
+
+  test('UT-037: sendStatusUpdate swallows SendGrid errors silently', async () => {
+    await expect(
+      sendStatusUpdate(mockIncident, 'resident@test.com')
+    ).resolves.toBeUndefined();
+  });
+});
