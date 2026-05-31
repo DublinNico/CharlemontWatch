@@ -9,6 +9,7 @@
 - [x] **Upload middleware unit test** — Supertest suite covering MIME filter, 5MB limit, magic-byte check, and no-file passthrough (UT-038–UT-042); upload.js now at 95% coverage
 - [x] **User model pre-save hook test** — mongodb-memory-server wired up; UT-034 confirms password is hashed on save and not re-hashed on unrelated updates
 - [x] **Email service catch-path test** — UT-035–UT-037 confirm all three catch blocks swallow SendGrid errors silently
+- [x] **sendComplaintEmails tests** — UT-038-A–G cover: Tuath-only send, DCC-only send, both recipients (2 emails), empty recipients (no send), complainant name in Tuath email, location in DCC email, SendGrid error swallowed silently
 
 ---
 
@@ -102,7 +103,7 @@
 
 | Category | Items |
 |----------|-------|
-| 🔴 Critical gaps (current suite) | 5 |
+| 🔴 Critical gaps (current suite) | 6 |
 | 🟠 Integration tests (Supertest) | 21 |
 | 🟠 Frontend unit tests (Vitest) | 13 |
 | 🟡 E2E tests (Playwright) | 9 |
