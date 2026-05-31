@@ -105,7 +105,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 119 automated tests pass (79 backend unit + 21 backend integration + 19 frontend unit)
+- All 125 automated tests pass (79 backend unit + 21 backend integration + 25 frontend unit)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -355,10 +355,11 @@ npm run test:coverage # run with V8 coverage output
 | `src/test/Header.test.tsx` | Auth-conditional rendering: unauthenticated hides Dashboard/Sign Out; authenticated shows username + buttons | FT-007 – FT-008 (4 tests) |
 | `src/test/TrackReport.test.tsx` | Search hits API and renders incident card; cache hit skips API call; 404 shows not-found message; network error shows error message | FT-009 – FT-010 (4 tests) |
 | `src/test/AdminDashboard.test.tsx` | Incidents list renders location and ID badge; status update modal calls `updateIncidentStatus` with selected value | FT-011 – FT-012 (3 tests) |
+| `src/test/ReportIncident.test.tsx` | Graffiti submission calls `addIncident` with correct payload; navigates to success on submit; shows error on failure; submit disabled without type; `addIncident` not called without type | FT-013 – FT-014 (6 tests) |
 
-**Frontend unit test total: 19 tests across 4 test suites**
+**Frontend unit test total: 25 tests across 5 test suites**
 
-**Grand total: 119 tests across 15 test suites**
+**Grand total: 125 tests across 16 test suites**
 
 ---
 
@@ -503,7 +504,7 @@ describe('User model — comparePassword', () => {
 
 ### 5.4 Test Execution Results
 
-All 119 tests were executed on 31 May 2026.
+All 125 tests were executed on 31 May 2026.
 
 **Backend** (`npm test` in `/backend`):
 
@@ -531,9 +532,9 @@ PASS src/test/Header.test.tsx                 (4 tests)
 PASS src/test/TrackReport.test.tsx            (4 tests)
 PASS src/test/AdminDashboard.test.tsx         (3 tests)
 
-Test Files:  4 passed (4)
-Tests:       19 passed (19)
-Time:        4.69 s
+Test Files:  5 passed (5)
+Tests:       25 passed (25)
+Time:        4.56 s
 ```
 
 ### 5.5 Coverage Reports
@@ -600,7 +601,12 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 
 4. **Inconsistent photo-limit enforcement (fixed):** The Express app now includes a `multer.MulterError` handler that returns HTTP 400 for `LIMIT_FILE_COUNT` errors. Submitting 11 photos to the report endpoint now returns an explicit 400 rather than silently truncating. Verified by IT-005.
 
-5. **Legacy incidents without shortId** — 8 of 9 incidents in the live database pre-date the `shortId` field. A database migration script to backfill `shortId` values would prevent future lookup ambiguity.
+5. **Three further bugs found and fixed during code review (31 May 2026):**
+   - **BUG-012 — Magic-byte multi-upload bypass (High):** `validateMagicBytes` only inspected `req.files[0]`; files at indices 1–9 bypassed the check entirely. Fixed by looping over all files. The `b.length < 12` global guard was also corrected — it now applies only to the WebP check, which actually requires bytes 8–11, not to JPEG/PNG.
+   - **BUG-013 — Anti-social field name mismatch (High):** `createIncident` wrote `typeData.reportedToGarda` but the Mongoose schema field is `reportedToTuath`. The value was silently dropped on every save. Fixed by correcting the field name.
+   - **BUG-014 — Optimistic clipboard UI (Low):** `handleCopy` in `IncidentCard` called `setCopied(true)` synchronously before `navigator.clipboard.writeText()` resolved. Fixed by moving the state update into `.then()`.
+
+6. **Legacy incidents without shortId** — 8 of 9 incidents in the live database pre-date the `shortId` field. A database migration script to backfill `shortId` values would prevent future lookup ambiguity.
 
 ### 6.2 Lessons Learned
 
