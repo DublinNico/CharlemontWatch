@@ -114,8 +114,8 @@ describe('sendAdminNotification', () => {
 
 const mockComplainant = {
   name: 'Jane Resident',
+  address: 'Apt 12, Charlemont Street, Dublin 2',
   email: 'jane@example.com',
-  phone: '087 123 4567',
 };
 
 describe('sendComplaintEmails', () => {
@@ -163,7 +163,7 @@ describe('sendComplaintEmails', () => {
   });
 
   test('UT-038-H: HTML-special chars in complainant name are escaped in email body', async () => {
-    const xssComplainant = { name: '<script>alert(1)</script>', email: 'x@x.com', phone: '087' };
+    const xssComplainant = { name: '<script>alert(1)</script>', address: '1 Test St', email: 'x@x.com' };
     await sendComplaintEmails(mockIncident, xssComplainant, ['tuath']);
     const html = sgMail.send.mock.calls[0][0].html;
     expect(html).not.toContain('<script>');

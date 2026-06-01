@@ -20,7 +20,7 @@ export const router = createBrowserRouter([
       { path: "/track", element: <TrackReport /> },
       { path: "/incidents", element: <AllIncidents /> },
       { path: "/about", element: <About /> },
-      { path: "/auth", element: <Auth /> },
+      { path: "/cw-admin", element: <Auth /> },
       { path: "/admin", element: <AdminDashboard /> },
       { path: "/privacy", element: <PrivacyPolicy /> },
     ],

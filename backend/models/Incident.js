@@ -73,8 +73,8 @@ const incidentSchema = new mongoose.Schema({
 
   // Formal complaint fields — only populated when user opts to send a complaint
   complainantName: String,
+  complainantAddress: String,
   complainantEmail: String,
-  complainantPhone: String,
   sendComplaintTo: [{ type: String, enum: ['tuath', 'dcc'] }],
 
   createdAt: { type: Date, default: Date.now },

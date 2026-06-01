@@ -179,7 +179,7 @@ export function AdminDashboard() {
   const [reviewingId, setReviewingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) navigate('/auth');
+    if (!isAuthenticated) navigate(`/cw-admin?key=${import.meta.env.VITE_ADMIN_KEY}`);
   }, [isAuthenticated, navigate]);
 
   useEffect(() => {

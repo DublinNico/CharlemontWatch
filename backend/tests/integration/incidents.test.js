@@ -237,7 +237,7 @@ describe('DELETE /api/incidents/admin/:id', () => {
 describe('POST /api/incidents/report — complaint field validation', () => {
   beforeEach(async () => { await Incident.deleteMany({}); });
 
-  test('IT-022: invalid complainant email blocks complaint fields from being persisted', async () => {
+  test('IT-022: missing complainant email blocks complaint fields from being persisted', async () => {
     const res = await request(app)
       .post('/api/incidents/report')
       .field('incidentType', 'graffiti')
@@ -245,8 +245,7 @@ describe('POST /api/incidents/report — complaint field validation', () => {
       .field('description', 'Test')
       .field('sendComplaintTo', 'tuath')
       .field('complainantName', 'Jane')
-      .field('complainantEmail', 'not-an-email')
-      .field('complainantPhone', '087 123 4567');
+      .field('complainantAddress', 'Apt 12, Charlemont Street, Dublin 2');
 
     expect(res.status).toBe(201);
     const saved = await Incident.findOne({ shortId: res.body.incidentId });
@@ -254,7 +253,7 @@ describe('POST /api/incidents/report — complaint field validation', () => {
     expect(saved.sendComplaintTo).toHaveLength(0);
   });
 
-  test('IT-023: missing complainant phone blocks complaint fields from being persisted', async () => {
+  test('IT-023: valid name, address and email persists complaint fields', async () => {
     const res = await request(app)
       .post('/api/incidents/report')
       .field('incidentType', 'graffiti')
@@ -262,11 +261,14 @@ describe('POST /api/incidents/report — complaint field validation', () => {
       .field('description', 'Test')
       .field('sendComplaintTo', 'tuath')
       .field('complainantName', 'Jane')
+      .field('complainantAddress', 'Apt 12, Charlemont Street, Dublin 2')
       .field('complainantEmail', 'jane@example.com');
 
     expect(res.status).toBe(201);
     const saved = await Incident.findOne({ shortId: res.body.incidentId });
-    expect(saved.complainantName).toBeUndefined();
-    expect(saved.sendComplaintTo).toHaveLength(0);
+    expect(saved.complainantName).toBe('Jane');
+    expect(saved.complainantAddress).toBe('Apt 12, Charlemont Street, Dublin 2');
+    expect(saved.complainantEmail).toBe('jane@example.com');
+    expect(saved.sendComplaintTo).toContain('tuath');
   });
 });

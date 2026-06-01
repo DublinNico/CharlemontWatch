@@ -15,7 +15,7 @@ const findByAnyId = async (id) => {
 const createIncident = async (req, res) => {
   try {
     const { incidentType, location, description, reporterEmail,
-            complainantName, complainantEmail, complainantPhone } = req.body;
+            complainantName, complainantAddress, complainantEmail } = req.body;
 
     const sendComplaintTo = req.body.sendComplaintTo
       ? req.body.sendComplaintTo.split(',').filter(v => ['tuath', 'dcc'].includes(v))
@@ -24,8 +24,8 @@ const createIncident = async (req, res) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const complaintReady = sendComplaintTo.length > 0
       && !!complainantName
-      && !!complainantEmail && emailRegex.test(complainantEmail)
-      && !!complainantPhone;
+      && !!complainantAddress
+      && !!complainantEmail && emailRegex.test(complainantEmail);
 
     const typeData = {};
     if (incidentType === 'graffiti') {
@@ -79,8 +79,8 @@ const createIncident = async (req, res) => {
       ...typeData,
       ...(complaintReady ? {
         complainantName,
+        complainantAddress,
         complainantEmail,
-        complainantPhone,
         sendComplaintTo,
       } : {})
     });
@@ -93,8 +93,8 @@ const createIncident = async (req, res) => {
     if (complaintReady) {
       sendComplaintEmails(incident, {
         name: complainantName,
+        address: complainantAddress,
         email: complainantEmail,
-        phone: complainantPhone,
       }, sendComplaintTo);
     }
 

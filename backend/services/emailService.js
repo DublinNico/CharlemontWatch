@@ -150,8 +150,8 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
   const complainantBlock = `
     <table style="width:100%;border-collapse:collapse;margin:16px 0;">
       <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;width:160px;">Name</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(complainant.name)}</td></tr>
-      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Email</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(complainant.email)}</td></tr>
-      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Phone</td><td style="padding:6px 12px;">${escapeHtml(complainant.phone)}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Address</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(complainant.address)}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Email</td><td style="padding:6px 12px;">${escapeHtml(complainant.email)}</td></tr>
     </table>
   `;
 
@@ -161,6 +161,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
     const msg = {
       to: process.env.TUATH_COMPLAINT_EMAIL || 'tonynico90@gmail.com',
       from: process.env.SENDGRID_FROM_EMAIL || 'reports@charlemontwatch.ie',
+      replyTo: complainant.email,
       subject: `Formal Complaint — ${incidentTypeName} at ${incident.location} [${incident.shortId}]`,
       html: `
         <h2 style="color:#1976d2;">Formal Complaint — Tuath Housing</h2>
@@ -191,6 +192,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
     const msg = {
       to: process.env.DCC_COMPLAINT_EMAIL || 'tonynico90@gmail.com',
       from: process.env.SENDGRID_FROM_EMAIL || 'reports@charlemontwatch.ie',
+      replyTo: complainant.email,
       subject: `Formal Complaint — ${incidentTypeName} at ${incident.location} [${incident.shortId}]`,
       html: `
         <h2 style="color:#1976d2;">Formal Complaint — Dublin City Council</h2>

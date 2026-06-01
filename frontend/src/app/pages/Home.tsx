@@ -74,7 +74,7 @@ export function Home() {
     {
       icon: User,
       title: 'Account',
-      onClick: () => navigate('/auth'),
+      onClick: () => navigate(`/cw-admin?key=${import.meta.env.VITE_ADMIN_KEY}`),
       show: isAuthenticated,
     },
   ];
@@ -101,7 +101,7 @@ export function Home() {
               </h1>
 
               <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                Your voice matters. Report incidents, track progress, and work together to maintain the quality of life in our Dublin community.
+                Reports without complaints get ignored. CharlemontWatch sends formal complaints to Tuath Housing and Dublin City Council on your behalf — forcing an official response.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">

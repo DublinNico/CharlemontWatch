@@ -20,8 +20,6 @@ if (incidentType === 'graffiti') {                  // Branch 1
   typeData.isProfane = req.body.isProfane === 'true';
 } else if (incidentType === 'antisocial') {          // Branch 2
   typeData.antisocialType = req.body.antisocialType;
-  typeData.estimatedPeopleInvolved = req.body.estimatedPeopleInvolved;
-  typeData.reportedToGarda = req.body.reportedToGarda === 'true';
 } else if (incidentType === 'safetyhazard') {        // Branch 3
   typeData.hazardType = req.body.hazardType;
   typeData.riskLevel = req.body.riskLevel;
@@ -35,6 +33,8 @@ if (incidentType === 'graffiti') {                  // Branch 1
 // Implicit else: no typeData populated (Branch 5 — caught by schema enum validation)
 ```
 
+> **Note:** `estimatedPeopleInvolved` and `reportedToGarda`/`reportedToTuath` were removed from the antisocial branch on 31/05/26. The "Already reported to Garda" checkbox and estimated people count no longer exist in the form or schema.
+
 ---
 
 ## Branch Map
@@ -42,7 +42,7 @@ if (incidentType === 'graffiti') {                  // Branch 1
 | Branch | incidentType value | Fields populated |
 |--------|-------------------|-----------------|
 | B1 | `graffiti` | surfaceType, estimatedArea, isProfane |
-| B2 | `antisocial` | antisocialType, estimatedPeopleInvolved, reportedToGarda |
+| B2 | `antisocial` | antisocialType |
 | B3 | `safetyhazard` | hazardType, riskLevel, causedInjury |
 | B4 | `maintenance` | issueType, priority, customIssueDescription, workCategory |
 | B5 (implicit else) | invalid value | typeData stays `{}`; schema rejects |
@@ -61,8 +61,8 @@ if (incidentType === 'graffiti') {                  // Branch 1
 ### TC-WB-005-B: antisocial branch (B2)
 | | |
 |---|---|
-| **Input** | `incidentType: "antisocial"`, `antisocialType: "noise"`, `estimatedPeopleInvolved: 4`, `reportedToGarda: "false"` |
-| **Expected** | HTTP 201; incident saved with `antisocialType: "noise"`, `reportedToGarda: false` |
+| **Input** | `incidentType: "antisocial"`, `antisocialType: "Noise / Disturbance"` |
+| **Expected** | HTTP 201; incident saved with `antisocialType: "Noise / Disturbance"` |
 | **Result** | PASS |
 
 ### TC-WB-005-C: safetyhazard branch (B3)
@@ -103,4 +103,4 @@ if (incidentType === 'graffiti') {                  // Branch 1
 ---
 
 ## Notes
-The boolean fields (`isProfane`, `reportedToGarda`, `causedInjury`) are sent as strings from `multipart/form-data` and converted with `=== 'true'`. Any value other than the literal string `"true"` evaluates to `false`, including `"True"`, `"1"`, or `"yes"`.
+The boolean fields (`isProfane`, `causedInjury`) are sent as strings from `multipart/form-data` and converted with `=== 'true'`. Any value other than the literal string `"true"` evaluates to `false`, including `"True"`, `"1"`, or `"yes"`.

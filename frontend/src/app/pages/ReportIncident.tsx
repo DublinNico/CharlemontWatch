@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ArrowLeft, Upload, X, AlertCircle, MapPin, FileText, Mail, ImageIcon, Phone, User, Send } from 'lucide-react';
+import { ArrowLeft, Upload, X, AlertCircle, MapPin, FileText, Mail, ImageIcon, User, Send } from 'lucide-react';
+
 import { useNavigate } from 'react-router';
 import { useApp, IncidentType, Photo, ComplaintData } from '../context/AppContext';
 import { Button } from '../components/ui/button';
@@ -28,11 +29,11 @@ export function ReportIncident() {
   const [submitError, setSubmitError] = useState('');
 
   const [complaint, setComplaint] = useState({
-    sendToTuath: false,
-    sendToDCC: false,
+    sendToTuath: true,
+    sendToDCC: true,
     name: '',
+    address: '',
     email: '',
-    phone: '',
   });
   const sendingComplaint = complaint.sendToTuath || complaint.sendToDCC;
 
@@ -43,8 +44,8 @@ export function ReportIncident() {
     e.preventDefault();
     if (!formData.type) return;
 
-    if (sendingComplaint && (!complaint.name || !complaint.email || !complaint.phone)) {
-      setSubmitError('Please provide your name, email, and phone number to send a formal complaint.');
+    if (sendingComplaint && (!complaint.name || !complaint.address || !complaint.email)) {
+      setSubmitError('Please provide your name, address, and email to send a formal complaint.');
       return;
     }
 
@@ -53,8 +54,8 @@ export function ReportIncident() {
 
     const complaintData: ComplaintData | undefined = sendingComplaint ? {
       name: complaint.name,
+      address: complaint.address,
       email: complaint.email,
-      phone: complaint.phone,
       sendTo: [
         ...(complaint.sendToTuath ? ['tuath' as const] : []),
         ...(complaint.sendToDCC ? ['dcc' as const] : []),
@@ -71,7 +72,7 @@ export function ReportIncident() {
         photos,
         typeSpecificData,
       }, complaintData);
-      navigate(`/success/${incidentId}`);
+      navigate(`/success/${incidentId}?complaint=${sendingComplaint}`);
     } catch {
       setSubmitError('Failed to submit report. Please check your connection and try again.');
     } finally {
@@ -417,7 +418,7 @@ export function ReportIncident() {
               <div>
                 <Label htmlFor="email" className="flex items-center gap-2 mb-2">
                   <Mail className="w-4 h-4" />
-                  Reporter Email <Badge variant="secondary" className="ml-2">Optional</Badge>
+                  Email for Status Updates <Badge variant="secondary" className="ml-2">Optional</Badge>
                 </Label>
                 <Input
                   id="email"
@@ -427,7 +428,7 @@ export function ReportIncident() {
                   onChange={e => setFormData({ ...formData, reporterEmail: e.target.value })}
                 />
                 <p className="text-xs text-muted-foreground mt-1.5">
-                  Receive updates about this incident via email
+                  We'll email you when the status of your report changes. Not needed if you're sending a formal complaint — Tuath or the Council will contact you directly.
                 </p>
               </div>
             </CardContent>
@@ -492,11 +493,10 @@ export function ReportIncident() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-amber-900">
                 <Send className="w-5 h-5 text-amber-600" />
-                Send a Formal Complaint
+                Take Action — Send a Formal Complaint
               </CardTitle>
               <CardDescription className="text-amber-800/70">
-                Optionally escalate this report as a formal complaint to Tuath Housing or Dublin City Council.
-                Your details are required for the complaint and will not be published.
+                Without a formal complaint, nothing will happen. This report creates the evidence — the complaint forces Tuath Housing or Dublin City Council to respond officially.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -529,8 +529,8 @@ export function ReportIncident() {
                 </div>
               </div>
 
-              <p className="text-xs text-amber-800 font-medium">
-                Formal complaints can't be ignored. Unlike a standard report, they require an official response from Tuath Housing or the Council.
+              <p className="text-sm text-amber-900 font-semibold">
+                Formal complaints can't be ignored — they require an official written response within 30 working days. Untick only if you do not want to escalate.
               </p>
 
               {sendingComplaint && (
@@ -552,12 +552,25 @@ export function ReportIncident() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="complainant-email" className="flex items-center gap-2 mb-2">
-                      <Mail className="w-4 h-4" />
-                      Email Address <span className="text-destructive">*</span>
+                    <Label htmlFor="complainant-address" className="flex items-center gap-2 mb-2">
+                      <MapPin className="w-4 h-4" />
+                      Your Address <span className="text-destructive">*</span>
                     </Label>
                     <Input
-                      id="complainant-email"
+                      id="complainant-address"
+                      placeholder="e.g. Apt 12, Charlemont Street, Dublin 2"
+                      value={complaint.address}
+                      onChange={e => setComplaint(c => ({ ...c, address: e.target.value }))}
+                      className="bg-white"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="complainant-complaint-email" className="flex items-center gap-2 mb-2">
+                      <Mail className="w-4 h-4" />
+                      Your Email <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="complainant-complaint-email"
                       type="email"
                       placeholder="your.email@example.com"
                       value={complaint.email}
@@ -565,25 +578,11 @@ export function ReportIncident() {
                       className="bg-white"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="complainant-phone" className="flex items-center gap-2 mb-2">
-                      <Phone className="w-4 h-4" />
-                      Phone Number <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="complainant-phone"
-                      type="tel"
-                      placeholder="e.g. 087 123 4567"
-                      value={complaint.phone}
-                      onChange={e => setComplaint(c => ({ ...c, phone: e.target.value }))}
-                      className="bg-white"
-                    />
-                  </div>
                   <p className="text-xs text-amber-800/70">
-                    A formal complaint will be sent on your behalf to {[
+                    Your name, address, and email are shared only with {[
                       complaint.sendToTuath ? 'Tuath Housing' : null,
                       complaint.sendToDCC ? 'Dublin City Council' : null,
-                    ].filter(Boolean).join(' and ')} referencing this incident. You remain anonymous on the public CharlemontWatch board.
+                    ].filter(Boolean).join(' and ')} so they can respond to you directly. They are never published on the CharlemontWatch board. Once you hear back, let the CharlemontWatch team know and we will update the status on the app.
                   </p>
                 </div>
               )}

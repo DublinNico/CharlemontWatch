@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Shield } from 'lucide-react';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useApp } from '../context/AppContext';
+
+const ADMIN_KEY = import.meta.env.VITE_ADMIN_KEY;
 
 export function Auth() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useApp();
+
+  useEffect(() => {
+    if (!ADMIN_KEY || searchParams.get('key') !== ADMIN_KEY) {
+      navigate('/', { replace: true });
+    }
+  }, []);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

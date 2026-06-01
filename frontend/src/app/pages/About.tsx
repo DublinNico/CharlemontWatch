@@ -80,10 +80,14 @@ export function About() {
             <Users className="w-10 h-10 text-[#1976d2] flex-shrink-0" />
             <div>
               <h2 className="text-[#333333] mb-3">Why This Matters</h2>
+              <p className="text-[#666666] mb-3">
+                Reporting an issue on an app alone achieves nothing. Tuath Housing and Dublin City Council are not obliged to act on community posts or photos.
+              </p>
+              <p className="text-[#666666] mb-3">
+                A <strong>formal complaint</strong> is different. Under Tuath's Complaints Policy and Dublin City Council's customer complaints process, they are legally required to acknowledge your complaint within days and provide a written response within 30 working days.
+              </p>
               <p className="text-[#666666]">
-                Individual complaints can be ignored or lost. A public, organised record of community concerns
-                builds collective evidence that demands response. CharlemontWatch ensures transparency, creates 
-                accountability, and gives residents a unified voice to improve our living conditions.
+                CharlemontWatch combines both — your report builds a public evidence record, and the formal complaint forces an official response. Together, they create accountability that neither can achieve alone.
               </p>
             </div>
           </div>

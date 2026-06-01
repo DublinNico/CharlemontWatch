@@ -6,7 +6,7 @@
 | **Name:** | Tony Nicoletti |
 | 
 | **GitHub Repository** | https://github.com/DublinNico/CharlemontWatch |
-| **Date** | 27/05/26 (updated 31/05/26, updated 31/05/26 v2) |
+| **Date** | 27/05/26 (updated 31/05/26, updated 31/05/26 v2, updated 31/05/26 v3) |
 
 ---
 
@@ -294,7 +294,7 @@ Source: `backend/controllers/incidentController.js`
 | Branch | Trigger | Test | Result |
 |--------|---------|------|--------|
 | graffiti branch | `incidentType === 'graffiti'` | TC-WB-005-A | PASS |
-| antisocial branch | `incidentType === 'antisocial'` | TC-WB-005-B | PASS |
+| antisocial branch | `incidentType === 'antisocial'` (fields: antisocialType only — estimatedPeopleInvolved and reportedToGarda removed 31/05/26) | TC-WB-005-B | PASS |
 | safetyhazard branch | `incidentType === 'safetyhazard'` | TC-WB-005-C | PASS |
 | maintenance branch | `incidentType === 'maintenance'` | TC-WB-005-D | PASS |
 | Boolean coercion | `isProfane: "true"` → `true` | TC-WB-005-F | PASS |
@@ -706,6 +706,11 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | Low | Add scroll-to-top on route navigation | ✅ Done — `ScrollToTop.tsx` layout route resets scroll on every navigation |
 | Low | Add GDPR privacy policy page | ✅ Done — `/privacy` page with data collected, retention policy, rights, and contact details |
 | Low | Formal complaint forwarding to Tuath Housing / Dublin City Council | ✅ Done — optional complaint section on report form; `sendComplaintEmails` dispatches formatted complaint emails to selected organisations |
+| Low | Remove "Already reported to Garda" field | ✅ Done — checkbox, schema field (`reportedToTuath`), controller extraction, and all frontend API mappings removed (31/05/26) |
+| Low | Update Anti-Social Behaviour options | ✅ Done — added Urination / Defecation; removed Fighting and Estimated Number of People |
+| Low | Add About Us button to header | ✅ Done — visible on all pages, navigates to `/about` |
+| Low | Update How It Works (Home + About) | ✅ Done — 5-step flow now includes Escalate step explaining Tuath/DCC complaint option |
+| Low | UK English throughout frontend | ✅ Done — neighbourhood, organised, behaviour |
 
 ---
 
@@ -718,7 +723,7 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | FR-01 | The system shall allow any user to submit an incident report without creating an account |
 | FR-02 | Each incident report shall be assigned a unique reference ID in the format `CW-XXXXXX` |
 | FR-03 | The system shall support four incident types: Graffiti, Anti-Social Behaviour, Safety Hazard, and Maintenance Issue |
-| FR-04 | Each incident type shall collect type-specific fields in addition to common fields (location, description) |
+| FR-04 | Each incident type shall collect type-specific fields in addition to common fields (location, description). Anti-Social Behaviour options: Loitering, Noise / Disturbance, Vandalism, Urination / Defecation, Other |
 | FR-05 | Users shall be able to attach up to 10 photos per incident report |
 | FR-06 | Photos shall be stored in AWS S3 and be publicly accessible via URL |
 | FR-07 | When a reporter provides an email address, the system shall send a confirmation email containing the reference ID |
