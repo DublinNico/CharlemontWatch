@@ -3,6 +3,13 @@ const sgMail = require('@sendgrid/mail');
 // Initialize SendGrid with API key from .env
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
+const escapeHtml = (str) => String(str ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
 // Helper: get incident type display name
 const getIncidentTypeName = (type) => {
   const names = {
@@ -132,19 +139,19 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
 
   const sharedIncidentBlock = `
     <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;width:160px;">Incident ID</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${incident.shortId}</td></tr>
-      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Type</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${incidentTypeName}</td></tr>
-      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Location</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${incident.location}</td></tr>
-      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Date Reported</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${reportedDate}</td></tr>
-      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Description</td><td style="padding:6px 12px;">${incident.description}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;width:160px;">Incident ID</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(incident.shortId)}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Type</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(incidentTypeName)}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Location</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(incident.location)}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Date Reported</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(reportedDate)}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Description</td><td style="padding:6px 12px;">${escapeHtml(incident.description)}</td></tr>
     </table>
   `;
 
   const complainantBlock = `
     <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;width:160px;">Name</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${complainant.name}</td></tr>
-      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Email</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${complainant.email}</td></tr>
-      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Phone</td><td style="padding:6px 12px;">${complainant.phone}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;width:160px;">Name</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(complainant.name)}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Address</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(complainant.address)}</td></tr>
+      <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;">Email</td><td style="padding:6px 12px;">${escapeHtml(complainant.email)}</td></tr>
     </table>
   `;
 
@@ -154,6 +161,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
     const msg = {
       to: process.env.TUATH_COMPLAINT_EMAIL || 'tonynico90@gmail.com',
       from: process.env.SENDGRID_FROM_EMAIL || 'reports@charlemontwatch.ie',
+      replyTo: complainant.email,
       subject: `Formal Complaint — ${incidentTypeName} at ${incident.location} [${incident.shortId}]`,
       html: `
         <h2 style="color:#1976d2;">Formal Complaint — Tuath Housing</h2>
@@ -166,7 +174,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
         ${sharedIncidentBlock}
 
         <h3>Nature of Complaint</h3>
-        <p>The complainant is reporting an unresolved issue within the Tuath Housing managed estate at <strong>${incident.location}</strong>.
+        <p>The complainant is reporting an unresolved issue within the Tuath Housing managed estate at <strong>${escapeHtml(incident.location)}</strong>.
         They are requesting that Tuath Housing investigate and take appropriate action in line with the Tuath Housing Complaints Policy & Procedure (v6.0, October 2024).</p>
 
         <h3>Desired Outcome</h3>
@@ -184,6 +192,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
     const msg = {
       to: process.env.DCC_COMPLAINT_EMAIL || 'tonynico90@gmail.com',
       from: process.env.SENDGRID_FROM_EMAIL || 'reports@charlemontwatch.ie',
+      replyTo: complainant.email,
       subject: `Formal Complaint — ${incidentTypeName} at ${incident.location} [${incident.shortId}]`,
       html: `
         <h2 style="color:#1976d2;">Formal Complaint — Dublin City Council</h2>
@@ -196,7 +205,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
         ${sharedIncidentBlock}
 
         <h3>Nature of Complaint</h3>
-        <p>The complainant is reporting an unresolved issue at <strong>${incident.location}</strong> and requests that Dublin City Council investigate and take appropriate action.</p>
+        <p>The complainant is reporting an unresolved issue at <strong>${escapeHtml(incident.location)}</strong> and requests that Dublin City Council investigate and take appropriate action.</p>
 
         <h3>Desired Outcome</h3>
         <p>The complainant requests a formal acknowledgement within 3 working days and a full response within 15 working days, in line with the Dublin City Council Customer Complaints procedure.</p>

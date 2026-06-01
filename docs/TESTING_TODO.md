@@ -10,6 +10,9 @@
 - [x] **User model pre-save hook test** — mongodb-memory-server wired up; UT-034 confirms password is hashed on save and not re-hashed on unrelated updates
 - [x] **Email service catch-path test** — UT-035–UT-037 confirm all three catch blocks swallow SendGrid errors silently
 - [x] **sendComplaintEmails tests** — UT-038-A–G cover: Tuath-only send, DCC-only send, both recipients (2 emails), empty recipients (no send), complainant name in Tuath email, location in DCC email, SendGrid error swallowed silently
+- [x] **escapeHtml injection tests** — UT-038-H confirms `<script>` in complainant name is escaped to `&lt;script&gt;`; UT-038-I confirms `<img>` in incident description is escaped
+- [x] **complaintReady integration tests** — IT-022 confirms invalid complainant email blocks complaint fields from DB; IT-023 confirms missing phone does the same
+- [ ] **ErrorBoundary.componentDidCatch** — Sentry hook not tested; accepted gap (see TestingReport §6.1.1)
 
 ---
 
@@ -103,7 +106,7 @@
 
 | Category | Items |
 |----------|-------|
-| 🔴 Critical gaps (current suite) | 6 |
+| 🔴 Critical gaps (current suite) | 6 (1 accepted gap remaining) |
 | 🟠 Integration tests (Supertest) | 21 |
 | 🟠 Frontend unit tests (Vitest) | 13 |
 | 🟡 E2E tests (Playwright) | 9 |

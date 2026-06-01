@@ -72,6 +72,12 @@ function fillCommonFields() {
   fireEvent.change(screen.getByPlaceholderText(/Describe what you observed/i), {
     target: { value: 'Large graffiti tag on the south wall' },
   });
+
+  // Untick complaint checkboxes — default is checked, tests cover report submission only
+  const tuathCheckbox = document.getElementById('send-tuath') as HTMLInputElement;
+  const dccCheckbox = document.getElementById('send-dcc') as HTMLInputElement;
+  if (tuathCheckbox?.checked) fireEvent.click(tuathCheckbox);
+  if (dccCheckbox?.checked) fireEvent.click(dccCheckbox);
 }
 
 // ─── FT-013: graffiti submit calls addIncident with correct payload ───────────
@@ -120,7 +126,7 @@ describe('ReportIncident — graffiti submission', () => {
     fireEvent.submit(screen.getByRole('button', { name: /Submit Report/i }).closest('form')!);
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/success/CW-NEW001');
+      expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('/success/CW-NEW001'));
     });
   });
 

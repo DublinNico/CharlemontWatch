@@ -5,8 +5,8 @@ const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
 
 export interface ComplaintData {
   name: string;
+  address: string;
   email: string;
-  phone: string;
   sendTo: ('tuath' | 'dcc')[];
 }
 
@@ -84,7 +84,6 @@ function mapApiToIncident(api: any): Incident {
     case 'antisocial':
       if (api.antisocialType) typeSpecificData.antisocialType = api.antisocialType;
       if (api.estimatedPeopleInvolved != null) typeSpecificData.estimatedPeopleInvolved = api.estimatedPeopleInvolved;
-      if (api.reportedToGarda != null) typeSpecificData.reportedToGarda = api.reportedToGarda;
       break;
     case 'safetyhazard':
       if (api.hazardType) typeSpecificData.hazardType = api.hazardType;
@@ -177,8 +176,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     if (complaint && complaint.sendTo.length > 0) {
       form.append('complainantName', complaint.name);
+      form.append('complainantAddress', complaint.address);
       form.append('complainantEmail', complaint.email);
-      form.append('complainantPhone', complaint.phone);
       form.append('sendComplaintTo', complaint.sendTo.join(','));
     }
 

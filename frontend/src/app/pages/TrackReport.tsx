@@ -27,7 +27,6 @@ function mapApiToIncident(api: any): Incident {
     case 'antisocial':
       if (api.antisocialType) typeSpecificData.antisocialType = api.antisocialType;
       if (api.estimatedPeopleInvolved != null) typeSpecificData.estimatedPeopleInvolved = api.estimatedPeopleInvolved;
-      if (api.reportedToGarda != null) typeSpecificData.reportedToGarda = api.reportedToGarda;
       break;
     case 'safetyhazard':
       if (api.hazardType) typeSpecificData.hazardType = api.hazardType;

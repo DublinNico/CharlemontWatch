@@ -6,6 +6,7 @@
 
 ### Security
 - [ ] **Replace JWT_SECRET** — current value in `.env` is a weak placeholder; generate a strong 256-bit random secret for production
+- [x] **Hide admin login from public** — route changed from `/auth` to `/cw-admin`; page only renders if `?key=VITE_ADMIN_KEY` is present in the URL, otherwise redirects to home. Access: `https://your-domain.com/cw-admin?key=charlemont2026`. **Change `VITE_ADMIN_KEY` in `frontend/.env.production` before going live.**
 - [ ] **Restrict CORS to production domain** — `server.js` currently allows all `localhost:*` origins; must be changed to the actual deployed frontend URL
 - [x] **Add rate limiting** — `express-rate-limit` added to `/api/auth/login` (10 req/min per IP, skipped in test env); ST-005 confirms 429 after threshold
 - [ ] **Enable HTTPS** — without it, admin credentials travel in plaintext; use a host that provides TLS (Vercel, Render, Railway all do this for free)

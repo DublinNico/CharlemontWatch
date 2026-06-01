@@ -231,3 +231,44 @@ describe('DELETE /api/incidents/admin/:id', () => {
     expect(res.status).toBe(401);
   });
 });
+
+// ─── complaintReady validation ────────────────────────────────────────────────
+
+describe('POST /api/incidents/report — complaint field validation', () => {
+  beforeEach(async () => { await Incident.deleteMany({}); });
+
+  test('IT-022: missing complainant email blocks complaint fields from being persisted', async () => {
+    const res = await request(app)
+      .post('/api/incidents/report')
+      .field('incidentType', 'graffiti')
+      .field('location', 'Block A')
+      .field('description', 'Test')
+      .field('sendComplaintTo', 'tuath')
+      .field('complainantName', 'Jane')
+      .field('complainantAddress', 'Apt 12, Charlemont Street, Dublin 2');
+
+    expect(res.status).toBe(201);
+    const saved = await Incident.findOne({ shortId: res.body.incidentId });
+    expect(saved.complainantName).toBeUndefined();
+    expect(saved.sendComplaintTo).toHaveLength(0);
+  });
+
+  test('IT-023: valid name, address and email persists complaint fields', async () => {
+    const res = await request(app)
+      .post('/api/incidents/report')
+      .field('incidentType', 'graffiti')
+      .field('location', 'Block A')
+      .field('description', 'Test')
+      .field('sendComplaintTo', 'tuath')
+      .field('complainantName', 'Jane')
+      .field('complainantAddress', 'Apt 12, Charlemont Street, Dublin 2')
+      .field('complainantEmail', 'jane@example.com');
+
+    expect(res.status).toBe(201);
+    const saved = await Incident.findOne({ shortId: res.body.incidentId });
+    expect(saved.complainantName).toBe('Jane');
+    expect(saved.complainantAddress).toBe('Apt 12, Charlemont Street, Dublin 2');
+    expect(saved.complainantEmail).toBe('jane@example.com');
+    expect(saved.sendComplaintTo).toContain('tuath');
+  });
+});

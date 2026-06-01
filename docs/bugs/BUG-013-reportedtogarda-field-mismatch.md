@@ -42,3 +42,7 @@ typeData.reportedToTuath = req.body.reportedToTuath === 'true';
 ## Discovered By
 
 Code review (31/05/26)
+
+## Subsequent Change
+
+The `reportedToTuath` / `reportedToGarda` field was removed entirely from the schema, controller, and frontend on 31/05/26. The "Already reported to Garda" checkbox no longer exists in the report form. This bug is therefore moot — the field does not exist in any current version of the codebase.

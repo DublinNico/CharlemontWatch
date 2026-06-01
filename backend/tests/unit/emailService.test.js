@@ -114,8 +114,8 @@ describe('sendAdminNotification', () => {
 
 const mockComplainant = {
   name: 'Jane Resident',
+  address: 'Apt 12, Charlemont Street, Dublin 2',
   email: 'jane@example.com',
-  phone: '087 123 4567',
 };
 
 describe('sendComplaintEmails', () => {
@@ -160,6 +160,22 @@ describe('sendComplaintEmails', () => {
     await expect(
       sendComplaintEmails(mockIncident, mockComplainant, ['tuath', 'dcc'])
     ).resolves.toBeUndefined();
+  });
+
+  test('UT-038-H: HTML-special chars in complainant name are escaped in email body', async () => {
+    const xssComplainant = { name: '<script>alert(1)</script>', address: '1 Test St', email: 'x@x.com' };
+    await sendComplaintEmails(mockIncident, xssComplainant, ['tuath']);
+    const html = sgMail.send.mock.calls[0][0].html;
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('&lt;script&gt;');
+  });
+
+  test('UT-038-I: HTML-special chars in incident description are escaped in email body', async () => {
+    const xssIncident = { ...mockIncident, description: '<img src=x onerror=alert(1)>' };
+    await sendComplaintEmails(xssIncident, mockComplainant, ['dcc']);
+    const html = sgMail.send.mock.calls[0][0].html;
+    expect(html).not.toContain('<img');
+    expect(html).toContain('&lt;img');
   });
 });
 

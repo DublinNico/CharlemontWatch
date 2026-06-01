@@ -15,11 +15,17 @@ const findByAnyId = async (id) => {
 const createIncident = async (req, res) => {
   try {
     const { incidentType, location, description, reporterEmail,
-            complainantName, complainantEmail, complainantPhone } = req.body;
+            complainantName, complainantAddress, complainantEmail } = req.body;
 
     const sendComplaintTo = req.body.sendComplaintTo
       ? req.body.sendComplaintTo.split(',').filter(v => ['tuath', 'dcc'].includes(v))
       : [];
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const complaintReady = sendComplaintTo.length > 0
+      && !!complainantName
+      && !!complainantAddress
+      && !!complainantEmail && emailRegex.test(complainantEmail);
 
     const typeData = {};
     if (incidentType === 'graffiti') {
@@ -29,7 +35,6 @@ const createIncident = async (req, res) => {
     } else if (incidentType === 'antisocial') {
       typeData.antisocialType = req.body.antisocialType;
       typeData.estimatedPeopleInvolved = req.body.estimatedPeopleInvolved;
-      typeData.reportedToTuath = req.body.reportedToTuath === 'true';
     } else if (incidentType === 'safetyhazard') {
       typeData.hazardType = req.body.hazardType;
       typeData.riskLevel = req.body.riskLevel;
@@ -72,10 +77,10 @@ const createIncident = async (req, res) => {
       reporterEmail: reporterEmail || null,
       photos,
       ...typeData,
-      ...(sendComplaintTo.length > 0 && complainantName ? {
+      ...(complaintReady ? {
         complainantName,
+        complainantAddress,
         complainantEmail,
-        complainantPhone,
         sendComplaintTo,
       } : {})
     });
@@ -85,11 +90,11 @@ const createIncident = async (req, res) => {
     sendResidentConfirmation(incident, incident.reporterEmail);
     sendAdminNotification(incident);
 
-    if (sendComplaintTo.length > 0 && complainantName) {
+    if (complaintReady) {
       sendComplaintEmails(incident, {
         name: complainantName,
+        address: complainantAddress,
         email: complainantEmail,
-        phone: complainantPhone,
       }, sendComplaintTo);
     }
 
