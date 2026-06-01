@@ -1,4 +1,4 @@
-jest.mock('@sendgrid/mail', () => ({ setApiKey: jest.fn(), send: jest.fn().mockResolvedValue([{ statusCode: 202 }]) }));
+jest.mock('resend', () => ({ Resend: jest.fn().mockImplementation(() => ({ emails: { send: jest.fn().mockResolvedValue({ data: { id: 'mock-id' }, error: null }) } })) }));
 jest.mock('../../config/s3', () => ({
   upload: jest.fn().mockReturnValue({
     promise: jest.fn().mockResolvedValue({ Location: 'https://s3.example.com/test.jpg' }),

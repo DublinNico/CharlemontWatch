@@ -19,6 +19,9 @@ module.exports = {
     'routes/**/*.js',
     'app.js',
   ],
+  moduleNameMapper: {
+    '^resend$': '<rootDir>/__mocks__/resend.js',
+  },
   coverageThreshold: {
     global: {
       statements: 70,
