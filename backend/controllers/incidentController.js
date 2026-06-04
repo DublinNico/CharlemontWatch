@@ -14,6 +14,7 @@ const findByAnyId = async (id) => {
 // Create incident (report)
 const createIncident = async (req, res) => {
   try {
+
     const { incidentType, location, description, reporterEmail,
             complainantName, complainantAddress, complainantEmail } = req.body;
 
@@ -26,6 +27,7 @@ const createIncident = async (req, res) => {
       && !!complainantName
       && !!complainantAddress
       && !!complainantEmail && emailRegex.test(complainantEmail);
+
 
     const typeData = {};
     if (incidentType === 'graffiti') {

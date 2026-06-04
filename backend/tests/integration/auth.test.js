@@ -1,4 +1,4 @@
-jest.mock('@sendgrid/mail', () => ({ setApiKey: jest.fn(), send: jest.fn().mockResolvedValue([{ statusCode: 202 }]) }));
+jest.mock('resend', () => ({ Resend: jest.fn().mockImplementation(() => ({ emails: { send: jest.fn().mockResolvedValue({ data: { id: 'mock-id' }, error: null }) } })) }));
 
 process.env.JWT_SECRET = 'charlemont-test-secret-key';
 
