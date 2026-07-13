@@ -106,7 +106,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 185 automated tests pass (97 backend unit + 35 backend integration + 5 security + 33 frontend unit + 15 E2E)
+- All 189 automated tests pass (99 backend unit + 37 backend integration + 5 security + 33 frontend unit + 15 E2E)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -344,24 +344,24 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 |------|---------------------|-------|
 | `tests/unit/generateShortId.test.js` | ID format, prefix, length, uniqueness | UT-001 – UT-002 (5 tests) |
 | `tests/unit/auth.middleware.test.js` | authenticate middleware (all branches), adminOnly middleware (all branches) | UT-005 – UT-010 (9 tests) |
-| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, SendGrid error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I (24 tests) |
+| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, Resend error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description, CR/LF header-injection stripping in subject lines | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I, UT-044 – UT-045 (26 tests) |
 | `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array, mandatory reporterEmail (format + anonymous-still-allowed) | UT-014 – UT-018, UT-033 (19 tests) |
 | `tests/unit/userModel.test.js` | Pre-save bcrypt hook, comparePassword, schema validation, role default/enum | UT-019 – UT-025, UT-034 (10 tests) |
 | `tests/unit/authController.test.js` | Login input validation, credential checks, JWT generation, email normalisation, 500 error path | UT-026 – UT-032 (15 tests) |
 | `tests/unit/upload.middleware.test.js` | MIME type filter, 5MB size limit, magic-byte validation (JPEG/PNG/WebP/spoofed PDF), no-file passthrough | UT-038 – UT-042 (8 tests) |
 | `tests/unit/satisfactionVoteModel.test.js` | Required field validation (email, rating), email format, rating enum (low/medium/high) | UT-043-A – UT-043-G (7 tests) |
 
-**Unit test total: 97 tests across 8 test suites**
+**Unit test total: 99 tests across 8 test suites**
 
 #### Integration Tests
 
 | File | Functionality Tested | Tests |
 |------|---------------------|-------|
-| `tests/integration/incidents.test.js` | POST/GET/PATCH/DELETE incident routes; auth guards; photo upload; 11-file limit; status filtering; reporter identity validation (reporterEmail mandatory, anonymous reports allowed without name/address, complainantName/complainantAddress required only when sendComplaintTo is set) | IT-001 – IT-017, IT-022 – IT-023 (23 tests) |
+| `tests/integration/incidents.test.js` | POST/GET/PATCH/DELETE incident routes; auth guards; photo upload; 11-file limit; status filtering; reporter identity validation (reporterEmail mandatory, anonymous reports allowed without name/address, complainantName/complainantAddress required only when sendComplaintTo is set); photo compression to JPEG before S3 upload; sendComplaintTo values trimmed so "tuath, dcc" keeps both recipients | IT-001 – IT-017, IT-022 – IT-023, IT-032 – IT-033 (25 tests) |
 | `tests/integration/auth.test.js` | Login (correct/wrong/unknown); register route removed (404) | IT-018 – IT-021 (4 tests) |
 | `tests/integration/satisfaction.test.js` | POST vote validation (email/rating), upsert-on-revote (no duplicates), case-insensitive email matching, GET summary aggregation (zero state, accurate counts, no emails exposed) | IT-024 – IT-031 (8 tests) |
 
-**Integration test total: 35 tests across 3 test suites**
+**Integration test total: 37 tests across 3 test suites**
 
 #### Frontend Unit Tests (Vitest + React Testing Library)
 
@@ -410,7 +410,7 @@ Artillery scenarios run against a live backend (`npm run dev` in `/backend` firs
 
 Observed results on 31/05/26: GET p95 = 72ms, POST p95 = 95ms — both well inside thresholds.
 
-**Grand total: 185 automated tests across 24 test suites**
+**Grand total: 189 automated tests across 24 test suites**
 
 ---
 
@@ -555,27 +555,27 @@ describe('User model — comparePassword', () => {
 
 ### 5.4 Test Execution Results
 
-All 185 tests were executed on 13/07/26.
+All 189 tests were executed on 13/07/26.
 
 **Backend** (`npm test` in `/backend`):
 
 ```
 PASS tests/unit/generateShortId.test.js        (5 tests)
 PASS tests/unit/auth.middleware.test.js        (9 tests)
-PASS tests/unit/emailService.test.js          (24 tests)
+PASS tests/unit/emailService.test.js          (26 tests)
 PASS tests/unit/incidentModel.test.js         (19 tests)
 PASS tests/unit/userModel.test.js             (10 tests)
 PASS tests/unit/authController.test.js        (15 tests)
 PASS tests/unit/upload.middleware.test.js      (8 tests)
 PASS tests/unit/satisfactionVoteModel.test.js  (7 tests)
-PASS tests/integration/incidents.test.js      (23 tests)
+PASS tests/integration/incidents.test.js      (25 tests)
 PASS tests/integration/auth.test.js            (4 tests)
 PASS tests/integration/satisfaction.test.js    (8 tests)
 PASS tests/security/security.test.js           (5 tests)
 
 Test Suites: 12 passed, 12 total
-Tests:       137 passed, 137 total
-Time:        15.676 s
+Tests:       141 passed, 141 total
+Time:        13.058 s
 ```
 
 **Frontend** (`npm test` in `/frontend`):
@@ -727,6 +727,10 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | Low | Migrate email provider from SendGrid to Resend | ✅ Done — `@sendgrid/mail` replaced with `resend`; complaint emails confirmed landing in inbox |
 | Low | Make `reporterEmail` mandatory on every incident report | ✅ Done — verifies the reporter lives in the complex; anonymous reporting (no name/address, no complaint) still works, since `complainantName`/`complainantAddress` remain optional unless `sendComplaintTo` is set |
 | Low | Add resident satisfaction voting system | ✅ Done — new `SatisfactionVote` model/controller/routes (`/api/satisfaction`, `/api/satisfaction/summary`); one vote per email, upserted so votes can be changed; `SatisfactionWidget` on the Home page shows a public low/medium/high results bar with no emails exposed |
+| Low | Compress incident photos before S3 upload | ✅ Done — `sharp` resizes to a max 1920px edge and re-encodes as JPEG (quality 80) in both `createIncident` and `addPhoto`, capping storage/bandwidth cost for full-resolution phone photos |
+| Low | Strip CR/LF from email subject lines | ✅ Done — `sanitizeHeader()` in `emailService.js` prevents header-injection via `incident.location` in admin notification and complaint email subjects |
+| Low | Add `mongoSanitize()` to multipart routes | ✅ Done — the global instance never ran on `POST /report`/`POST /:id/photos` since multer parses the body after it; now applied at the route level after `validateMagicBytes` |
+| Low | Code review fixes (satisfaction voting + reporter email pass) | ✅ Done — `sendComplaintTo` values now trimmed ("tuath, dcc" keeps both recipients); `getSummary` no longer leaks `error.message`; `submitVote` returns 409 on a duplicate-key upsert race; shared `EMAIL_REGEX` extracted to `backend/utils/validators.js`; `SatisfactionVote` uses Mongoose `timestamps: true`; rate limiter added to `POST /api/satisfaction`; `aria-pressed` added to rating buttons; `Incident.reporterEmail` made optional in the frontend type to match legacy rows; report form now trims email/name/address before submission; corrected stale copy in `About.tsx` ("Túath's" was rendering with a stray space) and `PrivacyPolicy.tsx` (reporter email described as optional when it's required) |
 
 ---
 

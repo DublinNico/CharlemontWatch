@@ -1,14 +1,14 @@
 const SatisfactionVote = require('../models/SatisfactionVote');
+const { EMAIL_REGEX } = require('../utils/validators');
 
 const VALID_RATINGS = ['low', 'medium', 'high'];
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Submit or change a satisfaction vote (one vote per email, upserted)
 const submitVote = async (req, res) => {
   try {
     const { email, rating } = req.body;
 
-    if (!email || !emailRegex.test(email)) {
+    if (!email || !EMAIL_REGEX.test(email)) {
       return res.status(400).json({ error: 'a valid email is required' });
     }
     if (!rating || !VALID_RATINGS.includes(rating)) {
@@ -17,7 +17,7 @@ const submitVote = async (req, res) => {
 
     const vote = await SatisfactionVote.findOneAndUpdate(
       { email: email.toLowerCase() },
-      { rating, updatedAt: new Date() },
+      { rating },
       { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true }
     );
 
@@ -26,6 +26,10 @@ const submitVote = async (req, res) => {
     console.error('Submit satisfaction vote error:', error);
     if (error.name === 'ValidationError') {
       return res.status(400).json({ error: error.message });
+    }
+    // Concurrent upserts for a brand-new email can race and hit the unique index
+    if (error.code === 11000) {
+      return res.status(409).json({ error: 'Vote submission conflict — please try again' });
     }
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -43,7 +47,8 @@ const getSummary = async (req, res) => {
     const total = counts.low + counts.medium + counts.high;
     res.json({ ...counts, total });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Get satisfaction summary error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 

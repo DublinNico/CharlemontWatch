@@ -11,6 +11,10 @@ const escapeHtml = (str) => String(str ?? '')
   .replace(/"/g, '&quot;')
   .replace(/'/g, '&#39;');
 
+// Strips CR/LF (and other control chars) so user input can't inject extra
+// headers or split an email subject line.
+const sanitizeHeader = (str) => String(str ?? '').replace(/[\r\n\x00-\x1F]+/g, ' ').trim();
+
 const getIncidentTypeName = (type) => {
   const names = {
     graffiti: 'Graffiti Report',
@@ -71,7 +75,7 @@ const sendAdminNotification = async (incident) => {
     await send({
       from: FROM,
       to: [adminEmail],
-      subject: `[NEW] ${getIncidentTypeName(incident.incidentType)} at ${incident.location}`,
+      subject: `[NEW] ${getIncidentTypeName(incident.incidentType)} at ${sanitizeHeader(incident.location)}`,
       html: `
         <h2>New Incident Report</h2>
         <p><strong>ID:</strong> ${incident._id.toString().slice(-8).toUpperCase()}</p>
@@ -154,7 +158,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
       from: FROM,
       to: [process.env.TUATH_COMPLAINT_EMAIL],
       replyTo: complainant.email,
-      subject: `Formal Complaint — ${incidentTypeName} at ${incident.location} [${incident.shortId}]`,
+      subject: `Formal Complaint — ${incidentTypeName} at ${sanitizeHeader(incident.location)} [${incident.shortId}]`,
       html: `
         <h2 style="color:#1976d2;">Formal Complaint — Túath Housing</h2>
         <p>A formal complaint has been submitted via CharlemontWatch regarding an incident at a Túath Housing managed area.</p>
@@ -181,7 +185,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
       from: FROM,
       to: [process.env.DCC_COMPLAINT_EMAIL],
       replyTo: complainant.email,
-      subject: `Formal Complaint — ${incidentTypeName} at ${incident.location} [${incident.shortId}]`,
+      subject: `Formal Complaint — ${incidentTypeName} at ${sanitizeHeader(incident.location)} [${incident.shortId}]`,
       html: `
         <h2 style="color:#1976d2;">Formal Complaint — Dublin City Council</h2>
         <p>A formal complaint has been submitted via CharlemontWatch regarding an issue within the Dublin City Council area.</p>

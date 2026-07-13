@@ -19,6 +19,10 @@
 - [x] **Remove hardcoded personal email fallback** — missing `TUATH_COMPLAINT_EMAIL`/`DCC_COMPLAINT_EMAIL` now logs a warning and skips rather than defaulting to a personal address
 - [x] **Migrate email provider to Resend** — `@sendgrid/mail` replaced; complaint emails confirmed landing in inbox; free tier: 3,000 emails/month
 - [x] **Make `reporterEmail` mandatory on every report** — previously optional; now required (400 if missing/invalid) so every submission, anonymous or not, is tied to a verifiable resident email. `complainantName`/`complainantAddress` remain optional and are only required when `sendComplaintTo` is set — anonymous reporting (photos + description only) still works.
+- [x] **Strip CR/LF from email subject lines** — `sanitizeHeader()` added to `emailService.js`; `incident.location` is no longer interpolated raw into subject lines, closing an email header-injection vector (UT-044, UT-045)
+- [x] **Apply `mongoSanitize()` to multipart routes** — the global instance in `app.js` never ran on `POST /report` / `POST /:id/photos` since `multer` parses the body after it; now applied at the route level, after `validateMagicBytes`
+- [x] **Rate limit `/api/satisfaction`** — `express-rate-limit` added to `POST /api/satisfaction` (10 req/min per IP, skipped in test env), mirroring the login limiter
+- [x] **Handle duplicate-key race on satisfaction vote upsert** — `submitVote` now catches MongoDB E11000 and returns 409 instead of a misleading 500
 
 ### Environment & Config
 - [x] **Replace all hardcoded `localhost:5000`** in the frontend — `AppContext.tsx:4` and `TrackReport.tsx:10` both hardcode the local API URL; move to `import.meta.env.VITE_API_URL`
@@ -38,11 +42,14 @@
 - [x] **Add request logging** — `morgan` middleware to log every request; essential for debugging production issues
 - [x] **Add MongoDB indexes** — `incidentType`, `status`, and `reportedDate` should be indexed for query performance as data grows
 - [x] **Explicit 400 when >10 photos submitted on create** — `MulterError` handler added to Express app; now returns 400 consistently (IT-005)
+- [x] **Trim `sendComplaintTo` values before matching** — `"tuath, dcc"` (with a space after the comma) was silently dropping `dcc`; values are now trimmed before the allow-list filter (IT-033)
 
 ### Frontend
 - [x] **Test production build** — run `npm run build` in `/frontend` and verify output has no errors or missing assets
 - [x] **Add an error boundary** — if the API is unreachable the app shows a blank screen; a React error boundary should show a friendly fallback message
 - [x] **Fix email tracking link in `emailService.js`** — `sendResidentConfirmation` still uses the old hash-based `/#track` path; should be the React Router path `/track`
+- [x] **Type `Incident.reporterEmail` as optional** — legacy DB rows predate the mandatory-email change; the type now matches reality instead of falsely promising every fetched incident has an email
+- [x] **Trim reporter/complainant fields before submission** — `ReportIncident.tsx` validated with `.trim()` but submitted the untrimmed value, so `" jane@example.com"` passed frontend validation only to be rejected by the backend's stricter regex; now trimmed once and reused
 
 ### Email
 - [ ] **Verify Resend sender domain** — add `charlemontwatch.ie` to Resend → Domains and set up SPF/DKIM DNS records; until then emails send from `onboarding@resend.dev`
@@ -58,13 +65,21 @@
 - [ ] **Enable MongoDB Atlas automated backups** — set a daily backup schedule on the Atlas cluster
 
 ### Testing
-- [x] **Add Supertest integration tests** — 35 integration tests covering all incident, auth, and satisfaction routes (IT-001 – IT-031)
+- [x] **Add Supertest integration tests** — 37 integration tests covering all incident, auth, and satisfaction routes (IT-001 – IT-033)
 - [x] **Add frontend unit tests** — 33 Vitest + React Testing Library tests covering AppContext, Header, TrackReport, AdminDashboard, ReportIncident, SatisfactionWidget (FT-001 – FT-016)
 - [x] **Add E2E tests (Playwright)** — 15 test cases × 2 browser profiles = 30 runs; covers report, track, browse, admin login/update/delete, mobile viewport (ET-001 – ET-014)
 - [x] **Set up GitHub Actions CI** — `.github/workflows/ci.yml` runs backend tests + coverage threshold + frontend tsc + Vitest on push to `dev` and PRs to `main`
 
 ### Features
 - [x] **Add resident satisfaction voting system** — public low/medium/high vote on Túath Housing (`/api/satisfaction`); one vote per email, upserted so residents can change their vote; results shown as a public bar chart on the Home page, no emails exposed via `/api/satisfaction/summary`
+- [x] **Add image compression before S3 upload** — `sharp` resizes photos to a max 1920px edge and re-encodes as JPEG (quality 80) in both `createIncident` and `addPhoto`, reducing storage/bandwidth cost for full-resolution phone photos
+- [x] **Add a 404 page** — unknown routes previously fell through to React Router's default error screen; `NotFound.tsx` now renders a branded page via a catch-all route
+- [x] **Add `sitemap.xml` and `robots.txt`** — lists the 6 public routes, disallows `/admin` and `/cw-admin`; hardcodes `charlemontwatch.ie` — **update if the registered domain differs**
+
+### Code Quality & Accessibility
+- [x] **Extract shared email regex** — the same regex was duplicated in `incidentController.js`, `satisfactionController.js`, and `SatisfactionVote.js`; now a single `EMAIL_REGEX` constant in `backend/utils/validators.js`
+- [x] **Use Mongoose `timestamps: true` on `SatisfactionVote`** — replaces manual `createdAt`/`updatedAt` fields and the controller's manual `updatedAt` assignment on every upsert
+- [x] **Add `aria-pressed` to satisfaction rating buttons** — selection state was previously conveyed by colour only
 
 ### Legal (GDPR — Ireland)
 - [x] **Write a privacy policy** — `/privacy` page created covering data collected, usage, retention, GDPR rights, and contact
@@ -83,7 +98,7 @@
 
 | Priority | Total | Done | Remaining |
 |----------|-------|------|-----------|
-| 🔴 Critical | 18 | 13 | 5 |
-| 🟠 Important | 8 | 8 | 0 |
-| 🟡 Nice to have | 14 | 10 | 4 |
-| **Total** | **40** | **31** | **9** |
+| 🔴 Critical | 23 | 17 | 6 |
+| 🟠 Important | 12 | 10 | 2 |
+| 🟡 Nice to have | 21 | 15 | 6 |
+| **Total** | **56** | **42** | **14** |

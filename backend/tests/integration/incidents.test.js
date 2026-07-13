@@ -4,6 +4,14 @@ jest.mock('../../config/s3', () => ({
     promise: jest.fn().mockResolvedValue({ Location: 'https://s3.example.com/test.jpg' }),
   }),
 }));
+// The JPEG_BUFFER fixture isn't a real decodable image, so sharp is mocked —
+// compression itself is exercised manually, not through these fixtures.
+jest.mock('sharp', () => jest.fn(() => ({
+  rotate: jest.fn().mockReturnThis(),
+  resize: jest.fn().mockReturnThis(),
+  jpeg: jest.fn().mockReturnThis(),
+  toBuffer: jest.fn().mockResolvedValue(Buffer.from('compressed-jpeg-bytes')),
+})));
 
 process.env.JWT_SECRET = 'charlemont-test-secret-key';
 process.env.AWS_S3_BUCKET = 'test-bucket';
@@ -92,6 +100,25 @@ describe('POST /api/incidents/report', () => {
     const incident = await Incident.findOne({ shortId: res.body.incidentId });
     expect(incident.photos).toHaveLength(1);
     expect(incident.photos[0].url).toContain('amazonaws.com');
+  });
+
+  test('IT-032: uploaded photos are compressed to JPEG before being stored', async () => {
+    const s3 = require('../../config/s3');
+    s3.upload.mockClear();
+
+    const res = await request(app)
+      .post('/api/incidents/report')
+      .field('incidentType', 'graffiti')
+      .field('location', 'Block A')
+      .field('description', 'Test with photo')
+      .field('reporterEmail', 'jane@example.com')
+      .attach('photos', JPEG_BUFFER, { filename: 'photo.jpg', contentType: 'image/jpeg' });
+
+    expect(res.status).toBe(201);
+    expect(s3.upload).toHaveBeenCalledTimes(1);
+    const uploadParams = s3.upload.mock.calls[0][0];
+    expect(uploadParams.ContentType).toBe('image/jpeg');
+    expect(uploadParams.Body.toString()).toBe('compressed-jpeg-bytes');
   });
 
   test('IT-005: 11 photos submitted returns 400', async () => {
@@ -302,5 +329,21 @@ describe('POST /api/incidents/report — reporter identity validation', () => {
     expect(saved.complainantAddress).toBe('Apt 12, Charlemont Street, Dublin 2');
     expect(saved.reporterEmail).toBe('jane@example.com');
     expect(saved.sendComplaintTo).toContain('tuath');
+  });
+
+  test('IT-033: sendComplaintTo with a space after the comma retains both recipients', async () => {
+    const res = await request(app)
+      .post('/api/incidents/report')
+      .send({
+        ...validBody,
+        sendComplaintTo: 'tuath, dcc',
+        complainantName: 'Jane Resident',
+        complainantAddress: 'Apt 12, Charlemont Street, Dublin 2',
+      });
+
+    expect(res.status).toBe(201);
+    const saved = await Incident.findOne({ shortId: res.body.incidentId });
+    expect(saved.sendComplaintTo).toEqual(expect.arrayContaining(['tuath', 'dcc']));
+    expect(saved.sendComplaintTo).toHaveLength(2);
   });
 });

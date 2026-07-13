@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { EMAIL_REGEX } = require('../utils/validators');
 
 const satisfactionVoteSchema = new mongoose.Schema({
   email: {
@@ -7,7 +8,7 @@ const satisfactionVoteSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     validate: {
-      validator: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      validator: v => EMAIL_REGEX.test(v),
       message: 'Invalid email format'
     }
   },
@@ -16,8 +17,6 @@ const satisfactionVoteSchema = new mongoose.Schema({
     enum: ['low', 'medium', 'high'],
     required: true
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('SatisfactionVote', satisfactionVoteSchema);

@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoSanitize = require('express-mongo-sanitize');
 const router = express.Router();
 const {
   createIncident,
@@ -15,7 +16,10 @@ const { authenticate, adminOnly } = require('../middleware/auth');
 const { upload, validateMagicBytes } = require('../middleware/upload');
 
 // Public: Report incident
-router.post('/report', upload.array('photos', 10), validateMagicBytes, createIncident);
+// mongoSanitize() runs here (not just globally in app.js) because multer parses
+// multipart/form-data into req.body at the route level, after the global
+// mongoSanitize() middleware has already executed on an empty body.
+router.post('/report', upload.array('photos', 10), validateMagicBytes, mongoSanitize(), createIncident);
 
 // Admin: Get review queue (must be before /:id to avoid param conflict)
 router.get('/admin/pending', authenticate, adminOnly, getPendingIncidents);
@@ -39,6 +43,6 @@ router.get('/', getAllIncidents);
 router.get('/:id', getIncident);
 
 // Authenticated: Add photo to incident
-router.post('/:id/photos', authenticate, upload.single('photo'), validateMagicBytes, addPhoto);
+router.post('/:id/photos', authenticate, upload.single('photo'), validateMagicBytes, mongoSanitize(), addPhoto);
 
 module.exports = router;
