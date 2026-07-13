@@ -19,7 +19,7 @@ Every anti-social behaviour incident submitted via the report form silently lost
 
 ## Root Cause
 
-Field name mismatch introduced when the schema was renamed from `reportedToGarda` to `reportedToTuath` (to reflect that Tuath Housing is the actual contact, not An Garda Síochána), but the corresponding `createIncident` controller line was not updated.
+Field name mismatch introduced when the schema was renamed from `reportedToGarda` to `reportedToTuath` (to reflect that Túath Housing is the actual contact, not An Garda Síochána), but the corresponding `createIncident` controller line was not updated.
 
 ```js
 // controller (wrong)

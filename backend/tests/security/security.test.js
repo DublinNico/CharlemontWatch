@@ -89,6 +89,7 @@ describe('ST-004: XSS in incident description is stored as plain text', () => {
         incidentType: 'graffiti',
         location: 'Block A',
         description: xssPayload,
+        reporterEmail: 'jane@example.com',
       });
 
     expect(res.status).toBe(201);
@@ -145,6 +146,7 @@ describe('ST-006: resident JWT is forbidden from deleting incidents', () => {
       incidentType: 'graffiti',
       location: 'Block A',
       description: 'Test',
+      reporterEmail: 'jane@example.com',
       status: 'NEW',
     });
 

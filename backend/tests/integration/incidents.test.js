@@ -30,10 +30,13 @@ const residentToken = jwt.sign(
   { expiresIn: '1h' }
 );
 
+// Anonymous-capable: only reporterEmail is required. complainantName/complainantAddress
+// are only needed when sendComplaintTo is set (see the reporter identity describe block below).
 const validBody = {
   incidentType: 'graffiti',
   location: 'Block A, Charlemont Street',
   description: 'Graffiti on south wall',
+  reporterEmail: 'jane@example.com',
 };
 
 let mongod;
@@ -82,6 +85,7 @@ describe('POST /api/incidents/report', () => {
       .field('incidentType', 'graffiti')
       .field('location', 'Block A')
       .field('description', 'Test with photo')
+      .field('reporterEmail', 'jane@example.com')
       .attach('photos', JPEG_BUFFER, { filename: 'photo.jpg', contentType: 'image/jpeg' });
 
     expect(res.status).toBe(201);
@@ -91,7 +95,12 @@ describe('POST /api/incidents/report', () => {
   });
 
   test('IT-005: 11 photos submitted returns 400', async () => {
-    let req = request(app).post('/api/incidents/report');
+    let req = request(app)
+      .post('/api/incidents/report')
+      .field('incidentType', 'graffiti')
+      .field('location', 'Block A')
+      .field('description', 'Test')
+      .field('reporterEmail', 'jane@example.com');
     for (let i = 0; i < 11; i++) {
       req = req.attach('photos', JPEG_BUFFER, { filename: `photo${i}.jpg`, contentType: 'image/jpeg' });
     }
@@ -232,43 +241,66 @@ describe('DELETE /api/incidents/admin/:id', () => {
   });
 });
 
-// ─── complaintReady validation ────────────────────────────────────────────────
+// ─── reporter identity validation ─────────────────────────────────────────────
+// reporterEmail is always required (verifies the reporter lives in the complex).
+// complainantName/complainantAddress are only required when sendComplaintTo is set —
+// anonymous reporting (no name, no address, no complaint) must still work.
 
-describe('POST /api/incidents/report — complaint field validation', () => {
+describe('POST /api/incidents/report — reporter identity validation', () => {
   beforeEach(async () => { await Incident.deleteMany({}); });
 
-  test('IT-022: missing complainant email blocks complaint fields from being persisted', async () => {
+  test('IT-022-A: missing reporterEmail returns 400', async () => {
+    const { reporterEmail, ...body } = validBody;
+    const res = await request(app).post('/api/incidents/report').send(body);
+    expect(res.status).toBe(400);
+  });
+
+  test('IT-022-B: invalid reporterEmail format returns 400', async () => {
     const res = await request(app)
       .post('/api/incidents/report')
-      .field('incidentType', 'graffiti')
-      .field('location', 'Block A')
-      .field('description', 'Test')
-      .field('sendComplaintTo', 'tuath')
-      .field('complainantName', 'Jane')
-      .field('complainantAddress', 'Apt 12, Charlemont Street, Dublin 2');
+      .send({ ...validBody, reporterEmail: 'notanemail' });
+    expect(res.status).toBe(400);
+  });
 
+  test('IT-022-C: anonymous report (email only, no name/address, no complaint) returns 201', async () => {
+    const res = await request(app).post('/api/incidents/report').send(validBody);
     expect(res.status).toBe(201);
     const saved = await Incident.findOne({ shortId: res.body.incidentId });
+    expect(saved.reporterEmail).toBe('jane@example.com');
     expect(saved.complainantName).toBeUndefined();
+    expect(saved.complainantAddress).toBeUndefined();
     expect(saved.sendComplaintTo).toHaveLength(0);
   });
 
-  test('IT-023: valid name, address and email persists complaint fields', async () => {
+  test('IT-022-D: sendComplaintTo set without complainantName returns 400', async () => {
     const res = await request(app)
       .post('/api/incidents/report')
-      .field('incidentType', 'graffiti')
-      .field('location', 'Block A')
-      .field('description', 'Test')
-      .field('sendComplaintTo', 'tuath')
-      .field('complainantName', 'Jane')
-      .field('complainantAddress', 'Apt 12, Charlemont Street, Dublin 2')
-      .field('complainantEmail', 'jane@example.com');
+      .send({ ...validBody, sendComplaintTo: 'tuath', complainantAddress: 'Apt 12, Charlemont Street, Dublin 2' });
+    expect(res.status).toBe(400);
+  });
+
+  test('IT-022-E: sendComplaintTo set without complainantAddress returns 400', async () => {
+    const res = await request(app)
+      .post('/api/incidents/report')
+      .send({ ...validBody, sendComplaintTo: 'tuath', complainantName: 'Jane Resident' });
+    expect(res.status).toBe(400);
+  });
+
+  test('IT-023: sendComplaintTo with name and address persists complaint fields', async () => {
+    const res = await request(app)
+      .post('/api/incidents/report')
+      .send({
+        ...validBody,
+        sendComplaintTo: 'tuath',
+        complainantName: 'Jane Resident',
+        complainantAddress: 'Apt 12, Charlemont Street, Dublin 2',
+      });
 
     expect(res.status).toBe(201);
     const saved = await Incident.findOne({ shortId: res.body.incidentId });
-    expect(saved.complainantName).toBe('Jane');
+    expect(saved.complainantName).toBe('Jane Resident');
     expect(saved.complainantAddress).toBe('Apt 12, Charlemont Street, Dublin 2');
-    expect(saved.complainantEmail).toBe('jane@example.com');
+    expect(saved.reporterEmail).toBe('jane@example.com');
     expect(saved.sendComplaintTo).toContain('tuath');
   });
 });

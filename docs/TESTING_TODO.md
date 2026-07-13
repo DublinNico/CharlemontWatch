@@ -9,7 +9,7 @@
 - [x] **Upload middleware unit test** — Supertest suite covering MIME filter, 5MB limit, magic-byte check, and no-file passthrough (UT-038–UT-042); upload.js now at 95% coverage
 - [x] **User model pre-save hook test** — mongodb-memory-server wired up; UT-034 confirms password is hashed on save and not re-hashed on unrelated updates
 - [x] **Email service catch-path test** — UT-035–UT-037 confirm all three catch blocks swallow SendGrid errors silently
-- [x] **sendComplaintEmails tests** — UT-038-A–G cover: Tuath-only send, DCC-only send, both recipients (2 emails), empty recipients (no send), complainant name in Tuath email, location in DCC email, SendGrid error swallowed silently
+- [x] **sendComplaintEmails tests** — UT-038-A–G cover: Túath-only send, DCC-only send, both recipients (2 emails), empty recipients (no send), complainant name in Túath email, location in DCC email, SendGrid error swallowed silently
 - [x] **escapeHtml injection tests** — UT-038-H confirms `<script>` in complainant name is escaped to `&lt;script&gt;`; UT-038-I confirms `<img>` in incident description is escaped
 - [x] **complaintReady integration tests** — IT-022 confirms invalid complainant email blocks complaint fields from DB; IT-023 confirms missing phone does the same
 - [ ] **ErrorBoundary.componentDidCatch** — Sentry hook not tested; accepted gap (see TestingReport §6.1.1)

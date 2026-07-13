@@ -32,7 +32,7 @@ export function ReportSuccess() {
             <div>
               <p className="text-sm font-semibold text-amber-900 mb-1">No formal complaint was sent</p>
               <p className="text-xs text-amber-800">
-                Without a formal complaint, Tuath Housing and Dublin City Council are not required to act.
+                Without a formal complaint, Túath Housing and Dublin City Council are not required to act.
                 Go back and escalate to make sure your report gets an official response.
               </p>
               <button

@@ -9,7 +9,6 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Badge } from '../components/ui/badge';
 import { Checkbox } from '../components/ui/checkbox';
 
 export function ReportIncident() {
@@ -33,7 +32,6 @@ export function ReportIncident() {
     sendToDCC: true,
     name: '',
     address: '',
-    email: '',
   });
   const sendingComplaint = complaint.sendToTuath || complaint.sendToDCC;
 
@@ -44,8 +42,13 @@ export function ReportIncident() {
     e.preventDefault();
     if (!formData.type) return;
 
-    if (sendingComplaint && (!complaint.name || !complaint.address || !complaint.email)) {
-      setSubmitError('Please provide your name, address, and email to send a formal complaint.');
+    if (!formData.reporterEmail.trim()) {
+      setSubmitError('Please provide your email to confirm you live in the complex.');
+      return;
+    }
+
+    if (sendingComplaint && (!complaint.name.trim() || !complaint.address.trim())) {
+      setSubmitError('Please provide your name and address to send a formal complaint.');
       return;
     }
 
@@ -55,7 +58,6 @@ export function ReportIncident() {
     const complaintData: ComplaintData | undefined = sendingComplaint ? {
       name: complaint.name,
       address: complaint.address,
-      email: complaint.email,
       sendTo: [
         ...(complaint.sendToTuath ? ['tuath' as const] : []),
         ...(complaint.sendToDCC ? ['dcc' as const] : []),
@@ -67,7 +69,7 @@ export function ReportIncident() {
         type: formData.type,
         location: formData.location,
         description: formData.description,
-        reporterEmail: formData.reporterEmail || undefined,
+        reporterEmail: formData.reporterEmail,
         status: 'NEW',
         photos,
         typeSpecificData,
@@ -418,17 +420,18 @@ export function ReportIncident() {
               <div>
                 <Label htmlFor="email" className="flex items-center gap-2 mb-2">
                   <Mail className="w-4 h-4" />
-                  Email for Status Updates <Badge variant="secondary" className="ml-2">Optional</Badge>
+                  Email <span className="text-destructive">*</span>
                 </Label>
                 <Input
                   id="email"
                   type="email"
+                  required
                   placeholder="your.email@example.com"
                   value={formData.reporterEmail}
                   onChange={e => setFormData({ ...formData, reporterEmail: e.target.value })}
                 />
                 <p className="text-xs text-muted-foreground mt-1.5">
-                  We'll email you when the status of your report changes. Not needed if you're sending a formal complaint — Tuath or the Council will contact you directly.
+                  Required to confirm you live in the complex. We'll also email you when the status of your report changes. You can still report anonymously: your name and address are never required unless you choose to send a formal complaint below.
                 </p>
               </div>
             </CardContent>
@@ -493,10 +496,10 @@ export function ReportIncident() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-amber-900">
                 <Send className="w-5 h-5 text-amber-600" />
-                Take Action — Send a Formal Complaint
+                Take Action: Send a Formal Complaint
               </CardTitle>
               <CardDescription className="text-amber-800/70">
-                Without a formal complaint, nothing will happen. This report creates the evidence — the complaint forces Tuath Housing or Dublin City Council to respond officially.
+                Without a formal complaint, nothing will happen. This report creates the evidence. The complaint forces Túath Housing or Dublin City Council to respond officially.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -508,9 +511,9 @@ export function ReportIncident() {
                     onCheckedChange={v => setComplaint(c => ({ ...c, sendToTuath: !!v }))}
                   />
                   <Label htmlFor="send-tuath" className="cursor-pointer font-medium">
-                    Tuath Housing
+                    Túath Housing
                     <span className="block text-xs text-muted-foreground font-normal">
-                      For issues in Tuath managed properties or estates
+                      For issues in Túath managed properties or estates
                     </span>
                   </Label>
                 </div>
@@ -530,7 +533,7 @@ export function ReportIncident() {
               </div>
 
               <p className="text-sm text-amber-900 font-semibold">
-                Formal complaints can't be ignored — they require an official written response within 30 working days. Untick only if you do not want to escalate.
+                Formal complaints can't be ignored: they require an official written response within 30 working days. Untick only if you do not want to escalate.
               </p>
 
               {sendingComplaint && (
@@ -564,23 +567,9 @@ export function ReportIncident() {
                       className="bg-white"
                     />
                   </div>
-                  <div>
-                    <Label htmlFor="complainant-complaint-email" className="flex items-center gap-2 mb-2">
-                      <Mail className="w-4 h-4" />
-                      Your Email <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="complainant-complaint-email"
-                      type="email"
-                      placeholder="your.email@example.com"
-                      value={complaint.email}
-                      onChange={e => setComplaint(c => ({ ...c, email: e.target.value }))}
-                      className="bg-white"
-                    />
-                  </div>
                   <p className="text-xs text-amber-800/70">
                     Your name, address, and email are shared only with {[
-                      complaint.sendToTuath ? 'Tuath Housing' : null,
+                      complaint.sendToTuath ? 'Túath Housing' : null,
                       complaint.sendToDCC ? 'Dublin City Council' : null,
                     ].filter(Boolean).join(' and ')} so they can respond to you directly. They are never published on the CharlemontWatch board. Once you hear back, let the CharlemontWatch team know and we will update the status on the app.
                   </p>

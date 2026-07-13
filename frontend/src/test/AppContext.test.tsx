@@ -68,6 +68,7 @@ describe('AppContext — addIncident', () => {
         type: 'Graffiti',
         location: 'Block B',
         description: 'New graffiti',
+        reporterEmail: 'jane@example.com',
         status: 'PENDING_REVIEW',
         photos: [],
       });
@@ -90,6 +91,7 @@ describe('AppContext — addIncident', () => {
         type: 'Anti-Social Behaviour',
         location: 'Block C',
         description: 'Noise issue',
+        reporterEmail: 'jane@example.com',
         status: 'PENDING_REVIEW',
         photos: [],
       });

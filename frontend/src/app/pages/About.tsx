@@ -24,7 +24,7 @@ export function About() {
               <p className="text-[#666666]">
                 CharlemontWatch is a community-led incident reporting and tracking platform for residents 
                 of Charlemont Street, Dublin. We empower residents to document safety, maintenance, and 
-                quality-of-life issues, creating a transparent evidence base that holds Tuath Housing and 
+                quality-of-life issues, creating a transparent evidence base that holds Túath Housing and 
                 Dublin City Council accountable for maintaining our neighbourhood.
               </p>
             </div>
@@ -37,7 +37,7 @@ export function About() {
           <div className="space-y-4">
             {[
               { number: 1, title: 'Report an Issue', description: 'Residents document incidents with photos and detailed descriptions' },
-              { number: 2, title: 'Escalate Formally', description: 'Optionally send a formal complaint directly to Tuath Housing, Dublin City Council, or both — on your behalf, automatically' },
+              { number: 2, title: 'Escalate Formally', description: 'Optionally send a formal complaint directly to Túath Housing, Dublin City Council, or both, on your behalf, automatically' },
               { number: 3, title: 'Receive an ID', description: 'Get a unique tracking ID to monitor your report\'s progress' },
               { number: 4, title: 'Admin Reviews', description: 'Housing administrators review submissions and update status' },
               { number: 5, title: 'Track Resolution', description: 'Follow the incident from submission to resolution' },
@@ -60,15 +60,15 @@ export function About() {
           <h2 className="text-[#333333] mb-4">Who We Pressure</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="border border-[#eeeeee] rounded p-4">
-              <h3 className="text-[#1976d2] mb-2">Tuath Housing</h3>
+              <h3 className="text-[#1976d2] mb-2">Túath Housing</h3>
               <p className="text-sm text-[#666666]">
-                The housing association, responsible for building maintenance, repairs, and resident safety
+                The housing association, responsible for building maintenance, repairs, and resident safety.
               </p>
             </div>
             <div className="border border-[#eeeeee] rounded p-4">
-              <h3 className="text-[#1976d2] mb-2">Dublin City Council</h3>
+              <h3 className="text-[#1976d2] mb-2">Dublin City Council (DCC)</h3>
               <p className="text-sm text-[#666666]">
-                The local government authority overseeing public safety, street cleaning, and community services
+                The local government authority overseeing public safety, street cleaning, and community services.
               </p>
             </div>
           </div>
@@ -81,13 +81,14 @@ export function About() {
             <div>
               <h2 className="text-[#333333] mb-3">Why This Matters</h2>
               <p className="text-[#666666] mb-3">
-                Reporting an issue on an app alone achieves nothing. Tuath Housing and Dublin City Council are not obliged to act on community posts or photos.
+                Reporting an issue on an app alone achieves nothing. Túath Housing and Dublin City Council are not obliged to act on community posts or photos.
               </p>
               <p className="text-[#666666] mb-3">
-                A <strong>formal complaint</strong> is different. Under Tuath's Complaints Policy and Dublin City Council's customer complaints process, they are legally required to acknowledge your complaint within days and provide a written response within 30 working days.
+                A <strong>formal complaint</strong> is different. Under Tú
+                ath's Complaints Policy and Dublin City Council's customer complaints process, they are legally required to acknowledge your complaint within days and provide a written response within 30 working days.
               </p>
               <p className="text-[#666666]">
-                CharlemontWatch combines both — your report builds a public evidence record, and the formal complaint forces an official response. Together, they create accountability that neither can achieve alone.
+                CharlemontWatch combines both: your report builds a public evidence record, and the formal complaint forces an official response. Together, they create accountability that neither can achieve alone.
               </p>
             </div>
           </div>
@@ -149,41 +150,41 @@ export function About() {
           </div>
         </div>
 
-        {/* Anonymous or Identified */}
+        {/* Report Only or Formal Complaint */}
         <div className="bg-white rounded shadow-sm p-6">
-          <h2 className="text-[#333333] mb-4">Anonymous or Identified?</h2>
+          <h2 className="text-[#333333] mb-4">Report Only or Formal Complaint?</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h3 className="text-[#1976d2] mb-2">Anonymous Reporting</h3>
+              <h3 className="text-[#1976d2] mb-2">Report Only</h3>
               <ul className="space-y-2 text-sm text-[#666666]">
                 <li className="flex gap-2">
                   <span className="text-[#388e3c]">✓</span>
-                  <span>No personal information required</span>
+                  <span>Just your email: confirms you live in the complex and lets us send status updates</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-[#388e3c]">✓</span>
-                  <span>Complete privacy protection</span>
+                  <span>Name and address are never required</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-[#d32f2f]">✗</span>
-                  <span>Cannot receive status updates</span>
+                  <span>Not forwarded to Túath Housing or Dublin City Council</span>
                 </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-[#1976d2] mb-2">With Email</h3>
+              <h3 className="text-[#1976d2] mb-2">Formal Complaint</h3>
               <ul className="space-y-2 text-sm text-[#666666]">
                 <li className="flex gap-2">
                   <span className="text-[#388e3c]">✓</span>
-                  <span>Receive status update notifications</span>
+                  <span>Also includes your name and address</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-[#388e3c]">✓</span>
-                  <span>Track progress via email</span>
+                  <span>Forwarded directly to Túath Housing and/or Dublin City Council</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-[#666666]">•</span>
-                  <span>Email only used for updates</span>
+                  <span className="text-[#388e3c]">✓</span>
+                  <span>Requires an official written response within 30 working days</span>
                 </li>
               </ul>
             </div>
