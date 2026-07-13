@@ -164,9 +164,17 @@ describe('sendComplaintEmails', () => {
     expect(msg.html).toContain('Jane Resident');
   });
 
-  test('UT-045: strips CR/LF from the incident location in the complaint subject line', async () => {
+  test('UT-045: strips CR/LF from the incident location in the Túath complaint subject line', async () => {
     const injectedIncident = { ...mockIncident, location: 'Block A\r\nBcc: attacker@evil.com' };
     await sendComplaintEmails(injectedIncident, mockComplainant, ['tuath']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.subject).not.toMatch(/[\r\n]/);
+    expect(msg.subject.split('\n')).toHaveLength(1);
+  });
+
+  test('UT-046: strips CR/LF from the incident location in the DCC complaint subject line', async () => {
+    const injectedIncident = { ...mockIncident, location: 'Block A\r\nBcc: attacker@evil.com' };
+    await sendComplaintEmails(injectedIncident, mockComplainant, ['dcc']);
     const msg = mockSend.mock.calls[0][0];
     expect(msg.subject).not.toMatch(/[\r\n]/);
     expect(msg.subject.split('\n')).toHaveLength(1);

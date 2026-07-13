@@ -296,7 +296,8 @@ const addPhoto = async (req, res) => {
     await incident.save();
     res.json({ success: true, incident });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Add photo error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 

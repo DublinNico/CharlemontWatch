@@ -31,7 +31,7 @@ export function PrivacyPolicy() {
             <h2 className="text-lg font-semibold text-gray-800">3. How we use your data</h2>
             <ul className="list-disc pl-5 text-gray-600 space-y-2">
               <li>To display incident reports on the public map for community awareness.</li>
-              <li>To send you email updates on your report if you provided your email address.</li>
+              <li>To send you email updates on your report.</li>
               <li>To allow community administrators to review and moderate reports.</li>
             </ul>
             <p className="text-gray-600">We do not sell, share, or transfer your data to any third party except SendGrid (our email provider) solely for the purpose of sending transactional emails.</p>
