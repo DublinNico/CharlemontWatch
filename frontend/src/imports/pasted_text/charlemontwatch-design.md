@@ -3,7 +3,7 @@
   CharlemontWatch is a community-led incident reporting and tracking web app for residents of
   Charlemont Street, Dublin. It lets residents document safety, maintenance, and quality-of-life
   issues — graffiti, anti-social behaviour, hazards, and building maintenance — and publicly track
-  resolution progress. The goal is to build an evidence base that holds Tuath Housing and Dublin City
+  resolution progress. The goal is to build an evidence base that holds Túath Housing and Dublin City
    Council accountable.
 
   Users: Residents (reporters/viewers) and Housing Admin staff.
@@ -169,7 +169,7 @@
   Sections in vertical stack (max-width 900px, centered), each as a white card:
   1. Mission Statement — icon + paragraph text
   2. "How It Works" — 4 horizontal numbered steps (circle number + title + description)
-  3. "Who We Pressure" — 2 side-by-side cards: Tuath Housing | Dublin City Council
+  3. "Who We Pressure" — 2 side-by-side cards: Túath Housing | Dublin City Council
   4. "Why This Matters" — paragraph
   5. "Uploading Photos" — icon + bullet list of tips
   6. "Safety & Privacy" — orange warning-style card with rules list (do NOT name individuals, etc.)

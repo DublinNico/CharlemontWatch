@@ -10,6 +10,8 @@ process.env.RESEND_API_KEY = 'test-key';
 process.env.RESEND_FROM_EMAIL = 'reports@charlemontwatch.ie';
 process.env.FRONTEND_URL = 'http://localhost:3000';
 process.env.ADMIN_EMAIL = 'admin@charlemontwatch.ie';
+process.env.TUATH_COMPLAINT_EMAIL = 'tuath@charlemontwatch.ie';
+process.env.DCC_COMPLAINT_EMAIL = 'dcc@charlemontwatch.ie';
 
 const {
   sendResidentConfirmation,
@@ -27,6 +29,7 @@ const mockIncident = {
   status: 'NEW',
   reportedDate: new Date('2025-05-27T10:00:00Z'),
   photos: [],
+  reporterEmail: 'jane@example.com',
 };
 
 beforeEach(() => {
@@ -122,7 +125,7 @@ const mockComplainant = {
 };
 
 describe('sendComplaintEmails', () => {
-  test('UT-038-A: sends to Tuath only when recipients is ["tuath"]', async () => {
+  test('UT-038-A: sends to Túath only when recipients is ["tuath"]', async () => {
     await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
     expect(mockSend).toHaveBeenCalledTimes(1);
     const msg = mockSend.mock.calls[0][0];
@@ -146,7 +149,7 @@ describe('sendComplaintEmails', () => {
     expect(mockSend).not.toHaveBeenCalled();
   });
 
-  test('UT-038-E: Tuath email contains complainant name', async () => {
+  test('UT-038-E: Túath email contains complainant name', async () => {
     await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
     const msg = mockSend.mock.calls[0][0];
     expect(msg.html).toContain('Jane Resident');

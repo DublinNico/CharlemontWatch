@@ -71,7 +71,7 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
             <div className="mt-3">
               <p className="text-xs font-medium text-gray-500 mb-2">
                 Photos ({incident.photos.length})
-                {isQueue && ' — toggle to approve before publishing'}
+                {isQueue && ': toggle to approve before publishing'}
               </p>
               <div className="flex flex-wrap gap-2">
                 {incident.photos.map(photo => (

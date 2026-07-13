@@ -6,8 +6,16 @@ const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
 export interface ComplaintData {
   name: string;
   address: string;
-  email: string;
   sendTo: ('tuath' | 'dcc')[];
+}
+
+export type SatisfactionRating = 'low' | 'medium' | 'high';
+
+export interface SatisfactionSummary {
+  low: number;
+  medium: number;
+  high: number;
+  total: number;
 }
 
 export type IncidentType = 'Graffiti' | 'Anti-Social Behaviour' | 'Safety Hazard' | 'Maintenance Issue';
@@ -25,7 +33,7 @@ export interface Incident {
   type: IncidentType;
   location: string;
   description: string;
-  reporterEmail?: string;
+  reporterEmail: string;
   status: IncidentStatus;
   date: string;
   photos: Photo[];
@@ -49,6 +57,9 @@ interface AppContextType {
   refreshPendingIncidents: () => Promise<void>;
   reviewIncident: (id: string, action: 'approve' | 'reject') => Promise<void>;
   reviewPhoto: (incidentId: string, photoId: string, approved: boolean) => Promise<void>;
+  satisfactionSummary: SatisfactionSummary | null;
+  refreshSatisfactionSummary: () => Promise<void>;
+  submitSatisfactionVote: (email: string, rating: SatisfactionRating) => Promise<void>;
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<boolean>;
@@ -115,6 +126,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [pendingIncidents, setPendingIncidents] = useState<Incident[]>([]);
   const [isLoadingIncidents, setIsLoadingIncidents] = useState(false);
+  const [satisfactionSummary, setSatisfactionSummary] = useState<SatisfactionSummary | null>(null);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
   const [user, setUser] = useState<User | null>(() => {
     const saved = localStorage.getItem('charlemont-user');
@@ -145,8 +157,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshSatisfactionSummary = async () => {
+    try {
+      const response = await axios.get(`${API_BASE}/satisfaction/summary`);
+      setSatisfactionSummary(response.data);
+    } catch {
+      // silently fail — network may be unavailable
+    }
+  };
+
+  const submitSatisfactionVote = async (email: string, rating: SatisfactionRating): Promise<void> => {
+    await axios.post(`${API_BASE}/satisfaction`, { email, rating });
+    await refreshSatisfactionSummary();
+  };
+
   useEffect(() => {
     refreshIncidents();
+    refreshSatisfactionSummary();
   }, []);
 
   useEffect(() => {
@@ -162,7 +189,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     form.append('incidentType', typeToApi[incident.type]);
     form.append('location', incident.location);
     form.append('description', incident.description);
-    if (incident.reporterEmail) form.append('reporterEmail', incident.reporterEmail);
+    form.append('reporterEmail', incident.reporterEmail);
 
     if (incident.typeSpecificData) {
       Object.entries(incident.typeSpecificData).forEach(([key, value]) => {
@@ -177,7 +204,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (complaint && complaint.sendTo.length > 0) {
       form.append('complainantName', complaint.name);
       form.append('complainantAddress', complaint.address);
-      form.append('complainantEmail', complaint.email);
       form.append('sendComplaintTo', complaint.sendTo.join(','));
     }
 
@@ -267,6 +293,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         refreshPendingIncidents,
         reviewIncident,
         reviewPhoto,
+        satisfactionSummary,
+        refreshSatisfactionSummary,
+        submitSatisfactionVote,
         user,
         token,
         login,

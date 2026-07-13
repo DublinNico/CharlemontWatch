@@ -20,9 +20,9 @@ export function PrivacyPolicy() {
           <section className="space-y-4 mb-8">
             <h2 className="text-lg font-semibold text-gray-800">2. What data we collect</h2>
             <ul className="list-disc pl-5 text-gray-600 space-y-2">
-              <li><strong>Incident reports</strong> — location, type, description, and photos submitted by residents.</li>
-              <li><strong>Reporter email address</strong> — optional, only collected if you choose to provide it so we can send you status updates.</li>
-              <li><strong>IP address</strong> — logged automatically by our server for security and abuse prevention.</li>
+              <li><strong>Incident reports:</strong> location, type, description, and photos submitted by residents.</li>
+              <li><strong>Reporter email address:</strong> optional, only collected if you choose to provide it so we can send you status updates.</li>
+              <li><strong>IP address:</strong> logged automatically by our server for security and abuse prevention.</li>
             </ul>
             <p className="text-gray-600">We do not use cookies, analytics scripts, or any third-party tracking.</p>
           </section>
@@ -40,10 +40,10 @@ export function PrivacyPolicy() {
           <section className="space-y-4 mb-8">
             <h2 className="text-lg font-semibold text-gray-800">4. Data retention</h2>
             <ul className="list-disc pl-5 text-gray-600 space-y-2">
-              <li><strong>Incident reports</strong> — retained for 2 years from the date of submission, then permanently deleted.</li>
-              <li><strong>Reporter email addresses</strong> — deleted along with their associated incident at the 2-year mark.</li>
-              <li><strong>Photos</strong> — stored in AWS S3 and deleted when the associated incident is deleted.</li>
-              <li><strong>Server logs</strong> — retained for 90 days for security purposes, then automatically purged.</li>
+              <li><strong>Incident reports:</strong> retained for 2 years from the date of submission, then permanently deleted.</li>
+              <li><strong>Reporter email addresses:</strong> deleted along with their associated incident at the 2-year mark.</li>
+              <li><strong>Photos:</strong> stored in AWS S3 and deleted when the associated incident is deleted.</li>
+              <li><strong>Server logs:</strong> retained for 90 days for security purposes, then automatically purged.</li>
             </ul>
           </section>
 

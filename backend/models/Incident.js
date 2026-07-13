@@ -41,10 +41,13 @@ const incidentSchema = new mongoose.Schema({
     default: Date.now,
     index: true
   },
+  // Always required — lets a reporter stay anonymous (no name/address) while
+  // still confirming they live in the complex and enabling status updates.
   reporterEmail: {
     type: String,
+    required: true,
     validate: {
-      validator: v => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      validator: v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
       message: 'Invalid email format'
     }
   },
@@ -71,10 +74,9 @@ const incidentSchema = new mongoose.Schema({
 
   photos: [photoSchema],
 
-  // Formal complaint fields — only populated when user opts to send a complaint
+  // Formal complaint fields — only required/populated when user opts to send a complaint
   complainantName: String,
   complainantAddress: String,
-  complainantEmail: String,
   sendComplaintTo: [{ type: String, enum: ['tuath', 'dcc'] }],
 
   createdAt: { type: Date, default: Date.now },

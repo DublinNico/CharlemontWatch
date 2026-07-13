@@ -16,18 +16,35 @@ const createIncident = async (req, res) => {
   try {
 
     const { incidentType, location, description, reporterEmail,
-            complainantName, complainantAddress, complainantEmail } = req.body;
+            complainantName, complainantAddress } = req.body;
 
     const sendComplaintTo = req.body.sendComplaintTo
       ? req.body.sendComplaintTo.split(',').filter(v => ['tuath', 'dcc'].includes(v))
       : [];
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const complaintReady = sendComplaintTo.length > 0
-      && !!complainantName
-      && !!complainantAddress
-      && !!complainantEmail && emailRegex.test(complainantEmail);
 
+    const VALID_TYPES = ['graffiti', 'antisocial', 'safetyhazard', 'maintenance'];
+    if (!incidentType || !VALID_TYPES.includes(incidentType)) {
+      return res.status(400).json({ error: 'incidentType must be one of: graffiti, antisocial, safetyhazard, maintenance' });
+    }
+    if (!location || !location.trim()) {
+      return res.status(400).json({ error: 'location is required' });
+    }
+    if (!description || !description.trim()) {
+      return res.status(400).json({ error: 'description is required' });
+    }
+    if (!reporterEmail || !emailRegex.test(reporterEmail)) {
+      return res.status(400).json({ error: 'a valid email is required' });
+    }
+    if (sendComplaintTo.length > 0) {
+      if (!complainantName || !complainantName.trim()) {
+        return res.status(400).json({ error: 'name is required to send a formal complaint' });
+      }
+      if (!complainantAddress || !complainantAddress.trim()) {
+        return res.status(400).json({ error: 'address is required to send a formal complaint' });
+      }
+    }
 
     const typeData = {};
     if (incidentType === 'graffiti') {
@@ -76,15 +93,10 @@ const createIncident = async (req, res) => {
       incidentType,
       location,
       description,
-      reporterEmail: reporterEmail || null,
+      reporterEmail,
       photos,
       ...typeData,
-      ...(complaintReady ? {
-        complainantName,
-        complainantAddress,
-        complainantEmail,
-        sendComplaintTo,
-      } : {})
+      ...(sendComplaintTo.length > 0 ? { complainantName, complainantAddress, sendComplaintTo } : {})
     });
 
     await incident.save();
@@ -92,11 +104,11 @@ const createIncident = async (req, res) => {
     sendResidentConfirmation(incident, incident.reporterEmail);
     sendAdminNotification(incident);
 
-    if (complaintReady) {
+    if (sendComplaintTo.length > 0) {
       sendComplaintEmails(incident, {
-        name: complainantName,
-        address: complainantAddress,
-        email: complainantEmail,
+        name: incident.complainantName,
+        address: incident.complainantAddress,
+        email: incident.reporterEmail,
       }, sendComplaintTo);
     }
 

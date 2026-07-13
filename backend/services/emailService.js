@@ -47,9 +47,9 @@ const sendResidentConfirmation = async (incident, residentEmail) => {
           <p style="margin:8px 0 0;font-size:24px;font-weight:700;letter-spacing:3px;color:#1976d2;">${incident.shortId}</p>
         </div>
 
-        <p><strong>Location:</strong> ${incident.location}</p>
-        <p><strong>Type:</strong> ${getIncidentTypeName(incident.incidentType)}</p>
-        <p><strong>Status:</strong> ${incident.status}</p>
+        <p><strong>Location:</strong> ${escapeHtml(incident.location)}</p>
+        <p><strong>Type:</strong> ${escapeHtml(getIncidentTypeName(incident.incidentType))}</p>
+        <p><strong>Status:</strong> ${escapeHtml(incident.status)}</p>
 
         <p>To track your report, go to <a href="${trackingLink}">${trackingLink}</a> and enter your Incident ID.</p>
         <p>We'll email you when the status changes.</p>
@@ -75,10 +75,10 @@ const sendAdminNotification = async (incident) => {
       html: `
         <h2>New Incident Report</h2>
         <p><strong>ID:</strong> ${incident._id.toString().slice(-8).toUpperCase()}</p>
-        <p><strong>Type:</strong> ${getIncidentTypeName(incident.incidentType)}</p>
-        <p><strong>Location:</strong> ${incident.location}</p>
-        <p><strong>Description:</strong> ${incident.description}</p>
-        <p><strong>Reporter:</strong> ${incident.reporterEmail || 'Anonymous'}</p>
+        <p><strong>Type:</strong> ${escapeHtml(getIncidentTypeName(incident.incidentType))}</p>
+        <p><strong>Location:</strong> ${escapeHtml(incident.location)}</p>
+        <p><strong>Description:</strong> ${escapeHtml(incident.description)}</p>
+        <p><strong>Reporter:</strong> ${escapeHtml(incident.reporterEmail)}</p>
         <p><strong>Reported:</strong> ${incident.reportedDate.toLocaleString()}</p>
         ${incident.photos.length > 0 ? `<p><strong>Photos:</strong> ${incident.photos.length} uploaded</p>` : ''}
         <p><a href="${adminLink}">View in Admin Dashboard</a></p>
@@ -120,7 +120,7 @@ const sendStatusUpdate = async (incident, residentEmail) => {
   }
 };
 
-// Send formal complaint email(s) to Tuath Housing and/or Dublin City Council
+// Send formal complaint email(s) to Túath Housing and/or Dublin City Council
 const sendComplaintEmails = async (incident, complainant, recipients) => {
   const incidentTypeName = getIncidentTypeName(incident.incidentType);
   const reportedDate = new Date(incident.reportedDate).toLocaleDateString('en-IE', {
@@ -148,34 +148,38 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
   const sends = [];
 
   if (recipients.includes('tuath')) {
-    sends.push(send({
+    if (!process.env.TUATH_COMPLAINT_EMAIL) {
+      console.error('TUATH_COMPLAINT_EMAIL not configured — Túath complaint skipped');
+    } else sends.push(send({
       from: FROM,
-      to: [process.env.TUATH_COMPLAINT_EMAIL || 'tonynico90@gmail.com'],
+      to: [process.env.TUATH_COMPLAINT_EMAIL],
       replyTo: complainant.email,
       subject: `Formal Complaint — ${incidentTypeName} at ${incident.location} [${incident.shortId}]`,
       html: `
-        <h2 style="color:#1976d2;">Formal Complaint — Tuath Housing</h2>
-        <p>A formal complaint has been submitted via CharlemontWatch regarding an incident at a Tuath Housing managed area.</p>
+        <h2 style="color:#1976d2;">Formal Complaint — Túath Housing</h2>
+        <p>A formal complaint has been submitted via CharlemontWatch regarding an incident at a Túath Housing managed area.</p>
         <h3>Complainant Details</h3>
         ${complainantBlock}
         <h3>Incident Details</h3>
         ${sharedIncidentBlock}
         <h3>Nature of Complaint</h3>
-        <p>The complainant is reporting an unresolved issue within the Tuath Housing managed estate at <strong>${escapeHtml(incident.location)}</strong>.
-        They are requesting that Tuath Housing investigate and take appropriate action in line with the Tuath Housing Complaints Policy & Procedure (v6.0, October 2024).</p>
+        <p>The complainant is reporting an unresolved issue within the Túath Housing managed estate at <strong>${escapeHtml(incident.location)}</strong>.
+        They are requesting that Túath Housing investigate and take appropriate action in line with the Túath Housing Complaints Policy & Procedure (v6.0, October 2024).</p>
         <h3>Desired Outcome</h3>
-        <p>The complainant requests a written acknowledgement within 5 working days and resolution within 30 working days, as per the Tuath Complaints Procedure.</p>
+        <p>The complainant requests a written acknowledgement within 5 working days and resolution within 30 working days, as per the Túath Complaints Procedure.</p>
         <hr style="margin:24px 0;border:none;border-top:1px solid #eee;" />
         <p style="font-size:12px;color:#888;">This complaint was submitted automatically via CharlemontWatch (charlemontwatch.ie).
         The incident reference is ${incident.shortId}. Please retain this for your complaints register.</p>
       `
-    }).catch(e => console.error('Tuath complaint email failed:', e)));
+    }).catch(e => console.error('Túath complaint email failed:', e)));
   }
 
   if (recipients.includes('dcc')) {
-    sends.push(send({
+    if (!process.env.DCC_COMPLAINT_EMAIL) {
+      console.error('DCC_COMPLAINT_EMAIL not configured — DCC complaint skipped');
+    } else sends.push(send({
       from: FROM,
-      to: [process.env.DCC_COMPLAINT_EMAIL || 'tonynico90@gmail.com'],
+      to: [process.env.DCC_COMPLAINT_EMAIL],
       replyTo: complainant.email,
       subject: `Formal Complaint — ${incidentTypeName} at ${incident.location} [${incident.shortId}]`,
       html: `

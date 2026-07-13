@@ -1,6 +1,7 @@
 import { Shield, Search, List, Info, Lock, User, ArrowRight, Bell, MapPin, Users, FileText, Eye, CheckCircle, Send } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
+import { SatisfactionWidget } from '../components/SatisfactionWidget';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -85,9 +86,9 @@ export function Home() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-        <div className="max-w-7xl mx-auto px-4 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 py-8 md:py-14">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
+            <div className="space-y-4">
               <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 border-0">
                 <Users className="w-3 h-3 mr-1" />
                 Community-Powered Safety
@@ -101,7 +102,7 @@ export function Home() {
               </h1>
 
               <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-                Reports without complaints get ignored. CharlemontWatch sends formal complaints to Tuath Housing and Dublin City Council on your behalf — forcing an official response.
+                CharlemontWatch builds a database of photo evidence and helps you send formal complaints to Túath Housing and Dublin City Council, forcing an official response.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -159,6 +160,11 @@ export function Home() {
         </div>
       </section>
 
+      {/* Satisfaction Voting */}
+      <section className="max-w-3xl mx-auto px-4 py-16">
+        <SatisfactionWidget />
+      </section>
+
       {/* How It Works */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
@@ -168,7 +174,7 @@ export function Home() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
           {[
             { number: 1, title: 'Report', description: 'Submit an incident with photos and details', icon: FileText },
-            { number: 2, title: 'Escalate', description: 'Optionally send a formal complaint directly to Tuath Housing or Dublin City Council', icon: Send },
+            { number: 2, title: 'Escalate', description: 'Optionally send a formal complaint directly to Túath Housing or Dublin City Council', icon: Send },
             { number: 3, title: 'Track', description: 'Use your incident ID to monitor progress', icon: Eye },
             { number: 4, title: 'Review', description: 'Admin reviews and updates status', icon: Shield },
             { number: 5, title: 'Resolve', description: 'Issue is addressed and marked complete', icon: CheckCircle },

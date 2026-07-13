@@ -35,7 +35,7 @@ The application is a full-stack system comprising:
 3. Residents can track their report status using the reference code
 4. Admin users authenticate via JWT and can update statuses (`NEW → IN_PROGRESS → RESOLVED`) or delete reports
 5. All incidents are publicly browsable at `/incidents`
-6. Residents can optionally send a formal complaint to Tuath Housing and/or Dublin City Council when submitting a report; a complaint email is dispatched on their behalf, containing their contact details and the incident summary
+6. Residents can optionally send a formal complaint to Túath Housing and/or Dublin City Council when submitting a report; a complaint email is dispatched on their behalf, containing their contact details and the incident summary
 
 ### 1.2 Testing Objectives
 
@@ -106,7 +106,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 156 automated tests pass (88 backend unit + 23 backend integration + 5 security + 25 frontend unit + 15 E2E)
+- All 185 automated tests pass (97 backend unit + 35 backend integration + 5 security + 33 frontend unit + 15 E2E)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -163,12 +163,15 @@ Equivalence Partitioning divides the input domain into classes where all values 
 
 #### TC-BB-EP-002 — Reporter Email (condensed)
 
+`reporterEmail` is mandatory on every report (anonymous or not); `complainantName`/`complainantAddress` are only required when `sendComplaintTo` is set.
+
 | Test | Input | Expected | Result |
 |------|-------|----------|--------|
 | EP1-1 | `"resident@gmail.com"` | 201, email sent | PASS |
-| EP3-1 | field omitted | 201, no email sent | PASS |
-| EP3-2 | `null` | 201, no email sent | PASS |
-| EP2-1 | `"notanemail"` | 400, validation error (**gap fixed**) | PASS |
+| EP3-1 | field omitted | 400, `reporterEmail` required | PASS |
+| EP2-1 | `"notanemail"` | 400, validation error | PASS |
+| EP4-1 | valid email, no name/address, no complaint | 201 — anonymous report still works | PASS |
+| EP4-2 | `sendComplaintTo` set, name/address omitted | 400 — required only to send a formal complaint | PASS |
 
 *Full test case detail: [TC-BB-EP-002.md](test-cases/TC-BB-EP-002.md)*
 
@@ -341,22 +344,24 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 |------|---------------------|-------|
 | `tests/unit/generateShortId.test.js` | ID format, prefix, length, uniqueness | UT-001 – UT-002 (5 tests) |
 | `tests/unit/auth.middleware.test.js` | authenticate middleware (all branches), adminOnly middleware (all branches) | UT-005 – UT-010 (9 tests) |
-| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, SendGrid error catch-paths, sendComplaintEmails (Tuath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I (24 tests) |
-| `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array, reporterEmail format | UT-014 – UT-018, UT-033 (17 tests) |
+| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, SendGrid error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I (24 tests) |
+| `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array, mandatory reporterEmail (format + anonymous-still-allowed) | UT-014 – UT-018, UT-033 (19 tests) |
 | `tests/unit/userModel.test.js` | Pre-save bcrypt hook, comparePassword, schema validation, role default/enum | UT-019 – UT-025, UT-034 (10 tests) |
 | `tests/unit/authController.test.js` | Login input validation, credential checks, JWT generation, email normalisation, 500 error path | UT-026 – UT-032 (15 tests) |
 | `tests/unit/upload.middleware.test.js` | MIME type filter, 5MB size limit, magic-byte validation (JPEG/PNG/WebP/spoofed PDF), no-file passthrough | UT-038 – UT-042 (8 tests) |
+| `tests/unit/satisfactionVoteModel.test.js` | Required field validation (email, rating), email format, rating enum (low/medium/high) | UT-043-A – UT-043-G (7 tests) |
 
-**Unit test total: 88 tests across 7 test suites**
+**Unit test total: 97 tests across 8 test suites**
 
 #### Integration Tests
 
 | File | Functionality Tested | Tests |
 |------|---------------------|-------|
-| `tests/integration/incidents.test.js` | POST/GET/PATCH/DELETE incident routes; auth guards; photo upload; 11-file limit; status filtering; complaintReady validation (invalid email and missing phone both block complaint persistence) | IT-001 – IT-017, IT-022 – IT-023 (19 tests) |
+| `tests/integration/incidents.test.js` | POST/GET/PATCH/DELETE incident routes; auth guards; photo upload; 11-file limit; status filtering; reporter identity validation (reporterEmail mandatory, anonymous reports allowed without name/address, complainantName/complainantAddress required only when sendComplaintTo is set) | IT-001 – IT-017, IT-022 – IT-023 (23 tests) |
 | `tests/integration/auth.test.js` | Login (correct/wrong/unknown); register route removed (404) | IT-018 – IT-021 (4 tests) |
+| `tests/integration/satisfaction.test.js` | POST vote validation (email/rating), upsert-on-revote (no duplicates), case-insensitive email matching, GET summary aggregation (zero state, accurate counts, no emails exposed) | IT-024 – IT-031 (8 tests) |
 
-**Integration test total: 23 tests across 2 test suites**
+**Integration test total: 35 tests across 3 test suites**
 
 #### Frontend Unit Tests (Vitest + React Testing Library)
 
@@ -367,8 +372,9 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 | `src/test/TrackReport.test.tsx` | Search hits API and renders incident card; cache hit skips API call; 404 shows not-found message; network error shows error message | FT-009 – FT-010 (4 tests) |
 | `src/test/AdminDashboard.test.tsx` | Incidents list renders location and ID badge; status update modal calls `updateIncidentStatus` with selected value | FT-011 – FT-012 (3 tests) |
 | `src/test/ReportIncident.test.tsx` | Graffiti submission calls `addIncident` with correct payload; navigates to success on submit; shows error on failure; submit disabled without type; `addIncident` not called without type | FT-013 – FT-014 (6 tests) |
+| `src/test/SatisfactionWidget.test.tsx` | Results bar percentages and zero-vote state; validation errors (missing rating/email); `submitSatisfactionVote` called with correct args; confirmation + "Update Vote" state after submit; error message on rejected submit | FT-015 – FT-016 (8 tests) |
 
-**Frontend unit test total: 25 tests across 5 test suites**
+**Frontend unit test total: 33 tests across 6 test suites**
 
 #### E2E Tests (Playwright)
 
@@ -404,7 +410,7 @@ Artillery scenarios run against a live backend (`npm run dev` in `/backend` firs
 
 Observed results on 31/05/26: GET p95 = 72ms, POST p95 = 95ms — both well inside thresholds.
 
-**Grand total: 156 automated tests across 22 test suites**
+**Grand total: 185 automated tests across 24 test suites**
 
 ---
 
@@ -549,7 +555,7 @@ describe('User model — comparePassword', () => {
 
 ### 5.4 Test Execution Results
 
-All 156 tests were executed on 31/05/26.
+All 185 tests were executed on 13/07/26.
 
 **Backend** (`npm test` in `/backend`):
 
@@ -557,17 +563,19 @@ All 156 tests were executed on 31/05/26.
 PASS tests/unit/generateShortId.test.js        (5 tests)
 PASS tests/unit/auth.middleware.test.js        (9 tests)
 PASS tests/unit/emailService.test.js          (24 tests)
-PASS tests/unit/incidentModel.test.js         (17 tests)
+PASS tests/unit/incidentModel.test.js         (19 tests)
 PASS tests/unit/userModel.test.js             (10 tests)
 PASS tests/unit/authController.test.js        (15 tests)
 PASS tests/unit/upload.middleware.test.js      (8 tests)
-PASS tests/integration/incidents.test.js      (19 tests)
+PASS tests/unit/satisfactionVoteModel.test.js  (7 tests)
+PASS tests/integration/incidents.test.js      (23 tests)
 PASS tests/integration/auth.test.js            (4 tests)
+PASS tests/integration/satisfaction.test.js    (8 tests)
 PASS tests/security/security.test.js           (5 tests)
 
-Test Suites: 10 passed, 10 total
-Tests:       116 passed, 116 total
-Time:        13.114 s
+Test Suites: 12 passed, 12 total
+Tests:       137 passed, 137 total
+Time:        15.676 s
 ```
 
 **Frontend** (`npm test` in `/frontend`):
@@ -577,10 +585,12 @@ PASS src/test/AppContext.test.tsx              (8 tests)
 PASS src/test/Header.test.tsx                 (4 tests)
 PASS src/test/TrackReport.test.tsx            (4 tests)
 PASS src/test/AdminDashboard.test.tsx         (3 tests)
+PASS src/test/ReportIncident.test.tsx          (6 tests)
+PASS src/test/SatisfactionWidget.test.tsx      (8 tests)
 
-Test Files:  5 passed (5)
-Tests:       25 passed (25)
-Time:        4.56 s
+Test Files:  6 passed (6)
+Tests:       33 passed (33)
+Time:        4.30 s
 ```
 
 **E2E** (`npm run test:e2e` in `/frontend`):
@@ -705,12 +715,18 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | Low | Add React error boundary | ✅ Done — `ErrorBoundary.tsx` wraps entire app; shows fallback on crash |
 | Low | Add scroll-to-top on route navigation | ✅ Done — `ScrollToTop.tsx` layout route resets scroll on every navigation |
 | Low | Add GDPR privacy policy page | ✅ Done — `/privacy` page with data collected, retention policy, rights, and contact details |
-| Low | Formal complaint forwarding to Tuath Housing / Dublin City Council | ✅ Done — optional complaint section on report form; `sendComplaintEmails` dispatches formatted complaint emails to selected organisations |
+| Low | Formal complaint forwarding to Túath Housing / Dublin City Council | ✅ Done — optional complaint section on report form; `sendComplaintEmails` dispatches formatted complaint emails to selected organisations |
 | Low | Remove "Already reported to Garda" field | ✅ Done — checkbox, schema field (`reportedToTuath`), controller extraction, and all frontend API mappings removed (31/05/26) |
 | Low | Update Anti-Social Behaviour options | ✅ Done — added Urination / Defecation; removed Fighting and Estimated Number of People |
 | Low | Add About Us button to header | ✅ Done — visible on all pages, navigates to `/about` |
-| Low | Update How It Works (Home + About) | ✅ Done — 5-step flow now includes Escalate step explaining Tuath/DCC complaint option |
+| Low | Update How It Works (Home + About) | ✅ Done — 5-step flow now includes Escalate step explaining Túath/DCC complaint option |
 | Low | UK English throughout frontend | ✅ Done — neighbourhood, organised, behaviour |
+| Low | Add explicit input validation in `createIncident` | ✅ Done — 400 guards for missing/invalid `incidentType`, `location`, `description` before type-specific logic runs |
+| Low | Apply `escapeHtml` to resident confirmation and admin notification emails | ✅ Done — `location`, `status`, `incidentType`, `description`, `reporterEmail` all escaped before HTML interpolation |
+| Low | Remove hardcoded personal email fallback from complaint sender config | ✅ Done — missing `TUATH_COMPLAINT_EMAIL` / `DCC_COMPLAINT_EMAIL` now logs a warning and skips rather than falling back to a personal address |
+| Low | Migrate email provider from SendGrid to Resend | ✅ Done — `@sendgrid/mail` replaced with `resend`; complaint emails confirmed landing in inbox |
+| Low | Make `reporterEmail` mandatory on every incident report | ✅ Done — verifies the reporter lives in the complex; anonymous reporting (no name/address, no complaint) still works, since `complainantName`/`complainantAddress` remain optional unless `sendComplaintTo` is set |
+| Low | Add resident satisfaction voting system | ✅ Done — new `SatisfactionVote` model/controller/routes (`/api/satisfaction`, `/api/satisfaction/summary`); one vote per email, upserted so votes can be changed; `SatisfactionWidget` on the Home page shows a public low/medium/high results bar with no emails exposed |
 
 ---
 
@@ -735,9 +751,11 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | FR-13 | Admin authentication shall be enforced via JWT with a 7-day expiry |
 | FR-14 | New admin accounts shall be created via the `/api/auth/register` endpoint |
 | FR-15 | Incident reference IDs shall be unique and collision-resistant |
-| FR-16 | Users shall be able to optionally send a formal complaint to Tuath Housing and/or Dublin City Council when submitting an incident report |
-| FR-17 | If a complaint is selected, the user must provide their full name, email address, and phone number; anonymous reporting without a complaint shall remain available |
+| FR-16 | Users shall be able to optionally send a formal complaint to Túath Housing and/or Dublin City Council when submitting an incident report |
+| FR-17 | Every incident report shall require a valid reporter email; if a formal complaint is selected, the user must additionally provide their full name and address. Anonymous reporting (no name/address, no complaint) shall remain available |
 | FR-18 | The system shall display a GDPR-compliant privacy policy at `/privacy` covering data collected, retention periods, user rights, and contact details |
+| FR-19 | The system shall allow any user to submit a satisfaction rating (low/medium/high) for Túath Housing, identified by email; resubmitting with the same email shall update the existing vote rather than creating a duplicate |
+| FR-20 | The system shall publicly display aggregate satisfaction vote counts without exposing voter email addresses |
 
 ### A.2 Non-Functional Requirements
 

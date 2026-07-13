@@ -14,6 +14,11 @@
 - [x] **Add NoSQL injection protection** — `express-mongo-sanitize` added to `app.js`; ST-003 confirms operator payloads are rejected before reaching the DB
 - [x] **Add email format validation** to the Incident schema (`reporterEmail`) — regex validator added; `"notanemail"` now rejected (UT-033)
 - [x] **Add magic-byte MIME verification** on uploads — `validateMagicBytes` middleware checks actual file buffer bytes; PDF-disguised-as-JPEG now rejected (UT-041)
+- [x] **Add explicit input validation in `createIncident`** — 400 returned for missing/invalid `incidentType`, `location`, `description` before any DB or type logic runs
+- [x] **Escape HTML in all outgoing emails** — `escapeHtml()` applied to all user-supplied fields in resident confirmation, admin notification, and complaint emails
+- [x] **Remove hardcoded personal email fallback** — missing `TUATH_COMPLAINT_EMAIL`/`DCC_COMPLAINT_EMAIL` now logs a warning and skips rather than defaulting to a personal address
+- [x] **Migrate email provider to Resend** — `@sendgrid/mail` replaced; complaint emails confirmed landing in inbox; free tier: 3,000 emails/month
+- [x] **Make `reporterEmail` mandatory on every report** — previously optional; now required (400 if missing/invalid) so every submission, anonymous or not, is tied to a verifiable resident email. `complainantName`/`complainantAddress` remain optional and are only required when `sendComplaintTo` is set — anonymous reporting (photos + description only) still works.
 
 ### Environment & Config
 - [x] **Replace all hardcoded `localhost:5000`** in the frontend — `AppContext.tsx:4` and `TrackReport.tsx:10` both hardcode the local API URL; move to `import.meta.env.VITE_API_URL`
@@ -40,7 +45,7 @@
 - [x] **Fix email tracking link in `emailService.js`** — `sendResidentConfirmation` still uses the old hash-based `/#track` path; should be the React Router path `/track`
 
 ### Email
-- [ ] **Verify SendGrid sender domain** — `reports@charlemontwatch.ie` must have SPF/DKIM DNS records set up or emails will go to spam
+- [ ] **Verify Resend sender domain** — add `charlemontwatch.ie` to Resend → Domains and set up SPF/DKIM DNS records; until then emails send from `onboarding@resend.dev`
 - [ ] **Test all three email flows in production** — resident confirmation, admin notification, status update
 
 ---
@@ -53,10 +58,13 @@
 - [ ] **Enable MongoDB Atlas automated backups** — set a daily backup schedule on the Atlas cluster
 
 ### Testing
-- [x] **Add Supertest integration tests** — 21 integration tests covering all incident and auth routes (IT-001 – IT-021)
-- [x] **Add frontend unit tests** — 25 Vitest + React Testing Library tests covering AppContext, Header, TrackReport, AdminDashboard, ReportIncident (FT-001 – FT-014)
+- [x] **Add Supertest integration tests** — 35 integration tests covering all incident, auth, and satisfaction routes (IT-001 – IT-031)
+- [x] **Add frontend unit tests** — 33 Vitest + React Testing Library tests covering AppContext, Header, TrackReport, AdminDashboard, ReportIncident, SatisfactionWidget (FT-001 – FT-016)
 - [x] **Add E2E tests (Playwright)** — 15 test cases × 2 browser profiles = 30 runs; covers report, track, browse, admin login/update/delete, mobile viewport (ET-001 – ET-014)
 - [x] **Set up GitHub Actions CI** — `.github/workflows/ci.yml` runs backend tests + coverage threshold + frontend tsc + Vitest on push to `dev` and PRs to `main`
+
+### Features
+- [x] **Add resident satisfaction voting system** — public low/medium/high vote on Túath Housing (`/api/satisfaction`); one vote per email, upserted so residents can change their vote; results shown as a public bar chart on the Home page, no emails exposed via `/api/satisfaction/summary`
 
 ### Legal (GDPR — Ireland)
 - [x] **Write a privacy policy** — `/privacy` page created covering data collected, usage, retention, GDPR rights, and contact
@@ -75,7 +83,7 @@
 
 | Priority | Total | Done | Remaining |
 |----------|-------|------|-----------|
-| 🔴 Critical | 12 | 7 | 5 |
+| 🔴 Critical | 18 | 13 | 5 |
 | 🟠 Important | 8 | 8 | 0 |
-| 🟡 Nice to have | 13 | 9 | 4 |
-| **Total** | **33** | **24** | **9** |
+| 🟡 Nice to have | 14 | 10 | 4 |
+| **Total** | **40** | **31** | **9** |

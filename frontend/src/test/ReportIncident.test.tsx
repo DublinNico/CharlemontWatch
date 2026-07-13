@@ -73,6 +73,17 @@ function fillCommonFields() {
     target: { value: 'Large graffiti tag on the south wall' },
   });
 
+  // Your Details — always required regardless of complaint checkboxes
+  fireEvent.change(screen.getByPlaceholderText(/Your full name/i), {
+    target: { value: 'Jane Resident' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/Apt 12, Charlemont Street/i), {
+    target: { value: 'Apt 12, Charlemont Street, Dublin 2' },
+  });
+  fireEvent.change(screen.getByPlaceholderText(/your\.email@example\.com/i), {
+    target: { value: 'jane@example.com' },
+  });
+
   // Untick complaint checkboxes — default is checked, tests cover report submission only
   const tuathCheckbox = document.getElementById('send-tuath') as HTMLInputElement;
   const dccCheckbox = document.getElementById('send-dcc') as HTMLInputElement;
