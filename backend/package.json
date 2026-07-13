@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "CharlemontWatch incident reporting API",
   "main": "server.js",
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
