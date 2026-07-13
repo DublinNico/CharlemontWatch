@@ -139,32 +139,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="max-w-7xl mx-auto px-4 -mt-8 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {stats.map((stat, index) => (
-            <Card key={index} className="border-0 shadow-lg">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
-                    <p className="text-3xl font-bold mt-2">{stat.value}</p>
-                  </div>
-                  <div className={`p-3 rounded-xl bg-gradient-to-br from-white to-gray-50 ${stat.color}`}>
-                    <stat.icon className="w-6 h-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Satisfaction Voting */}
-      <section className="max-w-3xl mx-auto px-4 py-16">
-        <SatisfactionWidget />
-      </section>
-
       {/* How It Works */}
       <section className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
@@ -217,6 +191,24 @@ export function Home() {
               </Card>
             ))}
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+            {stats.map((stat, index) => (
+              <Card key={index} className="border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                      <p className="text-3xl font-bold mt-2">{stat.value}</p>
+                    </div>
+                    <div className={`p-3 rounded-xl bg-gradient-to-br from-white to-gray-50 ${stat.color}`}>
+                      <stat.icon className="w-6 h-6" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -259,6 +251,11 @@ export function Home() {
             </Card>
           ))}
         </div>
+      </section>
+
+      {/* Satisfaction Voting */}
+      <section className="max-w-3xl mx-auto px-4 py-16">
+        <SatisfactionWidget />
       </section>
 
       {/* Quick Links */}

@@ -21,7 +21,7 @@ export function PrivacyPolicy() {
             <h2 className="text-lg font-semibold text-gray-800">2. What data we collect</h2>
             <ul className="list-disc pl-5 text-gray-600 space-y-2">
               <li><strong>Incident reports:</strong> location, type, description, and photos submitted by residents.</li>
-              <li><strong>Reporter email address:</strong> optional, only collected if you choose to provide it so we can send you status updates.</li>
+              <li><strong>Reporter email address:</strong> required for every incident report, used to confirm you live in the complex and to send you status updates.</li>
               <li><strong>IP address:</strong> logged automatically by our server for security and abuse prevention.</li>
             </ul>
             <p className="text-gray-600">We do not use cookies, analytics scripts, or any third-party tracking.</p>

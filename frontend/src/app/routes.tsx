@@ -8,6 +8,7 @@ import { About } from "./pages/About";
 import { Auth } from "./pages/Auth";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
+import { NotFound } from "./pages/NotFound";
 import { ScrollToTop } from "./components/ScrollToTop";
 
 export const router = createBrowserRouter([
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
       { path: "/cw-admin", element: <Auth /> },
       { path: "/admin", element: <AdminDashboard /> },
       { path: "/privacy", element: <PrivacyPolicy /> },
+      { path: "*", element: <NotFound /> },
     ],
   },
 ]);

@@ -42,12 +42,16 @@ export function ReportIncident() {
     e.preventDefault();
     if (!formData.type) return;
 
-    if (!formData.reporterEmail.trim()) {
+    const reporterEmail = formData.reporterEmail.trim();
+    const complainantName = complaint.name.trim();
+    const complainantAddress = complaint.address.trim();
+
+    if (!reporterEmail) {
       setSubmitError('Please provide your email to confirm you live in the complex.');
       return;
     }
 
-    if (sendingComplaint && (!complaint.name.trim() || !complaint.address.trim())) {
+    if (sendingComplaint && (!complainantName || !complainantAddress)) {
       setSubmitError('Please provide your name and address to send a formal complaint.');
       return;
     }
@@ -56,8 +60,8 @@ export function ReportIncident() {
     setSubmitError('');
 
     const complaintData: ComplaintData | undefined = sendingComplaint ? {
-      name: complaint.name,
-      address: complaint.address,
+      name: complainantName,
+      address: complainantAddress,
       sendTo: [
         ...(complaint.sendToTuath ? ['tuath' as const] : []),
         ...(complaint.sendToDCC ? ['dcc' as const] : []),
@@ -69,7 +73,7 @@ export function ReportIncident() {
         type: formData.type,
         location: formData.location,
         description: formData.description,
-        reporterEmail: formData.reporterEmail,
+        reporterEmail,
         status: 'NEW',
         photos,
         typeSpecificData,

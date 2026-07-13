@@ -114,6 +114,15 @@ describe('sendAdminNotification', () => {
     const msg = mockSend.mock.calls[0][0];
     expect(msg.subject).toContain('Block A, Charlemont Street');
   });
+
+  test('UT-044: strips CR/LF from the incident location in the subject line (header injection)', async () => {
+    const injectedIncident = { ...mockIncident, location: 'Block A\r\nBcc: attacker@evil.com' };
+    await sendAdminNotification(injectedIncident);
+    const msg = mockSend.mock.calls[0][0];
+    // No newline means "Bcc: ..." can't start a new header — it's just inert subject text
+    expect(msg.subject).not.toMatch(/[\r\n]/);
+    expect(msg.subject.split('\n')).toHaveLength(1);
+  });
 });
 
 // ─── sendComplaintEmails ──────────────────────────────────────────────────────
@@ -153,6 +162,14 @@ describe('sendComplaintEmails', () => {
     await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
     const msg = mockSend.mock.calls[0][0];
     expect(msg.html).toContain('Jane Resident');
+  });
+
+  test('UT-045: strips CR/LF from the incident location in the complaint subject line', async () => {
+    const injectedIncident = { ...mockIncident, location: 'Block A\r\nBcc: attacker@evil.com' };
+    await sendComplaintEmails(injectedIncident, mockComplainant, ['tuath']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.subject).not.toMatch(/[\r\n]/);
+    expect(msg.subject.split('\n')).toHaveLength(1);
   });
 
   test('UT-038-F: DCC email contains incident location', async () => {

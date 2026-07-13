@@ -116,7 +116,10 @@ export function TrackReport() {
         <StatsCard />
 
         <div className="bg-white rounded shadow-sm p-6">
-          <h2 className="text-[#333333] mb-4">Track Your Report</h2>
+          <h2 className="text-[#333333] mb-2">Track Your Report</h2>
+          <p className="text-sm text-[#666666] mb-4">
+            Enter the Incident ID you received in your confirmation email when you submitted the report.
+          </p>
           <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"

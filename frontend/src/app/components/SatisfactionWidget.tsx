@@ -106,6 +106,7 @@ export function SatisfactionWidget() {
                 key={r.value}
                 type="button"
                 variant="outline"
+                aria-pressed={rating === r.value}
                 onClick={() => { setRating(r.value); setSubmitted(false); }}
                 className={`flex flex-col h-auto py-3 gap-1 ${rating === r.value ? r.activeClass : ''}`}
               >

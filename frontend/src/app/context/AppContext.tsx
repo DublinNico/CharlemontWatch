@@ -33,7 +33,9 @@ export interface Incident {
   type: IncidentType;
   location: string;
   description: string;
-  reporterEmail: string;
+  // Optional because legacy records predate this field being made mandatory
+  // on submission — new reports always have it, but old fetched rows may not.
+  reporterEmail?: string;
   status: IncidentStatus;
   date: string;
   photos: Photo[];
@@ -189,7 +191,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     form.append('incidentType', typeToApi[incident.type]);
     form.append('location', incident.location);
     form.append('description', incident.description);
-    form.append('reporterEmail', incident.reporterEmail);
+    form.append('reporterEmail', incident.reporterEmail ?? '');
 
     if (incident.typeSpecificData) {
       Object.entries(incident.typeSpecificData).forEach(([key, value]) => {

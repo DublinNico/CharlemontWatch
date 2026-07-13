@@ -1,7 +1,9 @@
 const Incident = require('../models/Incident');
 const s3 = require('../config/s3');
 const crypto = require('crypto');
+const sharp = require('sharp');
 const { generateShortId } = require('../utils/idUtils');
+const { EMAIL_REGEX } = require('../utils/validators');
 const { sendResidentConfirmation, sendAdminNotification, sendStatusUpdate, sendComplaintEmails } = require('../services/emailService');
 
 const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
@@ -11,6 +13,14 @@ const findByAnyId = async (id) => {
          await Incident.findById(id).catch(() => null);
 };
 
+// Downscale and re-encode as JPEG before upload — caps storage/bandwidth cost
+// for full-resolution phone photos while keeping evidence clearly legible.
+const compressImage = (buffer) => sharp(buffer)
+  .rotate()
+  .resize({ width: 1920, height: 1920, fit: 'inside', withoutEnlargement: true })
+  .jpeg({ quality: 80 })
+  .toBuffer();
+
 // Create incident (report)
 const createIncident = async (req, res) => {
   try {
@@ -19,10 +29,8 @@ const createIncident = async (req, res) => {
             complainantName, complainantAddress } = req.body;
 
     const sendComplaintTo = req.body.sendComplaintTo
-      ? req.body.sendComplaintTo.split(',').filter(v => ['tuath', 'dcc'].includes(v))
+      ? req.body.sendComplaintTo.split(',').map(v => v.trim()).filter(v => ['tuath', 'dcc'].includes(v))
       : [];
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const VALID_TYPES = ['graffiti', 'antisocial', 'safetyhazard', 'maintenance'];
     if (!incidentType || !VALID_TYPES.includes(incidentType)) {
@@ -34,7 +42,7 @@ const createIncident = async (req, res) => {
     if (!description || !description.trim()) {
       return res.status(400).json({ error: 'description is required' });
     }
-    if (!reporterEmail || !emailRegex.test(reporterEmail)) {
+    if (!reporterEmail || !EMAIL_REGEX.test(reporterEmail)) {
       return res.status(400).json({ error: 'a valid email is required' });
     }
     if (sendComplaintTo.length > 0) {
@@ -69,13 +77,14 @@ const createIncident = async (req, res) => {
     if (req.files && req.files.length > 0) {
       for (const file of req.files.slice(0, 10)) {
         const key = `incidents/${Date.now()}-${crypto.randomBytes(4).toString('hex')}.jpg`;
-        const params = {
-          Bucket: process.env.AWS_S3_BUCKET,
-          Key: key,
-          Body: file.buffer,
-          ContentType: file.mimetype
-        };
         try {
+          const compressed = await compressImage(file.buffer);
+          const params = {
+            Bucket: process.env.AWS_S3_BUCKET,
+            Key: key,
+            Body: compressed,
+            ContentType: 'image/jpeg'
+          };
           await s3.upload(params).promise();
           photos.push({
             url: `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
@@ -267,11 +276,12 @@ const addPhoto = async (req, res) => {
     }
 
     const key = `incidents/${Date.now()}-${crypto.randomBytes(4).toString('hex')}.jpg`;
+    const compressed = await compressImage(req.file.buffer);
     const params = {
       Bucket: process.env.AWS_S3_BUCKET,
       Key: key,
-      Body: req.file.buffer,
-      ContentType: req.file.mimetype
+      Body: compressed,
+      ContentType: 'image/jpeg'
     };
 
     await s3.upload(params).promise();

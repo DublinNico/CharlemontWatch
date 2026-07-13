@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /cw-admin
+
+Sitemap: https://charlemontwatch.ie/sitemap.xml
