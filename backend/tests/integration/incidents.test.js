@@ -1,4 +1,9 @@
-jest.mock('resend', () => ({ Resend: jest.fn().mockImplementation(() => ({ emails: { send: jest.fn().mockResolvedValue({ data: { id: 'mock-id' }, error: null }) } })) }));
+// Named with a "mock" prefix so Jest's module-hoisting allows referencing it
+// inside the jest.mock() factory below — gives every test file-wide access
+// to the same send mock via a stable reference, rather than digging through
+// Resend.mock.results.
+const mockResendSend = jest.fn().mockResolvedValue({ data: { id: 'mock-id' }, error: null });
+jest.mock('resend', () => ({ Resend: jest.fn().mockImplementation(() => ({ emails: { send: mockResendSend } })) }));
 jest.mock('../../config/s3', () => ({
   upload: jest.fn().mockReturnValue({
     promise: jest.fn().mockResolvedValue({ Location: 'https://s3.example.com/test.jpg' }),
@@ -17,6 +22,10 @@ process.env.JWT_SECRET = 'charlemont-test-secret-key';
 process.env.AWS_S3_BUCKET = 'test-bucket';
 process.env.AWS_REGION = 'eu-north-1';
 process.env.FRONTEND_URL = 'http://localhost:3000';
+process.env.RESEND_API_KEY = 'test-key';
+process.env.ADMIN_EMAIL = 'admin@charlemontwatch.ie';
+process.env.TUATH_COMPLAINT_EMAIL = 'tuath@example.com';
+process.env.DCC_COMPLAINT_EMAIL = 'dcc@example.com';
 
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
@@ -265,6 +274,150 @@ describe('DELETE /api/incidents/admin/:id', () => {
     const res = await request(app)
       .delete(`/api/incidents/admin/${incident.shortId}`);
     expect(res.status).toBe(401);
+  });
+});
+
+// ─── PATCH /api/incidents/admin/:id/review ─────────────────────────────────────
+
+describe('PATCH /api/incidents/admin/:id/review', () => {
+  let incident;
+
+  beforeEach(async () => {
+    incident = await Incident.create({ ...validBody, shortId: 'CW-REVIEW1', status: 'PENDING_REVIEW' });
+  });
+
+  test('IT-034: admin JWT approves a pending incident, moving it to NEW', async () => {
+    const res = await request(app)
+      .patch(`/api/incidents/admin/${incident.shortId}/review`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ action: 'approve' });
+    expect(res.status).toBe(200);
+    expect(res.body.incident.status).toBe('NEW');
+  });
+
+  test('IT-035: admin JWT rejects a pending incident, moving it to REJECTED', async () => {
+    const res = await request(app)
+      .patch(`/api/incidents/admin/${incident.shortId}/review`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ action: 'reject' });
+    expect(res.status).toBe(200);
+    expect(res.body.incident.status).toBe('REJECTED');
+  });
+
+  test('IT-036: no JWT returns 401', async () => {
+    const res = await request(app)
+      .patch(`/api/incidents/admin/${incident.shortId}/review`)
+      .send({ action: 'approve' });
+    expect(res.status).toBe(401);
+  });
+
+  test('IT-037: resident JWT returns 403', async () => {
+    const res = await request(app)
+      .patch(`/api/incidents/admin/${incident.shortId}/review`)
+      .set('Authorization', `Bearer ${residentToken}`)
+      .send({ action: 'approve' });
+    expect(res.status).toBe(403);
+  });
+
+  test('IT-038: invalid action returns 400', async () => {
+    const res = await request(app)
+      .patch(`/api/incidents/admin/${incident.shortId}/review`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ action: 'delete' });
+    expect(res.status).toBe(400);
+  });
+
+  test('IT-039: unknown incident id returns 404', async () => {
+    const res = await request(app)
+      .patch('/api/incidents/admin/CW-UNKNOWN/review')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ action: 'approve' });
+    expect(res.status).toBe(404);
+  });
+
+  test('IT-040: an already-reviewed incident returns 409', async () => {
+    incident.status = 'NEW';
+    await incident.save();
+    const res = await request(app)
+      .patch(`/api/incidents/admin/${incident.shortId}/review`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ action: 'approve' });
+    expect(res.status).toBe(409);
+  });
+});
+
+// ─── Formal complaint dispatch is gated on admin approval ──────────────────────
+
+describe('Formal complaint emails are only sent on admin approval', () => {
+  const findComplaintCall = (to) =>
+    mockResendSend.mock.calls.find(call => call[0].to?.includes(to));
+
+  test('IT-041: submitting a report with a complaint request does NOT send the complaint immediately', async () => {
+    mockResendSend.mockClear();
+    const res = await request(app)
+      .post('/api/incidents/report')
+      .send({
+        ...validBody,
+        sendComplaintTo: 'tuath',
+        complainantName: 'Jane Resident',
+        complainantAddress: 'Apt 12, Charlemont Street, Dublin 2',
+      });
+    expect(res.status).toBe(201);
+    // Resident confirmation + admin notification still fire — just not the complaint
+    expect(findComplaintCall('tuath@example.com')).toBeUndefined();
+  });
+
+  test('IT-042: approving an incident with a pending complaint sends it to the requested org(s)', async () => {
+    const pending = await Incident.create({
+      ...validBody,
+      shortId: 'CW-COMPLAINT1',
+      status: 'PENDING_REVIEW',
+      complainantName: 'Jane Resident',
+      complainantAddress: 'Apt 12, Charlemont Street, Dublin 2',
+      sendComplaintTo: ['tuath', 'dcc'],
+    });
+    mockResendSend.mockClear();
+
+    const res = await request(app)
+      .patch(`/api/incidents/admin/${pending.shortId}/review`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ action: 'approve' });
+    expect(res.status).toBe(200);
+
+    expect(findComplaintCall('tuath@example.com')).toBeDefined();
+    expect(findComplaintCall('dcc@example.com')).toBeDefined();
+  });
+
+  test('IT-043: approving an incident with no complaint requested sends no complaint email', async () => {
+    const pending = await Incident.create({ ...validBody, shortId: 'CW-NOCOMPLAINT', status: 'PENDING_REVIEW' });
+    mockResendSend.mockClear();
+
+    await request(app)
+      .patch(`/api/incidents/admin/${pending.shortId}/review`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ action: 'approve' });
+
+    expect(findComplaintCall('tuath@example.com')).toBeUndefined();
+    expect(findComplaintCall('dcc@example.com')).toBeUndefined();
+  });
+
+  test('IT-044: rejecting an incident with a pending complaint never sends it', async () => {
+    const pending = await Incident.create({
+      ...validBody,
+      shortId: 'CW-COMPLAINT2',
+      status: 'PENDING_REVIEW',
+      complainantName: 'Jane Resident',
+      complainantAddress: 'Apt 12, Charlemont Street, Dublin 2',
+      sendComplaintTo: ['tuath'],
+    });
+    mockResendSend.mockClear();
+
+    await request(app)
+      .patch(`/api/incidents/admin/${pending.shortId}/review`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ action: 'reject' });
+
+    expect(findComplaintCall('tuath@example.com')).toBeUndefined();
   });
 });
 

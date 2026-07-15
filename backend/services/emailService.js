@@ -4,6 +4,8 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 
 const FROM = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
+// Escapes HTML special characters in user-supplied text before it's
+// interpolated into an email body, preventing HTML/script injection
 const escapeHtml = (str) => String(str ?? '')
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -15,6 +17,7 @@ const escapeHtml = (str) => String(str ?? '')
 // headers or split an email subject line.
 const sanitizeHeader = (str) => String(str ?? '').replace(/[\r\n\x00-\x1F]+/g, ' ').trim();
 
+// Maps the internal incidentType enum value to a human-readable label used in emails
 const getIncidentTypeName = (type) => {
   const names = {
     graffiti: 'Graffiti Report',
@@ -25,6 +28,8 @@ const getIncidentTypeName = (type) => {
   return names[type] || type;
 };
 
+// Shared Resend send wrapper — no-ops with a warning if RESEND_API_KEY isn't
+// configured (e.g. local dev), so the app still works without real email
 const send = async (msg) => {
   if (!resend) { console.warn('Resend not configured — email skipped'); return; }
   const { error } = await resend.emails.send(msg);
@@ -141,6 +146,23 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
     </table>
   `;
 
+  // Shows a few photo thumbnails inline (using the existing public S3 URLs)
+  // plus a link back to the tracking page, since some email clients (Outlook
+  // especially) block remote images by default — the link is the reliable
+  // fallback so the evidence is never more than one click away.
+  const trackingLink = `${process.env.FRONTEND_URL}/track?id=${incident.shortId}`;
+  const photosBlock = incident.photos && incident.photos.length > 0 ? `
+    <h3>Photo Evidence (${incident.photos.length})</h3>
+    <div style="margin:12px 0;">
+      ${incident.photos.slice(0, 3).map(p => `
+        <a href="${trackingLink}" style="display:inline-block;margin:0 8px 8px 0;">
+          <img src="${p.url}" alt="Incident photo" style="width:150px;height:150px;object-fit:cover;border-radius:4px;border:1px solid #ddd;" />
+        </a>
+      `).join('')}
+    </div>
+    <p><a href="${trackingLink}">View ${incident.photos.length > 3 ? `all ${incident.photos.length} photos` : 'full photo evidence'} and incident details on CharlemontWatch</a></p>
+  ` : '';
+
   const complainantBlock = `
     <table style="width:100%;border-collapse:collapse;margin:16px 0;">
       <tr><td style="padding:6px 12px;background:#f5f5f5;font-weight:600;width:160px;">Name</td><td style="padding:6px 12px;border-bottom:1px solid #eee;">${escapeHtml(complainant.name)}</td></tr>
@@ -149,23 +171,43 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
     </table>
   `;
 
+  // Shows the resident's name in the inbox ("Jane Resident via CharlemontWatch")
+  // even though the technical sending address is CharlemontWatch's own domain —
+  // you can't actually send "From" an address on a domain you don't control
+  // (SPF/DKIM/DMARC would reject it as spoofing), so this is the closest
+  // deliverable approximation. Quotes stripped so they can't break the header.
+  const fromDisplayName = (sanitizeHeader(complainant.name) || 'A Resident').replace(/"/g, '');
+  const fromHeader = `"${fromDisplayName} via CharlemontWatch" <${FROM}>`;
+
+  const correspondenceNote = `
+    <p style="background:#fff3e0;border-left:4px solid #f57c00;padding:10px 14px;margin:16px 0;">
+      <strong>Please correspond directly with the resident.</strong> All replies to this complaint should go to
+      <strong>${escapeHtml(complainant.email)}</strong> (this address is also set as the Reply-To on this email).
+      CharlemontWatch is a reporting platform only — it submitted this complaint on the resident's behalf and is
+      not a party to it.
+    </p>
+  `;
+
   const sends = [];
 
   if (recipients.includes('tuath')) {
     if (!process.env.TUATH_COMPLAINT_EMAIL) {
       console.error('TUATH_COMPLAINT_EMAIL not configured — Túath complaint skipped');
     } else sends.push(send({
-      from: FROM,
+      from: fromHeader,
       to: [process.env.TUATH_COMPLAINT_EMAIL],
+      cc: [complainant.email],
       replyTo: complainant.email,
       subject: `Formal Complaint — ${incidentTypeName} at ${sanitizeHeader(incident.location)} [${incident.shortId}]`,
       html: `
         <h2 style="color:#1976d2;">Formal Complaint — Túath Housing</h2>
         <p>A formal complaint has been submitted via CharlemontWatch regarding an incident at a Túath Housing managed area.</p>
+        ${correspondenceNote}
         <h3>Complainant Details</h3>
         ${complainantBlock}
         <h3>Incident Details</h3>
         ${sharedIncidentBlock}
+        ${photosBlock}
         <h3>Nature of Complaint</h3>
         <p>The complainant is reporting an unresolved issue within the Túath Housing managed estate at <strong>${escapeHtml(incident.location)}</strong>.
         They are requesting that Túath Housing investigate and take appropriate action in line with the Túath Housing Complaints Policy & Procedure (v6.0, October 2024).</p>
@@ -182,17 +224,20 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
     if (!process.env.DCC_COMPLAINT_EMAIL) {
       console.error('DCC_COMPLAINT_EMAIL not configured — DCC complaint skipped');
     } else sends.push(send({
-      from: FROM,
+      from: fromHeader,
       to: [process.env.DCC_COMPLAINT_EMAIL],
+      cc: [complainant.email],
       replyTo: complainant.email,
       subject: `Formal Complaint — ${incidentTypeName} at ${sanitizeHeader(incident.location)} [${incident.shortId}]`,
       html: `
         <h2 style="color:#1976d2;">Formal Complaint — Dublin City Council</h2>
         <p>A formal complaint has been submitted via CharlemontWatch regarding an issue within the Dublin City Council area.</p>
+        ${correspondenceNote}
         <h3>Complainant Details</h3>
         ${complainantBlock}
         <h3>Incident Details</h3>
         ${sharedIncidentBlock}
+        ${photosBlock}
         <h3>Nature of Complaint</h3>
         <p>The complainant is reporting an unresolved issue at <strong>${escapeHtml(incident.location)}</strong> and requests that Dublin City Council investigate and take appropriate action.</p>
         <h3>Desired Outcome</h3>

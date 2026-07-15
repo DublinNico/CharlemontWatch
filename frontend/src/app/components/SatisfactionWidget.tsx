@@ -6,18 +6,22 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 
+// The three selectable rating options, each with its icon and "selected" style
 const RATINGS: { value: SatisfactionRating; label: string; icon: typeof Smile; activeClass: string }[] = [
   { value: 'low', label: 'Low', icon: Frown, activeClass: 'bg-red-600 hover:bg-red-700 text-white' },
   { value: 'medium', label: 'Medium', icon: Meh, activeClass: 'bg-amber-500 hover:bg-amber-600 text-white' },
   { value: 'high', label: 'High', icon: Smile, activeClass: 'bg-emerald-600 hover:bg-emerald-700 text-white' },
 ];
 
+// Segment color for each rating in the results bar
 const BAR_COLORS: Record<SatisfactionRating, string> = {
   low: 'bg-red-500',
   medium: 'bg-amber-500',
   high: 'bg-emerald-500',
 };
 
+// Home page widget: lets a resident vote (or change their vote) on
+// satisfaction with Túath Housing, and shows the live public results bar
 export function SatisfactionWidget() {
   const { satisfactionSummary, submitSatisfactionVote } = useApp();
   const [email, setEmail] = useState('');
@@ -26,6 +30,7 @@ export function SatisfactionWidget() {
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
+  // Validates and submits the vote via the shared app context
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !rating) {
@@ -45,6 +50,7 @@ export function SatisfactionWidget() {
     }
   };
 
+  // Converts raw vote counts into display percentages for the results bar
   const total = satisfactionSummary?.total ?? 0;
   const percentages = RATINGS.map(r => ({
     ...r,

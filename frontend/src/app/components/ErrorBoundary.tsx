@@ -9,13 +9,18 @@ interface State {
   hasError: boolean;
 }
 
+// Top-level crash guard: catches any render error in the component tree
+// below it and shows a friendly fallback instead of a blank white screen,
+// while reporting the error to Sentry.
 export class ErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false };
 
+  // React lifecycle hook: flips the boundary into its fallback UI state
   static getDerivedStateFromError(): State {
     return { hasError: true };
   }
 
+  // React lifecycle hook: fires after an error is caught, used here purely for reporting
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
   }

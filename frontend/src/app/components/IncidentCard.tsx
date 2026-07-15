@@ -11,6 +11,7 @@ interface IncidentCardProps {
   showFullDetails?: boolean;
 }
 
+// Badge color and left-border accent per incident type
 const typeStyles: Record<IncidentType, { badge: string; accent: string }> = {
   'Graffiti': { badge: 'bg-orange-100 text-orange-700 border-orange-300', accent: 'border-l-orange-500' },
   'Anti-Social Behaviour': { badge: 'bg-red-100 text-red-700 border-red-300', accent: 'border-l-red-500' },
@@ -18,10 +19,14 @@ const typeStyles: Record<IncidentType, { badge: string; accent: string }> = {
   'Maintenance Issue': { badge: 'bg-emerald-100 text-emerald-700 border-emerald-300', accent: 'border-l-emerald-500' },
 };
 
+// Displays a single incident. In compact mode (default) it's a summary card
+// for lists; showFullDetails expands it into the full tracking view with a
+// copyable ID, type-specific fields, and a photo lightbox.
 export function IncidentCard({ incident, onClick, showFullDetails = false }: IncidentCardProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Copies the incident's shortId to the clipboard and flashes a checkmark
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
     navigator.clipboard.writeText(incident.id).then(() => {
@@ -151,6 +156,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
       </CardContent>
     </Card>
 
+    {/* Full-screen photo lightbox with prev/next navigation, shown when a thumbnail is clicked */}
     {lightboxIndex !== null && (
       <div
         className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"

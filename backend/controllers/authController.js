@@ -1,7 +1,9 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 
-// Admin login only
+// Admin login only — there's no public registration endpoint, admin accounts
+// are created directly in the database. Verifies email/password, checks the
+// role is admin, and issues a 7-day JWT.
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -14,6 +16,8 @@ const login = async (req, res) => {
     const normalisedEmail = email.trim().toLowerCase();
     const user = await User.findOne({ email: normalisedEmail });
     if (!user) {
+      // Same generic error as a wrong password below, so the response
+      // doesn't reveal whether the email exists
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 

@@ -5,11 +5,14 @@ import { useApp } from '../context/AppContext';
 
 const ADMIN_KEY = import.meta.env.VITE_ADMIN_KEY;
 
+// Admin login page. Hidden from public navigation — only reachable via
+// /cw-admin?key=<VITE_ADMIN_KEY>; any other visitor is redirected home.
 export function Auth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { login } = useApp();
 
+  // Gate: bounce anyone without the correct ?key= query param
   useEffect(() => {
     if (!ADMIN_KEY || searchParams.get('key') !== ADMIN_KEY) {
       navigate('/', { replace: true });
@@ -19,6 +22,7 @@ export function Auth() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Submits credentials and redirects to the dashboard on success
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');

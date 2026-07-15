@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
+// Admin/resident accounts. In practice only admin accounts exist today —
+// there's no public registration flow, they're created directly in the DB.
 const userSchema = new mongoose.Schema({
   email: {
     type: String,

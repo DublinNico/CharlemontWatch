@@ -11,6 +11,8 @@ import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import { NotFound } from "./pages/NotFound";
 import { ScrollToTop } from "./components/ScrollToTop";
 
+// All app routes. ScrollToTop wraps every page so navigating between routes
+// always lands at the top of the page; "*" is the catch-all 404.
 export const router = createBrowserRouter([
   {
     element: <ScrollToTop />,

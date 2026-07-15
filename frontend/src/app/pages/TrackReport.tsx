@@ -16,6 +16,8 @@ const typeFromApi: Record<string, IncidentType> = {
   maintenance: 'Maintenance Issue',
 };
 
+// Local copy of the API->Incident mapper (mirrors AppContext's) since a
+// tracked search result may not be in the already-loaded public incident list
 function mapApiToIncident(api: any): Incident {
   const typeSpecificData: Record<string, any> = {};
   switch (api.incidentType) {
@@ -50,9 +52,13 @@ function mapApiToIncident(api: any): Incident {
     date: api.reportedDate || api.createdAt,
     photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url })),
     typeSpecificData: Object.keys(typeSpecificData).length > 0 ? typeSpecificData : undefined,
+    sendComplaintTo: api.sendComplaintTo,
   };
 }
 
+// Lets a resident look up their own report by shortId/ObjectId — checks the
+// already-loaded public incidents first, then falls back to a direct API call
+// (needed since pending/unpublished reports aren't in that list)
 export function TrackReport() {
   const { getIncidentById } = useApp();
   const navigate = useNavigate();
@@ -63,6 +69,8 @@ export function TrackReport() {
   const [notFound, setNotFound] = useState(false);
   const [searchError, setSearchError] = useState(false);
 
+  // Auto-search if the page was loaded with a ?id= query param (e.g. from
+  // the "Track This Report" link on the success page)
   useEffect(() => {
     const id = searchParams.get('id');
     if (id) {
@@ -71,6 +79,8 @@ export function TrackReport() {
     }
   }, [searchParams]);
 
+  // Looks up an incident by ID: cache first, then the API. Distinguishes a
+  // 404 (not found) from other errors (network/server) for a clearer message.
   const doSearch = async (id: string) => {
     const trimmed = id.trim();
     if (!trimmed) return;

@@ -3,6 +3,7 @@ const rateLimit = require('express-rate-limit');
 const router = express.Router();
 const { submitVote, getSummary } = require('../controllers/satisfactionController');
 
+// Throttles votes per IP so the public endpoint can't be flooded with junk submissions
 const voteLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,

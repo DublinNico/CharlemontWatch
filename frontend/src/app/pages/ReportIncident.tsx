@@ -11,6 +11,8 @@ import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Checkbox } from '../components/ui/checkbox';
 
+// Incident report submission form — type selection, common fields, per-type
+// detail fields, photo upload, and optional formal complaint escalation
 export function ReportIncident() {
   const navigate = useNavigate();
   const { addIncident } = useApp();
@@ -35,9 +37,12 @@ export function ReportIncident() {
   });
   const sendingComplaint = complaint.sendToTuath || complaint.sendToDCC;
 
+  // Merges a single type-specific field update into typeSpecificData
   const updateSpecific = (key: string, value: any) =>
     setTypeSpecificData((prev: any) => ({ ...prev, [key]: value }));
 
+  // Validates required fields (email always; name/address only if a
+  // complaint is being sent), then submits the report via addIncident
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.type) return;
@@ -86,6 +91,7 @@ export function ReportIncident() {
     }
   };
 
+  // Adds newly-selected files as local preview Photos, capped at 10 total
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && photos.length < 10) {
@@ -102,6 +108,7 @@ export function ReportIncident() {
     setPhotos(prev => prev.filter(p => p.id !== id));
   };
 
+  // Options shown in the Incident Type select
   const incidentTypes = [
     { value: 'Graffiti', label: 'Graffiti', description: 'Vandalism or unwanted markings' },
     { value: 'Anti-Social Behaviour', label: 'Anti-Social Behaviour', description: 'Disruptive or threatening behaviour' },
@@ -109,6 +116,8 @@ export function ReportIncident() {
     { value: 'Maintenance Issue', label: 'Maintenance Issue', description: 'Repair or upkeep needed' },
   ];
 
+  // Renders the extra detail card for whichever incident type is selected
+  // (surface/area for graffiti, hazard/risk for safety, etc.)
   const renderTypeSpecificFields = () => {
     if (!formData.type) return null;
 

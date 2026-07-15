@@ -3,6 +3,8 @@ import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router';
 import { Button } from './ui/button';
 
+// Site-wide top nav: logo/home link, About Us, and (when logged in) the
+// admin Dashboard/Sign Out controls
 export function Header() {
   const { isAuthenticated, logout, user } = useApp();
   const navigate = useNavigate();

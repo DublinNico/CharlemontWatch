@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 
+// Shared S3 client used for uploading and referencing incident photos
 const s3 = new AWS.S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,

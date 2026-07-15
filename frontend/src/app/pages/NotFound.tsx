@@ -2,6 +2,7 @@ import { Compass } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 
+// Catch-all 404 page for any unmatched route
 export function NotFound() {
   const navigate = useNavigate();
 

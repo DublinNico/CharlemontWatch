@@ -1,5 +1,6 @@
 import { Header } from '../components/Header';
 
+// Static GDPR privacy policy page — data collected, usage, retention, and rights
 export function PrivacyPolicy() {
   return (
     <div className="min-h-screen bg-gray-100">

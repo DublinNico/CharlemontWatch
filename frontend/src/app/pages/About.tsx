@@ -1,7 +1,9 @@
-import { Shield, AlertTriangle, Camera, Users, FileText } from 'lucide-react';
+import { Shield, AlertTriangle, Camera, Users, FileText, Heart } from 'lucide-react';
 import { Header } from '../components/Header';
 import { useNavigate } from 'react-router';
 
+// Static "About" page: mission, how it works, complaint vs. report-only
+// explainer, photo guidelines, safety/privacy rules, and the donate button
 export function About() {
   const navigate = useNavigate();
 
@@ -208,6 +210,24 @@ export function About() {
               View All Incidents
             </button>
           </div>
+        </div>
+
+        {/* Donate */}
+        <div className="bg-white rounded shadow-sm p-6 text-center">
+          <Heart className="w-10 h-10 text-[#d32f2f] mx-auto mb-3" />
+          <h2 className="text-[#333333] mb-2">Support CharlemontWatch</h2>
+          <p className="text-sm text-[#666666] mb-4 max-w-md mx-auto">
+            CharlemontWatch is run and paid for out of pocket, hosting, storage, and email all cost money every month. If this site has been useful to you, a small donation helps keep it running.
+          </p>
+          <a
+            href="https://ko-fi.com/yourpagename"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-6 py-2 bg-[#d32f2f] hover:bg-[#b71c1c] text-white rounded transition-colors"
+          >
+            <Heart className="w-4 h-4" />
+            Donate via Ko-fi
+          </a>
         </div>
       </main>
     </div>

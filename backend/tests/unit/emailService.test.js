@@ -164,6 +164,18 @@ describe('sendComplaintEmails', () => {
     expect(msg.html).toContain('Jane Resident');
   });
 
+  test('UT-047: CCs the complainant on the Túath email so they get a copy', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.cc).toEqual(['jane@example.com']);
+  });
+
+  test('UT-048: CCs the complainant on the DCC email so they get a copy', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['dcc']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.cc).toEqual(['jane@example.com']);
+  });
+
   test('UT-045: strips CR/LF from the incident location in the Túath complaint subject line', async () => {
     const injectedIncident = { ...mockIncident, location: 'Block A\r\nBcc: attacker@evil.com' };
     await sendComplaintEmails(injectedIncident, mockComplainant, ['tuath']);
@@ -178,6 +190,45 @@ describe('sendComplaintEmails', () => {
     const msg = mockSend.mock.calls[0][0];
     expect(msg.subject).not.toMatch(/[\r\n]/);
     expect(msg.subject.split('\n')).toHaveLength(1);
+  });
+
+  test('UT-049: From header shows the complainant\'s name "via CharlemontWatch"', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.from).toContain('Jane Resident via CharlemontWatch');
+  });
+
+  test('UT-050: strips CR/LF and quotes from the complainant name in the From header', async () => {
+    const injectedComplainant = { ...mockComplainant, name: 'Jane\r\nBcc: attacker@evil.com "quoted"' };
+    await sendComplaintEmails(mockIncident, injectedComplainant, ['tuath']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.from).not.toMatch(/[\r\n]/);
+    expect(msg.from).not.toContain('"quoted"');
+  });
+
+  test('UT-051: body tells the recipient to correspond directly with the resident, not CharlemontWatch', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.html).toContain('correspond directly with the resident');
+    expect(msg.html).toContain('jane@example.com');
+  });
+
+  test('UT-052: includes photo thumbnails and a tracking link when photos exist', async () => {
+    const incidentWithPhotos = {
+      ...mockIncident,
+      photos: [{ url: 'https://bucket.s3.amazonaws.com/photo1.jpg' }, { url: 'https://bucket.s3.amazonaws.com/photo2.jpg' }],
+    };
+    await sendComplaintEmails(incidentWithPhotos, mockComplainant, ['tuath']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.html).toContain('https://bucket.s3.amazonaws.com/photo1.jpg');
+    expect(msg.html).toContain('https://bucket.s3.amazonaws.com/photo2.jpg');
+    expect(msg.html).toContain(`/track?id=${incidentWithPhotos.shortId}`);
+  });
+
+  test('UT-053: omits the photo section entirely when there are no photos', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.html).not.toContain('Photo Evidence');
   });
 
   test('UT-038-F: DCC email contains incident location', async () => {

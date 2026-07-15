@@ -40,6 +40,9 @@ export interface Incident {
   date: string;
   photos: Photo[];
   typeSpecificData?: Record<string, any>;
+  // Present only when the resident requested a formal complaint; approving a
+  // PENDING_REVIEW incident with this set sends real emails to those orgs
+  sendComplaintTo?: ('tuath' | 'dcc')[];
 }
 
 export interface User {
@@ -47,6 +50,8 @@ export interface User {
   name: string;
 }
 
+// Shape of the shared app context — global incident/auth/satisfaction state
+// plus the actions that mutate it, exposed to every page via useApp()
 interface AppContextType {
   incidents: Incident[];
   isLoadingIncidents: boolean;
@@ -71,6 +76,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+// Frontend-facing incident type labels <-> the lowercase enum values the API expects
 const typeToApi: Record<IncidentType, string> = {
   'Graffiti': 'graffiti',
   'Anti-Social Behaviour': 'antisocial',
@@ -85,6 +91,8 @@ const typeFromApi: Record<string, IncidentType> = {
   maintenance: 'Maintenance Issue',
 };
 
+// Converts a raw API incident document into the shape the frontend uses,
+// picking out only the type-specific fields relevant to that incident's type
 function mapApiToIncident(api: any): Incident {
   const typeSpecificData: Record<string, any> = {};
 
@@ -121,9 +129,12 @@ function mapApiToIncident(api: any): Incident {
     date: api.reportedDate || api.createdAt,
     photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url, approved: p.approved })),
     typeSpecificData: Object.keys(typeSpecificData).length > 0 ? typeSpecificData : undefined,
+    sendComplaintTo: api.sendComplaintTo,
   };
 }
 
+// Provides global app state (incidents, admin auth, satisfaction votes) to
+// the whole component tree — mounted once in App.tsx around the router
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [incidents, setIncidents] = useState<Incident[]>([]);
   const [pendingIncidents, setPendingIncidents] = useState<Incident[]>([]);
@@ -135,6 +146,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return saved ? JSON.parse(saved) : null;
   });
 
+  // Loads the public incident feed (used by Home/AllIncidents/TrackReport)
   const refreshIncidents = async () => {
     setIsLoadingIncidents(true);
     try {
@@ -147,6 +159,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Loads the admin moderation queue — requires a token, so it's a no-op when logged out
   const refreshPendingIncidents = async () => {
     if (!token) return;
     try {
@@ -159,6 +172,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Loads the public satisfaction vote aggregate shown on the Home page
   const refreshSatisfactionSummary = async () => {
     try {
       const response = await axios.get(`${API_BASE}/satisfaction/summary`);
@@ -168,16 +182,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Submits (or overwrites) the caller's satisfaction vote, then re-fetches
+  // the aggregate so the results bar reflects the change immediately
   const submitSatisfactionVote = async (email: string, rating: SatisfactionRating): Promise<void> => {
     await axios.post(`${API_BASE}/satisfaction`, { email, rating });
     await refreshSatisfactionSummary();
   };
 
+  // Initial data load on mount
   useEffect(() => {
     refreshIncidents();
     refreshSatisfactionSummary();
   }, []);
 
+  // Persists the logged-in user's display info across page reloads
   useEffect(() => {
     if (user) {
       localStorage.setItem('charlemont-user', JSON.stringify(user));
@@ -186,6 +204,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user]);
 
+  // Submits a new incident report as multipart/form-data (photos require it).
+  // Complaint fields are only appended if the resident opted to escalate.
   const addIncident = async (incident: Omit<Incident, 'id' | 'date'>, complaint?: ComplaintData): Promise<string> => {
     const form = new FormData();
     form.append('incidentType', typeToApi[incident.type]);
@@ -217,6 +237,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return response.data.incidentId;
   };
 
+  // Admin action: progress an incident's status (NEW -> IN_PROGRESS -> RESOLVED)
   const updateIncidentStatus = async (id: string, status: IncidentStatus): Promise<void> => {
     await axios.patch(
       `${API_BASE}/incidents/admin/${id}/status`,
@@ -226,6 +247,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIncidents(prev => prev.map(i => i.id === id ? { ...i, status } : i));
   };
 
+  // Admin action: permanently delete an incident
   const deleteIncident = async (id: string): Promise<void> => {
     await axios.delete(`${API_BASE}/incidents/admin/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -234,6 +256,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPendingIncidents(prev => prev.filter(i => i.id !== id));
   };
 
+  // Admin action: approve or reject a pending incident from the moderation queue
   const reviewIncident = async (id: string, action: 'approve' | 'reject'): Promise<void> => {
     await axios.patch(
       `${API_BASE}/incidents/admin/${id}/review`,
@@ -244,6 +267,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (action === 'approve') await refreshIncidents();
   };
 
+  // Admin action: approve or reject a single photo on a pending incident
   const reviewPhoto = async (incidentId: string, photoId: string, approved: boolean): Promise<void> => {
     await axios.patch(
       `${API_BASE}/incidents/admin/${incidentId}/photos/${photoId}/review`,
@@ -256,10 +280,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }));
   };
 
+  // Looks up an already-loaded public incident by shortId (case-insensitive)
   const getIncidentById = (id: string) => {
     return incidents.find(i => i.id.toLowerCase() === id.toLowerCase());
   };
 
+  // Admin login — stores the JWT and a minimal user object in localStorage on success
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const response = await axios.post(`${API_BASE}/auth/login`, { email, password });
@@ -273,6 +299,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Clears auth state and any admin-only data held in memory/localStorage
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -310,6 +337,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Hook for accessing the shared app context — throws if used outside AppProvider
 export function useApp() {
   const context = useContext(AppContext);
   if (!context) {

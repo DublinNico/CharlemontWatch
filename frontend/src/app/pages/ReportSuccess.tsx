@@ -1,6 +1,8 @@
 import { CheckCircle, AlertTriangle } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 
+// Post-submission confirmation page — shows the incident's tracking ID and,
+// if no complaint was sent, nudges the resident to go back and escalate
 export function ReportSuccess() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
@@ -49,7 +51,7 @@ export function ReportSuccess() {
           <div className="bg-green-50 border border-green-200 rounded p-4 mb-6 text-left flex gap-3">
             <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-green-800">
-              A formal complaint has been sent on your behalf. You will be contacted directly with an official response.
+              Your formal complaint is queued and will be sent to Túath Housing and/or Dublin City Council as soon as an admin reviews and approves your report.
             </p>
           </div>
         )}
