@@ -13,6 +13,7 @@
 - [x] **escapeHtml injection tests** — UT-038-H confirms `<script>` in complainant name is escaped to `&lt;script&gt;`; UT-038-I confirms `<img>` in incident description is escaped
 - [x] **complaintReady integration tests** — IT-022 confirms invalid complainant email blocks complaint fields from DB; IT-023 confirms missing phone does the same
 - [ ] **ErrorBoundary.componentDidCatch** — Sentry hook not tested; accepted gap (see TestingReport §6.1.1)
+- [x] **Contact.tsx frontend unit test** — `src/test/Contact.test.tsx` added 16/07/26; FT-017-A – FT-017-E cover POST payload shape, success confirmation, server/generic error messages, and in-flight disabled state
 
 ---
 
@@ -39,6 +40,11 @@
 - [x] **POST /api/auth/login** — correct credentials → 200 + JWT (IT-018, UT-030)
 - [x] **POST /api/auth/login** — wrong password → 401 (IT-019, UT-028)
 - [x] **POST /api/auth/login** — unknown email → 401 (IT-020, UT-027)
+- [x] **POST /api/contact** — valid submission → 200, email sent with admin recipient + sender Reply-To (IT-045)
+- [x] **POST /api/contact** — 400 when name/email/message missing (IT-046 – IT-048)
+- [x] **POST /api/contact** — 400 when message exceeds 5000 chars (IT-049)
+- [x] **POST /api/contact** — honeypot field set → 200, no email sent (IT-050)
+- [x] **POST /api/contact** — HTML-special characters escaped in email body (IT-051)
 
 ---
 
@@ -57,6 +63,7 @@
 - [x] **AdminDashboard** — renders incidents list for authenticated admin (FT-011, FT-011-B)
 - [x] **AdminDashboard** — status update button calls `updateIncidentStatus` (FT-012)
 - [x] **Header** — hides Dashboard/Sign Out when unauthenticated; shows username + buttons when authenticated (FT-007, FT-008)
+- [x] **Contact** — POST payload shape (incl. honeypot), success confirmation, server/generic error messages, in-flight disabled state (FT-017)
 
 ---
 
@@ -106,11 +113,11 @@
 
 | Category | Items |
 |----------|-------|
-| 🔴 Critical gaps (current suite) | 6 (1 accepted gap remaining) |
-| 🟠 Integration tests (Supertest) | 21 |
-| 🟠 Frontend unit tests (Vitest) | 13 |
+| 🔴 Critical gaps (current suite) | 7 (1 accepted gap remaining) |
+| 🟠 Integration tests (Supertest) | 26 (incl. 5 Contact form) |
+| 🟠 Frontend unit tests (Vitest) | 14 (incl. Contact) |
 | 🟡 E2E tests (Playwright) | 9 |
 | 🟡 Security tests | 7 |
 | 🟡 Performance tests | 3 |
 | 🟡 CI/CD | 3 |
-| **Total** | **61** |
+| **Total** | **69** |

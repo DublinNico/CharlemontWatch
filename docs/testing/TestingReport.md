@@ -6,7 +6,7 @@
 | **Name:** | Tony Nicoletti |
 | 
 | **GitHub Repository** | https://github.com/DublinNico/CharlemontWatch |
-| **Date** | 27/05/26 (updated 31/05/26, updated 31/05/26 v2, updated 31/05/26 v3) |
+| **Date** | 27/05/26 (updated 31/05/26, updated 31/05/26 v2, updated 31/05/26 v3, updated 16/07/26) |
 
 ---
 
@@ -19,7 +19,7 @@
 The application is a full-stack system comprising:
 
 - **Frontend:** React 18, Vite 6, TypeScript, Tailwind CSS, shadcn/ui component library, React Router 7
-- **Backend:** Node.js, Express 4, MongoDB (via Mongoose 7), JWT authentication, AWS S3 (photo storage), SendGrid (transactional email)
+- **Backend:** Node.js, Express 4, MongoDB (via Mongoose 7), JWT authentication, AWS S3 (photo storage), Resend (transactional email)
 
 **Incident Types supported:**
 | Frontend Label | API Value |
@@ -36,6 +36,7 @@ The application is a full-stack system comprising:
 4. Admin users authenticate via JWT and can update statuses (`NEW → IN_PROGRESS → RESOLVED`) or delete reports
 5. All incidents are publicly browsable at `/incidents`
 6. Residents can optionally send a formal complaint to Túath Housing and/or Dublin City Council when submitting a report; a complaint email is dispatched on their behalf, containing their contact details and the incident summary
+7. Residents can send a general "Contact Us" message (question, feedback, press enquiry) outside the incident-report flow; the admin receives it by email with Reply-To set to the sender
 
 ### 1.2 Testing Objectives
 
@@ -55,12 +56,12 @@ The application is a full-stack system comprising:
 - Backend REST API endpoints (`/api/incidents`, `/api/auth`)
 - Authentication and authorisation middleware
 - Incident and User Mongoose model validation
-- Email service logic (SendGrid integration, skip-on-null guard)
+- Email service logic (Resend integration, skip-on-null guard)
 - ID generation utility
 
 **Out of scope:**
 - AWS S3 upload pipeline (requires live cloud credentials; mocked in integration tests)
-- SendGrid live email delivery (mocked in unit tests)
+- Resend live email delivery (mocked in unit tests)
 
 ### 2.2 Test Types
 
@@ -93,7 +94,7 @@ The application is a full-stack system comprising:
 
 - Unit tests use inline mock objects (no database connection required)
 - Integration tests use `mongodb-memory-server` (isolated in-memory MongoDB per test suite)
-- SendGrid is mocked with `jest.mock('@sendgrid/mail')` in all automated tests
+- Resend is mocked with `jest.mock('resend')` in all automated tests
 - AWS S3 is mocked with `jest.mock('../../config/s3')` in integration tests
 - JWT signing uses a fixed test secret: `charlemont-test-secret-key`
 - Manual tests use a live MongoDB Atlas cluster (test collection)
@@ -106,7 +107,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 189 automated tests pass (99 backend unit + 37 backend integration + 5 security + 33 frontend unit + 15 E2E)
+- All 225 automated tests pass (112 backend unit + 55 backend integration + 5 security + 38 frontend unit + 15 E2E)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -344,24 +345,25 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 |------|---------------------|-------|
 | `tests/unit/generateShortId.test.js` | ID format, prefix, length, uniqueness | UT-001 – UT-002 (5 tests) |
 | `tests/unit/auth.middleware.test.js` | authenticate middleware (all branches), adminOnly middleware (all branches) | UT-005 – UT-010 (9 tests) |
-| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, Resend error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description, CR/LF header-injection stripping in subject lines | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I, UT-044 – UT-045 (26 tests) |
+| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, Resend error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description, CR/LF header-injection stripping in subject lines, sendContactMessage (admin recipient, Reply-To sender, HTML escaping, error swallowed) | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I, UT-044 – UT-045 + additional coverage (39 tests) |
 | `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array, mandatory reporterEmail (format + anonymous-still-allowed) | UT-014 – UT-018, UT-033 (19 tests) |
 | `tests/unit/userModel.test.js` | Pre-save bcrypt hook, comparePassword, schema validation, role default/enum | UT-019 – UT-025, UT-034 (10 tests) |
 | `tests/unit/authController.test.js` | Login input validation, credential checks, JWT generation, email normalisation, 500 error path | UT-026 – UT-032 (15 tests) |
 | `tests/unit/upload.middleware.test.js` | MIME type filter, 5MB size limit, magic-byte validation (JPEG/PNG/WebP/spoofed PDF), no-file passthrough | UT-038 – UT-042 (8 tests) |
 | `tests/unit/satisfactionVoteModel.test.js` | Required field validation (email, rating), email format, rating enum (low/medium/high) | UT-043-A – UT-043-G (7 tests) |
 
-**Unit test total: 99 tests across 8 test suites**
+**Unit test total: 112 tests across 8 test suites** *(recount 16/07/26 — `emailService.test.js` had grown to 39 tests since this table was last updated; prior figure of 26 was stale)*
 
 #### Integration Tests
 
 | File | Functionality Tested | Tests |
 |------|---------------------|-------|
-| `tests/integration/incidents.test.js` | POST/GET/PATCH/DELETE incident routes; auth guards; photo upload; 11-file limit; status filtering; reporter identity validation (reporterEmail mandatory, anonymous reports allowed without name/address, complainantName/complainantAddress required only when sendComplaintTo is set); photo compression to JPEG before S3 upload; sendComplaintTo values trimmed so "tuath, dcc" keeps both recipients | IT-001 – IT-017, IT-022 – IT-023, IT-032 – IT-033 (25 tests) |
+| `tests/integration/incidents.test.js` | POST/GET/PATCH/DELETE incident routes; auth guards; photo upload; 11-file limit; status filtering; reporter identity validation (reporterEmail mandatory, anonymous reports allowed without name/address, complainantName/complainantAddress required only when sendComplaintTo is set); photo compression to JPEG before S3 upload; sendComplaintTo values trimmed so "tuath, dcc" keeps both recipients | IT-001 – IT-017, IT-022 – IT-023, IT-032 – IT-033 + additional coverage (36 tests) |
 | `tests/integration/auth.test.js` | Login (correct/wrong/unknown); register route removed (404) | IT-018 – IT-021 (4 tests) |
 | `tests/integration/satisfaction.test.js` | POST vote validation (email/rating), upsert-on-revote (no duplicates), case-insensitive email matching, GET summary aggregation (zero state, accurate counts, no emails exposed) | IT-024 – IT-031 (8 tests) |
+| `tests/integration/contact.test.js` | POST /api/contact: valid submission sends email with admin recipient + sender Reply-To (IT-045); 400 on missing name/email/message (IT-046 – IT-048); 400 when message exceeds 5000 chars (IT-049); honeypot field silently drops spam without sending (IT-050); HTML-special characters escaped in email body (IT-051) | IT-045 – IT-051 (7 tests) |
 
-**Integration test total: 37 tests across 3 test suites**
+**Integration test total: 55 tests across 4 test suites** *(recount 16/07/26 — `incidents.test.js` had grown to 36 tests since this table was last updated; prior figure of 25 was stale. `contact.test.js` is new.)*
 
 #### Frontend Unit Tests (Vitest + React Testing Library)
 
@@ -373,8 +375,9 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 | `src/test/AdminDashboard.test.tsx` | Incidents list renders location and ID badge; status update modal calls `updateIncidentStatus` with selected value | FT-011 – FT-012 (3 tests) |
 | `src/test/ReportIncident.test.tsx` | Graffiti submission calls `addIncident` with correct payload; navigates to success on submit; shows error on failure; submit disabled without type; `addIncident` not called without type | FT-013 – FT-014 (6 tests) |
 | `src/test/SatisfactionWidget.test.tsx` | Results bar percentages and zero-vote state; validation errors (missing rating/email); `submitSatisfactionVote` called with correct args; confirmation + "Update Vote" state after submit; error message on rejected submit | FT-015 – FT-016 (8 tests) |
+| `src/test/Contact.test.tsx` | POST payload shape including empty honeypot field; "Message Sent" confirmation; server-provided and generic error messages; disabled/"Sending…" state while in flight | FT-017 (5 tests) |
 
-**Frontend unit test total: 33 tests across 6 test suites**
+**Frontend unit test total: 38 tests across 7 test suites**
 
 #### E2E Tests (Playwright)
 
@@ -410,7 +413,7 @@ Artillery scenarios run against a live backend (`npm run dev` in `/backend` firs
 
 Observed results on 31/05/26: GET p95 = 72ms, POST p95 = 95ms — both well inside thresholds.
 
-**Grand total: 189 automated tests across 24 test suites**
+**Grand total: 225 automated tests across 26 test suites**
 
 ---
 
@@ -488,23 +491,20 @@ describe('adminOnly middleware', () => {
 
 #### emailService.test.js
 ```js
-jest.mock('@sendgrid/mail', () => ({
-  setApiKey: jest.fn(),
-  send: jest.fn().mockResolvedValue([{ statusCode: 202 }]),
-}));
+const mockResendSend = jest.fn().mockResolvedValue({ data: { id: 'mock-id' }, error: null });
+jest.mock('resend', () => ({ Resend: jest.fn().mockImplementation(() => ({ emails: { send: mockResendSend } })) }));
 
-const sgMail = require('@sendgrid/mail');
 const { sendResidentConfirmation } = require('../../services/emailService');
 
 describe('sendResidentConfirmation', () => {
-  test('UT-011-A: does NOT call sgMail.send when residentEmail is null', async () => {
+  test('UT-011-A: does NOT call Resend send when residentEmail is null', async () => {
     await sendResidentConfirmation(mockIncident, null);
-    expect(sgMail.send).not.toHaveBeenCalled();
+    expect(mockResendSend).not.toHaveBeenCalled();
   });
 
   test('UT-011-E: email subject contains the incident shortId', async () => {
     await sendResidentConfirmation(mockIncident, 'resident@test.com');
-    const msg = sgMail.send.mock.calls[0][0];
+    const msg = mockResendSend.mock.calls[0][0];
     expect(msg.subject).toContain('CW-ABC123');
   });
 });
@@ -555,27 +555,27 @@ describe('User model — comparePassword', () => {
 
 ### 5.4 Test Execution Results
 
-All 189 tests were executed on 13/07/26.
+All 220 tests were executed on 16/07/26.
 
 **Backend** (`npm test` in `/backend`):
 
 ```
 PASS tests/unit/generateShortId.test.js        (5 tests)
 PASS tests/unit/auth.middleware.test.js        (9 tests)
-PASS tests/unit/emailService.test.js          (26 tests)
+PASS tests/unit/emailService.test.js          (39 tests)
 PASS tests/unit/incidentModel.test.js         (19 tests)
 PASS tests/unit/userModel.test.js             (10 tests)
 PASS tests/unit/authController.test.js        (15 tests)
 PASS tests/unit/upload.middleware.test.js      (8 tests)
 PASS tests/unit/satisfactionVoteModel.test.js  (7 tests)
-PASS tests/integration/incidents.test.js      (25 tests)
+PASS tests/integration/incidents.test.js      (36 tests)
 PASS tests/integration/auth.test.js            (4 tests)
 PASS tests/integration/satisfaction.test.js    (8 tests)
+PASS tests/integration/contact.test.js         (7 tests)
 PASS tests/security/security.test.js           (5 tests)
 
-Test Suites: 12 passed, 12 total
-Tests:       141 passed, 141 total
-Time:        13.058 s
+Test Suites: 13 passed, 13 total
+Tests:       172 passed, 172 total
 ```
 
 **Frontend** (`npm test` in `/frontend`):
@@ -587,10 +587,10 @@ PASS src/test/TrackReport.test.tsx            (4 tests)
 PASS src/test/AdminDashboard.test.tsx         (3 tests)
 PASS src/test/ReportIncident.test.tsx          (6 tests)
 PASS src/test/SatisfactionWidget.test.tsx      (8 tests)
+PASS src/test/Contact.test.tsx                 (5 tests)
 
-Test Files:  6 passed (6)
-Tests:       33 passed (33)
-Time:        4.30 s
+Test Files:  7 passed (7)
+Tests:       38 passed (38)
 ```
 
 **E2E** (`npm run test:e2e` in `/frontend`):
@@ -612,37 +612,46 @@ Running 30 tests using 5 workers
 
 #### Backend Coverage
 
+*(refreshed 16/07/26 — this table was several features out of date; `contactController.js`, `routes/contact.js`, `satisfactionController.js`, and `models/SatisfactionVote.js` were missing entirely)*
+
 ```
-------------------------|---------|----------|---------|---------|
-File                    | % Stmts | % Branch | % Funcs | % Lines |
-------------------------|---------|----------|---------|---------|
-All files               |   75.08 |    68.61 |   71.87 |   76.68 |
- app.js                 |   77.14 |    42.85 |   42.85 |   81.25 |
- controllers/           |         |          |         |         |
-  authController.js     |  100.00 |   100.00 |  100.00 |  100.00 |
-  incidentController.js |   52.77 |    46.42 |   58.33 |   54.74 |
- middleware/            |         |          |         |         |
-  auth.js               |  100.00 |   100.00 |  100.00 |  100.00 |
-  upload.js             |   95.23 |    96.77 |  100.00 |   95.00 |
- models/                |         |          |         |         |
-  Incident.js           |  100.00 |   100.00 |  100.00 |  100.00 |
-  User.js               |  100.00 |   100.00 |  100.00 |  100.00 |
- routes/                |         |          |         |         |
-  auth.js               |  100.00 |   100.00 |  100.00 |  100.00 |
-  incidents.js          |  100.00 |   100.00 |  100.00 |  100.00 |
- services/              |         |          |         |         |
-  emailService.js       |  100.00 |    75.00 |  100.00 |  100.00 |
- utils/                 |         |          |         |         |
-  idUtils.js            |  100.00 |   100.00 |  100.00 |  100.00 |
-------------------------|---------|----------|---------|---------|
+----------------------------|---------|----------|---------|---------|
+File                        | % Stmts | % Branch | % Funcs | % Lines |
+----------------------------|---------|----------|---------|---------|
+All files                   |   80.94 |    75.33 |   86.27 |   82.76 |
+ app.js                     |   76.47 |    40.00 |   42.85 |   82.60 |
+ controllers/                |         |          |         |         |
+  authController.js          |  100.00 |   100.00 |  100.00 |  100.00 |
+  contactController.js       |   90.47 |   100.00 |  100.00 |   90.47 |
+  incidentController.js      |   64.32 |    68.88 |   80.00 |   65.43 |
+  satisfactionController.js  |   72.41 |    66.66 |  100.00 |   71.42 |
+ middleware/                 |         |          |         |         |
+  auth.js                    |  100.00 |   100.00 |  100.00 |  100.00 |
+  upload.js                  |   95.65 |    96.96 |  100.00 |  100.00 |
+ models/                     |         |          |         |         |
+  Incident.js                |  100.00 |   100.00 |  100.00 |  100.00 |
+  SatisfactionVote.js        |  100.00 |   100.00 |  100.00 |  100.00 |
+  User.js                    |  100.00 |   100.00 |  100.00 |  100.00 |
+ routes/                     |         |          |         |         |
+  auth.js                    |  100.00 |   100.00 |  100.00 |  100.00 |
+  contact.js                 |  100.00 |   100.00 |  100.00 |  100.00 |
+  incidents.js               |  100.00 |   100.00 |  100.00 |  100.00 |
+  satisfaction.js            |  100.00 |   100.00 |  100.00 |  100.00 |
+ services/                   |         |          |         |         |
+  emailService.js            |   92.95 |    71.05 |  100.00 |   96.87 |
+ utils/                      |         |          |         |         |
+  idUtils.js                 |  100.00 |   100.00 |  100.00 |  100.00 |
+----------------------------|---------|----------|---------|---------|
 ```
 
 **Key observations:**
-- `auth.js`, `authController.js`, `Incident.js`, `User.js`, `idUtils.js`, `routes/*` — 100% across all metrics
-- `upload.js` — 95% statements (one unreachable branch in the WebP multi-file path; all critical paths covered by UT-038–UT-042)
-- `emailService.js` — 100% statements/functions/lines; ~76% branch (untested branches are template literal ternary expressions for optional photo count display — not logic branches). `sendComplaintEmails` covered by UT-038-A – UT-038-I including HTML-injection escaping (UT-038-H/I)
-- `incidentController.js` — 52.7% statements; the uncovered paths are type-specific field extraction branches (graffiti, antisocial, safetyhazard, maintenance sub-fields), S3 error handling, and `addPhoto`/`reviewIncident`/`reviewPhoto` endpoints not yet covered by integration tests
-- `app.js` — 77% statements; CORS rejection path and error handlers not exercised in current integration tests (tested manually)
+- `auth.js`, `authController.js`, `Incident.js`, `SatisfactionVote.js`, `User.js`, `idUtils.js`, `routes/*` — 100% across all metrics
+- `contactController.js` — 90.5% statements; the two uncovered lines are the generic 500 catch-block, not exercised by IT-045–051 which only cover the validation and success paths
+- `upload.js` — 95.6% statements (one unreachable branch in the WebP multi-file path; all critical paths covered by UT-038–UT-042)
+- `emailService.js` — 93% statements/97% lines; ~71% branch (untested branches are template literal ternary expressions for optional photo count display — not logic branches)
+- `incidentController.js` — 64.3% statements; the uncovered paths are type-specific field extraction branches (graffiti, antisocial, safetyhazard, maintenance sub-fields), S3 error handling, and `addPhoto`/`reviewIncident`/`reviewPhoto` endpoints not yet covered by integration tests
+- `satisfactionController.js` — 72.4% statements; uncovered paths are error-handling branches
+- `app.js` — 76.5% statements; CORS rejection path and error handlers not exercised in current integration tests (tested manually)
 
 #### Frontend Coverage
 
@@ -682,6 +691,8 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 ### 6.1.1 Accepted Test Gap
 
 **`ErrorBoundary.componentDidCatch`** — the Sentry capture hook in the class error boundary is not covered by automated tests. Testing it requires throwing an exception from a child component inside React Testing Library, then asserting on a mocked Sentry call. The project has no existing ErrorBoundary test file and the setup cost is disproportionate to the risk: `Sentry.captureException` is a no-op when Sentry is uninitialised (no DSN set), so there is no reachable failure mode in development or CI. Accepted as a known gap.
+
+~~**`pages/Contact.tsx` frontend unit test**~~ — RESOLVED 16/07/26. `src/test/Contact.test.tsx` added: FT-017-A – FT-017-E cover payload shape (including the empty honeypot field), the success confirmation, server-provided and generic error messages, and the disabled/"Sending…" in-flight state.
 
 ### 6.2 Lessons Learned
 
@@ -731,6 +742,7 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | Low | Strip CR/LF from email subject lines | ✅ Done — `sanitizeHeader()` in `emailService.js` prevents header-injection via `incident.location` in admin notification and complaint email subjects |
 | Low | Add `mongoSanitize()` to multipart routes | ✅ Done — the global instance never ran on `POST /report`/`POST /:id/photos` since multer parses the body after it; now applied at the route level after `validateMagicBytes` |
 | Low | Code review fixes (satisfaction voting + reporter email pass) | ✅ Done — `sendComplaintTo` values now trimmed ("tuath, dcc" keeps both recipients); `getSummary` no longer leaks `error.message`; `submitVote` returns 409 on a duplicate-key upsert race; shared `EMAIL_REGEX` extracted to `backend/utils/validators.js`; `SatisfactionVote` uses Mongoose `timestamps: true`; rate limiter added to `POST /api/satisfaction`; `aria-pressed` added to rating buttons; `Incident.reporterEmail` made optional in the frontend type to match legacy rows; report form now trims email/name/address before submission; corrected stale copy in `About.tsx` ("Túath's" was rendering with a stray space) and `PrivacyPolicy.tsx` (reporter email described as optional when it's required) |
+| Low | Add a "Contact Us" page for general questions/feedback outside the incident-report flow | ✅ Done 16/07/26 — `POST /api/contact` validates name/email/message, honeypot spam field, HTML-escaped body, Reply-To set to sender; new `Contact.tsx` page linked from the header; covered by IT-045–051 (backend) and FT-017 (frontend) |
 
 ---
 
@@ -760,6 +772,7 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | FR-18 | The system shall display a GDPR-compliant privacy policy at `/privacy` covering data collected, retention periods, user rights, and contact details |
 | FR-19 | The system shall allow any user to submit a satisfaction rating (low/medium/high) for Túath Housing, identified by email; resubmitting with the same email shall update the existing vote rather than creating a duplicate |
 | FR-20 | The system shall publicly display aggregate satisfaction vote counts without exposing voter email addresses |
+| FR-21 | The system shall allow any user to send a general "Contact Us" message (name, email, message) outside the incident-report flow; the message shall be emailed to the admin with Reply-To set to the sender's address, and shall include a honeypot field to silently discard automated spam submissions |
 
 ### A.2 Non-Functional Requirements
 
@@ -774,7 +787,7 @@ Frontend coverage is collected via Vitest's V8 provider across `src/app/**/*.{ts
 | NFR-07 | The backend API shall respond to incident creation requests in under 2 seconds under normal load | Performance |
 | NFR-08 | The application shall be deployable on any Node.js 18+ environment | Portability |
 | NFR-09 | All incident data shall be persisted in MongoDB Atlas with replication across 3 shards | Reliability |
-| NFR-10 | The system shall function correctly when the email service (SendGrid) is unavailable, logging the error silently | Reliability |
+| NFR-10 | The system shall function correctly when the email service (Resend) is unavailable, logging the error silently | Reliability |
 | NFR-11 | The frontend shall be fully usable on Chrome, Firefox, and Safari on both desktop and mobile | Usability |
 | NFR-12 | Anonymous reporting shall be supported — no account or personal information shall be required to submit a report | Usability |
 | NFR-13 | The application shall publish a privacy policy compliant with GDPR (Ireland), covering data collected, retention periods, and user rights | Legal / Compliance |
