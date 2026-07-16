@@ -1,14 +1,14 @@
 # CharlemontWatch — Use Case Document
 
 **Project:** CharlemontWatch Community Safety Platform
-**Version:** 1.1
-**Date:** 2026-07-13
+**Version:** 1.2
+**Date:** 2026-07-16
 
 ---
 
 ## 1. System Boundary
 
-CharlemontWatch is a community incident reporting web application for the Charlemont Street area of Dublin. The system allows residents to submit incident reports (with optional photos and an optional formal complaint to Túath Housing and/or Dublin City Council), track the progress of their own submissions, view approved incidents on a public feed, and vote on their satisfaction with Túath Housing. A single admin user reviews submissions, moderates photo content, manages incident statuses, and maintains the integrity of the public board.
+CharlemontWatch is a community incident reporting web application for the Charlemont Street area of Dublin. The system allows residents to submit incident reports (with optional photos and an optional formal complaint to Túath Housing and/or Dublin City Council), track the progress of their own submissions, view approved incidents on a public feed, vote on their satisfaction with Túath Housing, and send a general contact message for questions, feedback, or press enquiries outside the incident-report flow. A single admin user reviews submissions, moderates photo content, manages incident statuses, and maintains the integrity of the public board.
 
 The system boundary includes:
 - The React frontend (browser-based SPA)
@@ -25,14 +25,14 @@ The system boundary includes:
 
 | Actor | Description |
 |---|---|
-| **Resident** | A member of the public. No account required, but must provide a valid email on every report to confirm residency. Can report incidents, attach photos, optionally escalate to a formal complaint (providing name and address), track their own submissions by shortId, and vote on satisfaction with Túath Housing. |
+| **Resident** | A member of the public. No account required, but must provide a valid email on every report to confirm residency. Can report incidents, attach photos, optionally escalate to a formal complaint (providing name and address), track their own submissions by shortId, vote on satisfaction with Túath Housing, and send a general contact message. |
 | **Admin** | An authenticated user with `role: admin`. Responsible for reviewing submissions, moderating photos, updating statuses, and deleting incidents. Only one admin account exists. |
 
 ### Secondary Actors
 
 | Actor | Description |
 |---|---|
-| **Resend (Email Service)** | Sends transactional emails: submission confirmation, admin notification on new submission, status update emails when an incident progresses, and formal complaint emails to Túath Housing / Dublin City Council. |
+| **Resend (Email Service)** | Sends transactional emails: submission confirmation, admin notification on new submission, status update emails when an incident progresses, formal complaint emails to Túath Housing / Dublin City Council, and Contact Us messages to the admin. |
 | **Túath Housing / Dublin City Council** | Recipients of formal complaint emails when a resident opts to escalate a report (UC-16). Legally required to acknowledge and respond within statutory timeframes. |
 | **AWS S3** | Stores uploaded photo files. Returns a permanent public URL for each uploaded image. |
 | **MongoDB Atlas** | Persists all incident records, satisfaction votes, user accounts, and photo metadata. |
@@ -61,6 +61,7 @@ The system boundary includes:
 | UC-16 | Send a Formal Complaint | Resident | Escalate an incident report to Túath Housing and/or Dublin City Council, triggering a legally-required official response |
 | UC-17 | Submit a Satisfaction Vote | Resident | Rate satisfaction with Túath Housing as low/medium/high; one vote per email, changeable at any time |
 | UC-18 | View Satisfaction Results | Resident | View the public aggregate breakdown of satisfaction votes |
+| UC-19 | Send a Contact Message | Resident | Send a general question, feedback, or press enquiry to the admin outside the incident-report flow |
 
 ---
 
@@ -403,6 +404,50 @@ The system boundary includes:
 | Missing or invalid email | Backend returns 400 "a valid email is required" |
 | Missing or invalid rating | Backend returns 400 "rating must be one of: low, medium, high" |
 | More than 10 requests/minute from the same IP | Rate limiter returns 429 |
+
+---
+
+### UC-19 — Send a Contact Message
+
+**Actor:** Resident
+**Goal:** Send a general question, feedback, or press enquiry to the admin, outside the incident-report flow
+
+**Preconditions:**
+- Resident is on the CharlemontWatch website
+- The backend API is reachable
+- No login is required
+
+**Main Flow:**
+1. Resident navigates to `/contact` (linked from the header)
+2. Resident enters their name, email address, and a message (up to 5000 characters)
+3. Resident submits the form
+4. System sends `POST /api/contact` with `{ name, email, message }`
+5. Backend validates that name, email, and message are all present, the email is a valid format, and the message does not exceed 5000 characters
+6. Backend sends an email to the admin via Resend, with the subject prefixed `[Contact Form]`, the resident's name and email in the body, and `replyTo` set to the resident's email so the admin can reply directly
+7. Frontend displays a "Message Sent" confirmation
+
+**Alternative Flows:**
+
+*A1 — Automated/bot submission:*
+- A hidden honeypot field (`website`) is present in the form but invisible to real users
+- If a bot fills it in, the backend returns 200 "success" without sending an email, so the bot cannot tell its submission was silently dropped
+
+*A2 — Email send fails:*
+- The error is swallowed silently and logged server-side; the frontend still shows a generic error state if the request itself fails, but a downstream Resend failure does not surface to the resident
+
+**Postconditions:**
+- The admin has received an email with the resident's message and can reply directly to their address
+- No record of the message is persisted in MongoDB — this is a stateless, email-only flow
+
+**Exceptions:**
+
+| Condition | System Response |
+|---|---|
+| Missing or empty name | Backend returns 400 "name is required" |
+| Missing or invalid email | Backend returns 400 "a valid email is required" |
+| Missing or empty message | Backend returns 400 "message is required" |
+| Message exceeds 5000 characters | Backend returns 400 "message must be 5000 characters or fewer" |
+| API unreachable | Frontend shows a generic error message |
 
 ---
 
