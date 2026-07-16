@@ -35,6 +35,14 @@ export default defineConfig({
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
 
+  // Fixed dev port (rather than Vite's default auto-increment-if-busy
+  // behaviour) so it can't silently drift away from backend FRONTEND_URL,
+  // which is what generates tracking links in emails.
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
+
   build: {
     chunkSizeWarningLimit: 600,
   },
