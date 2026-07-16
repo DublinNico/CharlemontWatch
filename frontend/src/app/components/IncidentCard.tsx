@@ -81,7 +81,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
           <span className="font-medium">{incident.location}</span>
         </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
+        <p className={`text-sm text-muted-foreground leading-relaxed ${showFullDetails ? '' : 'line-clamp-2'}`}>
           {incident.description}
         </p>
 
