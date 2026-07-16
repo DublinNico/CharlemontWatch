@@ -5,6 +5,7 @@ import { ReportSuccess } from "./pages/ReportSuccess";
 import { TrackReport } from "./pages/TrackReport";
 import { AllIncidents } from "./pages/AllIncidents";
 import { About } from "./pages/About";
+import { Contact } from "./pages/Contact";
 import { Auth } from "./pages/Auth";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
       { path: "/track", element: <TrackReport /> },
       { path: "/incidents", element: <AllIncidents /> },
       { path: "/about", element: <About /> },
+      { path: "/contact", element: <Contact /> },
       { path: "/cw-admin", element: <Auth /> },
       { path: "/admin", element: <AdminDashboard /> },
       { path: "/privacy", element: <PrivacyPolicy /> },

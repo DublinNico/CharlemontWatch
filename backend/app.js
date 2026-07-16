@@ -14,6 +14,7 @@ if (process.env.SENTRY_DSN) {
 const authRoutes = require('./routes/auth');
 const incidentRoutes = require('./routes/incidents');
 const satisfactionRoutes = require('./routes/satisfaction');
+const contactRoutes = require('./routes/contact');
 
 const app = express();
 
@@ -53,6 +54,7 @@ app.use(mongoSanitize());
 app.use('/api/auth', authRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/satisfaction', satisfactionRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Simple liveness check for uptime monitoring
 app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
