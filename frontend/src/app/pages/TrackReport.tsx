@@ -163,7 +163,11 @@ export function TrackReport() {
 
         {searchedIncident && (
           <div className="max-w-3xl mx-auto">
-            <IncidentCard incident={searchedIncident} showFullDetails={true} />
+            <IncidentCard
+              incident={searchedIncident}
+              showFullDetails={true}
+              showTrackingBadge={searchParams.get('source') !== 'list'}
+            />
           </div>
         )}
 
