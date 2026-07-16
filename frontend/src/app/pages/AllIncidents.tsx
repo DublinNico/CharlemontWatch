@@ -197,7 +197,7 @@ export function AllIncidents() {
                 <IncidentCard
                   key={incident.id}
                   incident={incident}
-                  onClick={() => navigate(`/track?id=${incident.id}`)}
+                  onClick={() => navigate(`/track?id=${incident.id}&source=list`)}
                 />
               ))}
             </div>

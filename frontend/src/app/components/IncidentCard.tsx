@@ -9,6 +9,7 @@ interface IncidentCardProps {
   incident: Incident;
   onClick?: () => void;
   showFullDetails?: boolean;
+  showTrackingBadge?: boolean;
 }
 
 // Badge color and left-border accent per incident type
@@ -22,7 +23,7 @@ const typeStyles: Record<IncidentType, { badge: string; accent: string }> = {
 // Displays a single incident. In compact mode (default) it's a summary card
 // for lists; showFullDetails expands it into the full tracking view with a
 // copyable ID, type-specific fields, and a photo lightbox.
-export function IncidentCard({ incident, onClick, showFullDetails = false }: IncidentCardProps) {
+export function IncidentCard({ incident, onClick, showFullDetails = false, showTrackingBadge = true }: IncidentCardProps) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -57,7 +58,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false }: Inc
           <StatusBadge status={incident.status} />
         </div>
 
-        {showFullDetails && (
+        {showFullDetails && showTrackingBadge && (
           <div className="mt-3 flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Track Your Report:</span>
             <Badge variant="secondary" className="text-xs font-mono">
