@@ -18,7 +18,6 @@ const {
   sendAdminNotification,
   sendStatusUpdate,
   sendComplaintEmails,
-  sendContactMessage,
 } = require('../../services/emailService');
 
 const mockIncident = {
@@ -259,46 +258,6 @@ describe('sendComplaintEmails', () => {
     const html = mockSend.mock.calls[0][0].html;
     expect(html).not.toContain('<img');
     expect(html).toContain('&lt;img');
-  });
-});
-
-// ─── sendContactMessage ───────────────────────────────────────────────────────
-
-describe('sendContactMessage', () => {
-  test('UT-054: sends to ADMIN_EMAIL with Reply-To set to the sender', async () => {
-    await sendContactMessage('Jane Resident', 'jane@example.com', 'Hello there');
-    expect(mockSend).toHaveBeenCalledTimes(1);
-    const msg = mockSend.mock.calls[0][0];
-    expect(msg.to).toContain('admin@charlemontwatch.ie');
-    expect(msg.replyTo).toBe('jane@example.com');
-  });
-
-  test('UT-055: subject and body contain the sender name and message', async () => {
-    await sendContactMessage('Jane Resident', 'jane@example.com', 'Hello there');
-    const msg = mockSend.mock.calls[0][0];
-    expect(msg.subject).toContain('Jane Resident');
-    expect(msg.html).toContain('Hello there');
-    expect(msg.html).toContain('jane@example.com');
-  });
-
-  test('UT-056: strips CR/LF from the sender name in the subject line', async () => {
-    await sendContactMessage('Jane\r\nBcc: attacker@evil.com', 'jane@example.com', 'Hi');
-    const msg = mockSend.mock.calls[0][0];
-    expect(msg.subject).not.toMatch(/[\r\n]/);
-  });
-
-  test('UT-057: HTML-special chars in the message are escaped', async () => {
-    await sendContactMessage('Jane', 'jane@example.com', '<script>alert(1)</script>');
-    const msg = mockSend.mock.calls[0][0];
-    expect(msg.html).not.toContain('<script>');
-    expect(msg.html).toContain('&lt;script&gt;');
-  });
-
-  test('UT-058: swallows Resend errors silently', async () => {
-    mockSend.mockRejectedValue(new Error('Resend down'));
-    await expect(
-      sendContactMessage('Jane', 'jane@example.com', 'Hi')
-    ).resolves.toBeUndefined();
   });
 });
 

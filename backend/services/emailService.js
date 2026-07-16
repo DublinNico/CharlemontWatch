@@ -252,35 +252,9 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
   await Promise.all(sends);
 };
 
-// Send a "Contact Us" form message to the admin, with Reply-To set to the
-// sender's own address so admin can just hit reply to respond directly
-const sendContactMessage = async (name, email, message) => {
-  const adminEmail = process.env.ADMIN_EMAIL;
-
-  try {
-    await send({
-      from: FROM,
-      to: [adminEmail],
-      replyTo: email,
-      subject: `[Contact Form] Message from ${sanitizeHeader(name)}`,
-      html: `
-        <h2>New Contact Form Message</h2>
-        <p><strong>Name:</strong> ${escapeHtml(name)}</p>
-        <p><strong>Email:</strong> ${escapeHtml(email)}</p>
-        <p><strong>Message:</strong></p>
-        <p style="white-space:pre-wrap;">${escapeHtml(message)}</p>
-      `
-    });
-    console.log(`Contact form message sent from ${email}`);
-  } catch (error) {
-    console.error('Failed to send contact form email:', error);
-  }
-};
-
 module.exports = {
   sendResidentConfirmation,
   sendAdminNotification,
   sendStatusUpdate,
-  sendComplaintEmails,
-  sendContactMessage
+  sendComplaintEmails
 };
