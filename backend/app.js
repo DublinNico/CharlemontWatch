@@ -46,7 +46,7 @@ app.use((req, res, next) => {
 });
 // Parse JSON and URL-encoded bodies (multipart/form-data is handled per-route by multer)
 app.use(express.json());
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
 // Strip any $-prefixed or dot-containing keys from body/query/params to block NoSQL injection
 app.use(mongoSanitize());
 

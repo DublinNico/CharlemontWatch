@@ -7,6 +7,10 @@ const ADMIN_KEY = import.meta.env.VITE_ADMIN_KEY;
 
 // Admin login page. Hidden from public navigation — only reachable via
 // /cw-admin?key=<VITE_ADMIN_KEY>; any other visitor is redirected home.
+// This is a UI/navigation gate only, not a security boundary: VITE_ADMIN_KEY
+// is bundled into the client JS and visible to anyone who inspects it.
+// Real authorization is enforced server-side by login + the adminOnly
+// middleware, not by this check.
 export function Auth() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

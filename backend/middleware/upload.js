@@ -2,7 +2,7 @@ const multer = require('multer');
 
 const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
 
-// First-pass filter based on the declared MIME type/extension — cheap but
+// First-pass filter based on the declared MIME type — cheap but
 // spoofable, so it's backed up by validateMagicBytes below
 const fileFilter = (req, file, cb) => {
   if (!allowedMimes.includes(file.mimetype)) {

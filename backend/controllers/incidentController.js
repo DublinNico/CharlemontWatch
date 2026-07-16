@@ -36,7 +36,7 @@ const createIncident = async (req, res) => {
     // sendComplaintTo is a comma-separated string from the multipart form;
     // only 'tuath'/'dcc' values survive the filter
     const sendComplaintTo = req.body.sendComplaintTo
-      ? req.body.sendComplaintTo.split(',').map(v => v.trim()).filter(v => ['tuath', 'dcc'].includes(v))
+      ? String(req.body.sendComplaintTo).split(',').map(v => v.trim()).filter(v => ['tuath', 'dcc'].includes(v))
       : [];
 
     // Required-field validation — runs before any DB or type-specific logic
