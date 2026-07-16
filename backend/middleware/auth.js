@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 
-// Check if user is logged in
+// Verifies the Bearer JWT on the request and attaches the decoded payload
+// (_id, email, role) to req.user for downstream handlers
 const authenticate = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   
@@ -17,7 +18,7 @@ const authenticate = (req, res, next) => {
   }
 };
 
-// Check if user is admin
+// Gate for admin-only routes — must run after authenticate() since it reads req.user
 const adminOnly = (req, res, next) => {
   if (req.user?.role !== 'admin') {
     return res.status(403).json({ error: 'Admin access required' });

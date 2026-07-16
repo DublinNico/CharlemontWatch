@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const { EMAIL_REGEX } = require('../utils/validators');
 
+// One document per resident email — the unique index on email is what makes
+// the controller's upsert-by-email pattern work (vote again = overwrite).
 const satisfactionVoteSchema = new mongoose.Schema({
   email: {
     type: String,

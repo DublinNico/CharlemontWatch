@@ -3,6 +3,7 @@ const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const { login } = require('../controllers/authController');
 
+// Throttles login attempts per IP to slow down brute-force password guessing
 const loginLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 10,

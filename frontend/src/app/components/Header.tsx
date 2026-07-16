@@ -1,8 +1,10 @@
-import { Shield, LogOut, Info } from 'lucide-react';
+import { Shield, LogOut, Info, Mail } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router';
 import { Button } from './ui/button';
 
+// Site-wide top nav: logo/home link, About Us, and (when logged in) the
+// admin Dashboard/Sign Out controls
 export function Header() {
   const { isAuthenticated, logout, user } = useApp();
   const navigate = useNavigate();
@@ -37,6 +39,14 @@ export function Header() {
             >
               <Info className="w-4 h-4" />
               <span className="hidden sm:inline">About Us</span>
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/contact')}
+              className="gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <Mail className="w-4 h-4" />
+              <span className="hidden sm:inline">Contact</span>
             </Button>
             {isAuthenticated ? (
               <>

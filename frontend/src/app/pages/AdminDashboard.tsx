@@ -5,6 +5,7 @@ import { Header } from '../components/Header';
 import { StatusBadge } from '../components/StatusBadge';
 import { useApp, IncidentStatus, Incident, IncidentType } from '../context/AppContext';
 
+// Left-border accent color per incident type in the dashboard rows
 const typeColors: Record<IncidentType, string> = {
   'Graffiti': '#f57c00',
   'Anti-Social Behaviour': '#d32f2f',
@@ -24,6 +25,10 @@ interface IncidentRowProps {
   onSelectIncident: (incident: Incident) => void;
 }
 
+// A single incident's row in either the review queue or the manage-incidents
+// list. isQueue toggles between approve/reject/delete actions (queue) and
+// update-status/delete actions (manage), and whether photos are individually
+// toggleable for approval.
 function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhotoReview, onDelete, onSelectIncident }: IncidentRowProps) {
   const formattedDate = new Date(incident.date).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric',
@@ -43,6 +48,14 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
             </h3>
             <span className="text-xs text-white bg-indigo-600 px-2 py-1 rounded">{incident.id}</span>
             {!isQueue && <StatusBadge status={incident.status} />}
+            {incident.sendComplaintTo && incident.sendComplaintTo.length > 0 && (
+              <span
+                className="text-xs font-semibold text-white bg-[#d32f2f] px-2 py-1 rounded"
+                title={isQueue ? 'Approving this will email a formal complaint' : 'A formal complaint was sent when this was approved'}
+              >
+                Complaint: {incident.sendComplaintTo.map(o => o === 'tuath' ? 'Túath' : 'DCC').join(', ')}
+              </span>
+            )}
           </div>
 
           <p className="text-sm text-gray-800 mb-2">
@@ -157,6 +170,9 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
   );
 }
 
+// Admin-only dashboard: a moderation queue for PENDING_REVIEW incidents and
+// a status-management view for already-approved ones. Redirects to login if
+// not authenticated.
 export function AdminDashboard() {
   const navigate = useNavigate();
   const {
@@ -178,22 +194,26 @@ export function AdminDashboard() {
   const [actionError, setActionError] = useState('');
   const [reviewingId, setReviewingId] = useState<string | null>(null);
 
+  // Guard: bounce unauthenticated visitors back to the (hidden) login page
   useEffect(() => {
     if (!isAuthenticated) navigate(`/cw-admin?key=${import.meta.env.VITE_ADMIN_KEY}`);
   }, [isAuthenticated, navigate]);
 
+  // Refresh the moderation queue whenever it becomes the active tab
   useEffect(() => {
     if (activeTab === 'queue') refreshPendingIncidents();
   }, [activeTab]);
 
   const filteredIncidents = incidents.filter(i => i.status === statusFilter);
 
+  // Tab-pill counts for the Manage Incidents view
   const statusCounts = {
     NEW: incidents.filter(i => i.status === 'NEW').length,
     IN_PROGRESS: incidents.filter(i => i.status === 'IN_PROGRESS').length,
     RESOLVED: incidents.filter(i => i.status === 'RESOLVED').length,
   };
 
+  // Submits the status change picked in the modal for selectedIncident
   const handleUpdateStatus = async () => {
     if (!selectedIncident) return;
     setIsUpdating(true);
@@ -208,6 +228,7 @@ export function AdminDashboard() {
     }
   };
 
+  // Permanently deletes an incident, after a native confirm() prompt
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this incident?')) return;
     setActionError('');
@@ -218,6 +239,7 @@ export function AdminDashboard() {
     }
   };
 
+  // Approves or rejects a pending incident from the moderation queue
   const handleReview = async (id: string, action: 'approve' | 'reject') => {
     setReviewingId(id);
     setActionError('');
@@ -230,6 +252,7 @@ export function AdminDashboard() {
     }
   };
 
+  // Toggles a single photo's approval state on a pending incident
   const handlePhotoReview = async (incidentId: string, photoId: string, approved: boolean) => {
     try {
       await reviewPhoto(incidentId, photoId, approved);

@@ -1,5 +1,7 @@
 import { useApp } from '../context/AppContext';
 
+// Compact row of total/new/in-progress/resolved counts, shown at the top of
+// the Track Report page
 export function StatsCard() {
   const { incidents } = useApp();
 

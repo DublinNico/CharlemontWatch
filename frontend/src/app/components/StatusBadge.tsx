@@ -7,7 +7,9 @@ interface StatusBadgeProps {
   status: IncidentStatus;
 }
 
+// Renders a colored pill + icon for an incident's status
 export function StatusBadge({ status }: StatusBadgeProps) {
+  // Label, color, and icon per status value
   const configs: Record<IncidentStatus, { label: string; className: string; icon: React.ElementType }> = {
     PENDING_REVIEW: {
       label: 'Pending Review',

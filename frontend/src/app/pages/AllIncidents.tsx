@@ -11,6 +11,7 @@ import { Tabs, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Label } from '../components/ui/label';
 
+// Badge/pill colors per incident type, used for the filter pills and cards
 const typeColors: Record<IncidentType, { bg: string; text: string; border: string }> = {
   'Graffiti': { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-300' },
   'Anti-Social Behaviour': { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-300' },
@@ -18,12 +19,14 @@ const typeColors: Record<IncidentType, { bg: string; text: string; border: strin
   'Maintenance Issue': { bg: 'bg-emerald-100', text: 'text-emerald-700', border: 'border-emerald-300' },
 };
 
+// Public "browse all reports" page — filterable by type and status
 export function AllIncidents() {
   const { incidents } = useApp();
   const navigate = useNavigate();
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<IncidentType | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<IncidentStatus | 'all'>('all');
 
+  // Recomputed only when the incident list or either filter changes
   const filteredIncidents = useMemo(() => {
     return incidents.filter(incident => {
       const typeMatch = selectedTypeFilter === 'all' || incident.type === selectedTypeFilter;
@@ -34,6 +37,7 @@ export function AllIncidents() {
 
   const incidentTypes: IncidentType[] = ['Graffiti', 'Anti-Social Behaviour', 'Safety Hazard', 'Maintenance Issue'];
 
+  // Header summary counts (unaffected by the active filters)
   const stats = [
     { label: 'Total', value: incidents.length, color: 'text-slate-600' },
     { label: 'New', value: incidents.filter(i => i.status === 'NEW').length, color: 'text-blue-600' },

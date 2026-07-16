@@ -7,10 +7,13 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 
+// Landing page: hero, stats, how-it-works, incident types, main actions,
+// satisfaction voting, and quick links
 export function Home() {
   const navigate = useNavigate();
   const { isAuthenticated, incidents } = useApp();
 
+  // Summary counts shown in the "Incident Types" section
   const stats = [
     {
       label: 'Total Reports',
@@ -32,6 +35,7 @@ export function Home() {
     },
   ];
 
+  // The three primary call-to-action cards
   const actions = [
     {
       icon: Shield,
@@ -59,6 +63,7 @@ export function Home() {
     },
   ];
 
+  // Footer-area links — Admin/Account entries only show once logged in
   const quickLinks = [
     {
       icon: Lock,

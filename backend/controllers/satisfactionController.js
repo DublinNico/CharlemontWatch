@@ -3,7 +3,9 @@ const { EMAIL_REGEX } = require('../utils/validators');
 
 const VALID_RATINGS = ['low', 'medium', 'high'];
 
-// Submit or change a satisfaction vote (one vote per email, upserted)
+// Submit or change a satisfaction vote (one vote per email, upserted).
+// Public endpoint — resubmitting with the same email overwrites the
+// resident's previous rating instead of creating a duplicate.
 const submitVote = async (req, res) => {
   try {
     const { email, rating } = req.body;
@@ -35,7 +37,8 @@ const submitVote = async (req, res) => {
   }
 };
 
-// Public aggregate counts — no emails exposed
+// Public aggregate counts — no emails exposed. Powers the results bar shown
+// on the Home page.
 const getSummary = async (req, res) => {
   try {
     const counts = { low: 0, medium: 0, high: 0 };

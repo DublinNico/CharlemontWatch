@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 
+// A single uploaded photo attached to an incident. Starts unapproved and is
+// only shown publicly once an admin approves it (or the whole incident).
 const photoSchema = new mongoose.Schema({
   url: String,
   uploadedAt: { type: Date, default: Date.now },
@@ -7,6 +9,9 @@ const photoSchema = new mongoose.Schema({
   approved: { type: Boolean, default: false }
 });
 
+// The core incident report schema. Type-specific fields (graffiti/antisocial/
+// safetyhazard/maintenance) all live on the same document rather than using
+// discriminators, since only one set is ever populated per incident.
 const incidentSchema = new mongoose.Schema({
   shortId: {
     type: String,

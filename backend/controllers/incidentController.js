@@ -8,6 +8,9 @@ const { sendResidentConfirmation, sendAdminNotification, sendStatusUpdate, sendC
 
 const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
 
+// Looks an incident up by its human-friendly shortId first, falling back to
+// the raw MongoDB ObjectId — lets both the public tracking page and admin
+// routes accept either identifier
 const findByAnyId = async (id) => {
   return await Incident.findOne({ shortId: id }) ||
          await Incident.findById(id).catch(() => null);
@@ -21,17 +24,22 @@ const compressImage = (buffer) => sharp(buffer)
   .jpeg({ quality: 80 })
   .toBuffer();
 
-// Create incident (report)
+// Create incident (report) — public endpoint, no login required.
+// Validates the submission, uploads any photos, saves the incident as
+// PENDING_REVIEW, and fires off confirmation/notification/complaint emails.
 const createIncident = async (req, res) => {
   try {
 
     const { incidentType, location, description, reporterEmail,
             complainantName, complainantAddress } = req.body;
 
+    // sendComplaintTo is a comma-separated string from the multipart form;
+    // only 'tuath'/'dcc' values survive the filter
     const sendComplaintTo = req.body.sendComplaintTo
-      ? req.body.sendComplaintTo.split(',').map(v => v.trim()).filter(v => ['tuath', 'dcc'].includes(v))
+      ? String(req.body.sendComplaintTo).split(',').map(v => v.trim()).filter(v => ['tuath', 'dcc'].includes(v))
       : [];
 
+    // Required-field validation — runs before any DB or type-specific logic
     const VALID_TYPES = ['graffiti', 'antisocial', 'safetyhazard', 'maintenance'];
     if (!incidentType || !VALID_TYPES.includes(incidentType)) {
       return res.status(400).json({ error: 'incidentType must be one of: graffiti, antisocial, safetyhazard, maintenance' });
@@ -42,9 +50,12 @@ const createIncident = async (req, res) => {
     if (!description || !description.trim()) {
       return res.status(400).json({ error: 'description is required' });
     }
+    // Email is required on every report (anonymous or not) — confirms the
+    // reporter lives in the complex and enables status-update emails
     if (!reporterEmail || !EMAIL_REGEX.test(reporterEmail)) {
       return res.status(400).json({ error: 'a valid email is required' });
     }
+    // Name/address are only required when escalating to a formal complaint
     if (sendComplaintTo.length > 0) {
       if (!complainantName || !complainantName.trim()) {
         return res.status(400).json({ error: 'name is required to send a formal complaint' });
@@ -54,6 +65,7 @@ const createIncident = async (req, res) => {
       }
     }
 
+    // Pull out only the fields relevant to the selected incident type
     const typeData = {};
     if (incidentType === 'graffiti') {
       typeData.surfaceType = req.body.surfaceType;
@@ -73,6 +85,8 @@ const createIncident = async (req, res) => {
       typeData.workCategory = req.body.workCategory;
     }
 
+    // Compress and upload each photo (max 10); a failed upload is logged and
+    // skipped rather than failing the whole report
     const photos = [];
     if (req.files && req.files.length > 0) {
       for (const file of req.files.slice(0, 10)) {
@@ -97,6 +111,8 @@ const createIncident = async (req, res) => {
       }
     }
 
+    // Persist the incident — complainant fields are only stored if a
+    // complaint was actually requested
     const incident = new Incident({
       shortId: generateShortId(),
       incidentType,
@@ -110,16 +126,13 @@ const createIncident = async (req, res) => {
 
     await incident.save();
 
+    // Fire-and-forget notification emails — failures here don't affect the
+    // API response, they're logged inside emailService itself.
+    // Note: the formal complaint itself is NOT sent here — it's held until
+    // an admin approves the incident (see reviewIncident) so Túath/DCC never
+    // receive a complaint that hasn't been moderated.
     sendResidentConfirmation(incident, incident.reporterEmail);
     sendAdminNotification(incident);
-
-    if (sendComplaintTo.length > 0) {
-      sendComplaintEmails(incident, {
-        name: incident.complainantName,
-        address: incident.complainantAddress,
-        email: incident.reporterEmail,
-      }, sendComplaintTo);
-    }
 
     res.status(201).json({
       success: true,
@@ -150,7 +163,9 @@ const getIncident = async (req, res) => {
   }
 };
 
-// Get all incidents (public — PENDING_REVIEW and REJECTED are never returned)
+// Get all incidents (public — PENDING_REVIEW and REJECTED are never returned).
+// Supports optional ?status= and ?type= filters, both restricted to
+// publicly-visible values.
 const getAllIncidents = async (req, res) => {
   try {
     const { status, type } = req.query;
@@ -171,7 +186,7 @@ const getAllIncidents = async (req, res) => {
   }
 };
 
-// Get all pending incidents (admin only)
+// Get all pending incidents (admin only) — the moderation queue
 const getPendingIncidents = async (req, res) => {
   try {
     const incidents = await Incident.find({ status: 'PENDING_REVIEW' }).sort({ reportedDate: -1 });
@@ -181,7 +196,10 @@ const getPendingIncidents = async (req, res) => {
   }
 };
 
-// Approve or reject a pending incident (admin only)
+// Approve or reject a pending incident (admin only). Approving publishes it
+// to the public feed (status NEW), marks all its photos approved, and — if
+// the resident requested one — sends the formal complaint to Túath/DCC for
+// the first time. Rejecting hides it permanently and no complaint is ever sent.
 const reviewIncident = async (req, res) => {
   try {
     const { action } = req.body;
@@ -204,6 +222,14 @@ const reviewIncident = async (req, res) => {
 
     incident.updatedAt = new Date();
     await incident.save();
+
+    if (action === 'approve' && incident.sendComplaintTo?.length > 0) {
+      sendComplaintEmails(incident, {
+        name: incident.complainantName,
+        address: incident.complainantAddress,
+        email: incident.reporterEmail,
+      }, incident.sendComplaintTo);
+    }
 
     res.json({ success: true, incident });
   } catch (error) {
@@ -237,7 +263,9 @@ const reviewPhoto = async (req, res) => {
   }
 };
 
-// Update incident status (admin only — active statuses only)
+// Update incident status (admin only — active statuses only).
+// Progresses an already-approved incident through NEW -> IN_PROGRESS -> RESOLVED
+// and emails the reporter about the change.
 const updateIncidentStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -261,7 +289,8 @@ const updateIncidentStatus = async (req, res) => {
   }
 };
 
-// Add photo to existing incident
+// Add photo to existing incident (admin only) — used to attach further
+// evidence after the initial report, e.g. follow-up photos
 const addPhoto = async (req, res) => {
   try {
     const incident = await findByAnyId(req.params.id);
@@ -301,7 +330,7 @@ const addPhoto = async (req, res) => {
   }
 };
 
-// Delete incident (admin only)
+// Delete incident (admin only) — permanent, not a soft delete
 const deleteIncident = async (req, res) => {
   try {
     const incident = await findByAnyId(req.params.id);
