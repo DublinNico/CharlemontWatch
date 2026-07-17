@@ -130,14 +130,7 @@ export function TrackReport() {
       <main className="max-w-7xl mx-auto px-4 py-6 md:py-8 space-y-6">
         <StatsCard />
 
-        {fromList ? (
-          <div className="bg-white rounded shadow-sm p-6">
-            <h2 className="text-gray-800 mb-2">Incident Details</h2>
-            <p className="text-sm text-gray-500">
-              Viewing a publicly listed incident report.
-            </p>
-          </div>
-        ) : (
+        {!fromList && (
           <div className="bg-white rounded shadow-sm p-6">
             <h2 className="text-gray-800 mb-2">Track Your Report</h2>
             <p className="text-sm text-gray-500 mb-4">
