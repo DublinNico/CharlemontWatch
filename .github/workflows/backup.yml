@@ -28,7 +28,12 @@ jobs:
       - name: Encrypt backup
         env:
           BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
-        run: gpg --batch --yes --passphrase "$BACKUP_ENCRYPTION_KEY" --symmetric --cipher-algo AES256 -o backup.gz.gpg backup.gz
+        run: |
+          if [ -z "$BACKUP_ENCRYPTION_KEY" ]; then
+            echo "BACKUP_ENCRYPTION_KEY is not set — refusing to upload an unencrypted backup" >&2
+            exit 1
+          fi
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 --symmetric --cipher-algo AES256 -o backup.gz.gpg backup.gz <<< "$BACKUP_ENCRYPTION_KEY"
 
       - name: Upload encrypted backup
         uses: actions/upload-artifact@v4
