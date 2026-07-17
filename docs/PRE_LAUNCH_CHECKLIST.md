@@ -64,7 +64,7 @@
 ### Monitoring & Ops
 - [x] **Set up error monitoring** — Sentry installed on backend and frontend; set `SENTRY_DSN` (backend) and `VITE_SENTRY_DSN` (frontend) env vars to activate
 - [x] **Set up uptime monitoring** — UptimeRobot monitor pinging `https://charlemontwatch.onrender.com/api/health` every 5 minutes, keeping Render's free tier from cold-starting
-- [ ] **Enable MongoDB Atlas automated backups** — set a daily backup schedule on the Atlas cluster
+- [x] **Set up database backups** — Atlas Cloud Backups aren't available on the M0 free tier at all (hard platform limit, not a config toggle); instead added `.github/workflows/backup.yml` — daily `mongodump`, GPG-encrypted (repo is public) before upload as a 30-day-retention workflow artifact. Pending: PR #20 merge + one manual `workflow_dispatch` run to confirm end-to-end (untestable pre-merge since GitHub only allows dispatching workflows that already exist on the default branch).
 
 ### Testing
 - [x] **Add Supertest integration tests** — 37 integration tests covering all incident, auth, and satisfaction routes (IT-001 – IT-033)
@@ -102,7 +102,7 @@
 |----------|-------|------|-----------|
 | 🔴 Critical | 23 | 23 | 0 |
 | 🟠 Important | 12 | 10 | 2 |
-| 🟡 Nice to have | 21 | 19 | 2 |
-| **Total** | **56** | **52** | **4** |
+| 🟡 Nice to have | 21 | 20 | 1 |
+| **Total** | **56** | **53** | **3** |
 
-**Still open:** Resend sender domain verification — DNS records (SPF/DKIM/DMARC) are correctly in place at Register365, but can't verify until `charlemontwatch.ie` is delegated in the `.ie` registry (pending, no reply from Register365 support yet); production email flow testing (blocked on the above); MongoDB Atlas automated backups; custom domain DNS (same registry delegation blocker).
+**Still open:** Resend sender domain verification — DNS records (SPF/DKIM/DMARC) are correctly in place at Register365, but can't verify until `charlemontwatch.ie` is delegated in the `.ie` registry (pending, no reply from Register365 support yet); production email flow testing (blocked on the above); custom domain DNS (same registry delegation blocker).
