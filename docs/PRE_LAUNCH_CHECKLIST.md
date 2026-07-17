@@ -33,7 +33,7 @@
 - [x] **Update `FRONTEND_URL`** in backend env to the live domain — set to the Vercel frontend URL in Render's environment variables; used in email tracking links
 
 ### Database
-- [ ] **Backfill `shortId` on 8 legacy incidents** — 8 of 9 incidents in MongoDB have no `shortId`; run migration script to generate and persist them
+- [x] **Backfill `shortId` on legacy incidents** — checked production DB 2026-07-17: those legacy incidents are gone (cleaned up since this was written) and all 4 incidents currently in the database already have a `shortId`. Nothing to migrate.
 
 ---
 
@@ -63,8 +63,8 @@
 
 ### Monitoring & Ops
 - [x] **Set up error monitoring** — Sentry installed on backend and frontend; set `SENTRY_DSN` (backend) and `VITE_SENTRY_DSN` (frontend) env vars to activate
-- [ ] **Set up uptime monitoring** — Freshping or UptimeRobot to alert if the backend goes down
-- [ ] **Enable MongoDB Atlas automated backups** — set a daily backup schedule on the Atlas cluster
+- [x] **Set up uptime monitoring** — UptimeRobot monitor pinging `https://charlemontwatch.onrender.com/api/health` every 5 minutes, keeping Render's free tier from cold-starting
+- [x] **Set up database backups** — Atlas Cloud Backups aren't available on the M0 free tier at all (hard platform limit, not a config toggle); instead added `.github/workflows/backup.yml` — daily `mongodump`, GPG-encrypted (repo is public) before upload as a 30-day-retention workflow artifact. Pending: PR #20 merge + one manual `workflow_dispatch` run to confirm end-to-end (untestable pre-merge since GitHub only allows dispatching workflows that already exist on the default branch).
 
 ### Testing
 - [x] **Add Supertest integration tests** — 37 integration tests covering all incident, auth, and satisfaction routes (IT-001 – IT-033)
@@ -100,9 +100,9 @@
 
 | Priority | Total | Done | Remaining |
 |----------|-------|------|-----------|
-| 🔴 Critical | 23 | 22 | 1 |
+| 🔴 Critical | 23 | 23 | 0 |
 | 🟠 Important | 12 | 10 | 2 |
-| 🟡 Nice to have | 21 | 18 | 3 |
-| **Total** | **56** | **50** | **6** |
+| 🟡 Nice to have | 21 | 20 | 1 |
+| **Total** | **56** | **53** | **3** |
 
-**Still open:** shortId backfill on 8 legacy incidents; Resend sender domain verification (SPF/DKIM) — currently sandboxed to the account owner's own email; production email flow testing (blocked on the above); uptime monitoring; MongoDB Atlas automated backups; custom domain DNS.
+**Still open:** Resend sender domain verification — DNS records (SPF/DKIM/DMARC) are correctly in place at Register365, but can't verify until `charlemontwatch.ie` is delegated in the `.ie` registry (pending, no reply from Register365 support yet); production email flow testing (blocked on the above); custom domain DNS (same registry delegation blocker).
