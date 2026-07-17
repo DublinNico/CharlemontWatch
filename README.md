@@ -6,6 +6,8 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 
 [![CI](https://github.com/DublinNico/CharlemontWatch/actions/workflows/ci.yml/badge.svg)](https://github.com/DublinNico/CharlemontWatch/actions/workflows/ci.yml)
 
+**Live:** [charlemontwatch-frontend.vercel.app](https://charlemontwatch-frontend.vercel.app) (frontend) · [charlemontwatch.onrender.com](https://charlemontwatch.onrender.com) (backend API) — custom domain `charlemontwatch.ie` pending DNS propagation
+
 ![CharlemontWatch home page](docs/images/home.png)
 
 ---
@@ -18,6 +20,7 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 - **Track by ID** — every report gets a unique `CW-XXXXXX` reference for status lookups, no account required
 - **Satisfaction voting** — residents can publicly rate their satisfaction with Túath Housing (low/medium/high), one vote per email, changeable at any time
 - **Admin dashboard** — JWT-authenticated review queue, photo moderation, and status updates (New → In Progress → Resolved)
+- **Contact Us** — spam-protected general enquiry form for questions, feedback, or press, separate from the incident-report flow
 - **Privacy by design** — GDPR-compliant privacy policy, no analytics or third-party tracking, defined data retention periods
 
 ## Screenshots
@@ -34,7 +37,7 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 
 **Frontend** — React + Vite + TypeScript, React Router, Tailwind CSS, shadcn/ui, Axios
 **Backend** — Node.js + Express, MongoDB + Mongoose, JWT auth, AWS S3 (photo storage), Resend (email), Sentry (error monitoring)
-**Testing** — Jest + Supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E) — 189 automated tests across unit, integration, security, and E2E suites
+**Testing** — Jest + Supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E) — 225 automated tests (172 backend + 38 frontend + 15 E2E) across unit, integration, security, and E2E suites
 **CI** — GitHub Actions runs the full backend and frontend suites plus a frontend type check on every push to `dev` and PR to `main`
 
 ## Getting Started
@@ -93,7 +96,7 @@ cd frontend && npm run test:e2e
 
 ## Documentation
 
-- [`docs/PRE_LAUNCH_CHECKLIST.md`](docs/PRE_LAUNCH_CHECKLIST.md) — pre-launch security, config, and deployment checklist
+- [`docs/PRE_LAUNCH_CHECKLIST.md`](docs/PRE_LAUNCH_CHECKLIST.md) — security, config, and deployment checklist (app has launched; kept for the few remaining post-launch items)
 - [`docs/testing/TestingReport.md`](docs/testing/TestingReport.md) — full test plan, coverage, and execution results
 - [`docs/use-cases/`](docs/use-cases) — use case documentation
 - [`docs/bugs/`](docs/bugs) — resolved bug write-ups
