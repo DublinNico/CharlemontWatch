@@ -2,7 +2,7 @@
 
 **Community-led incident reporting and tracking for Charlemont Street, Dublin.**
 
-CharlemontWatch lets residents document safety, maintenance, and quality-of-life issues with photo evidence, track them through to resolution, and — when a report alone isn't enough — send a formal complaint directly to Túath Housing and/or Dublin City Council on their own behalf.
+CharlemontWatch lets residents document safety, maintenance, and quality-of-life issues with photo evidence, track them through to resolution, and when a report alone isn't enough, send a formal complaint directly to Túath Housing and/or Dublin City Council on their own behalf.
 
 [![CI](https://github.com/DublinNico/CharlemontWatch/actions/workflows/ci.yml/badge.svg)](https://github.com/DublinNico/CharlemontWatch/actions/workflows/ci.yml)
 
