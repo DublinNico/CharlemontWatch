@@ -1,0 +1,38 @@
+name: Database Backup
+
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    name: mongodump
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Install MongoDB Database Tools
+        run: |
+          wget -q https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x86_64-100.17.0.deb
+          sudo apt install -y ./mongodb-database-tools-ubuntu2204-x86_64-100.17.0.deb
+
+      - name: Dump database
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: mongodump --uri="$MONGODB_URI" --gzip --archive=backup.gz
+
+      # Repo is public — GitHub Actions artifacts on public repos are
+      # downloadable by anyone with Actions tab access, and the dump contains
+      # real resident PII (emails, complainant names/addresses). Encrypting
+      # before upload means a leaked/found artifact is useless without the key.
+      - name: Encrypt backup
+        env:
+          BACKUP_ENCRYPTION_KEY: ${{ secrets.BACKUP_ENCRYPTION_KEY }}
+        run: gpg --batch --yes --passphrase "$BACKUP_ENCRYPTION_KEY" --symmetric --cipher-algo AES256 -o backup.gz.gpg backup.gz
+
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: mongodb-backup-${{ github.run_id }}
+          path: backup.gz.gpg
+          retention-days: 30

@@ -33,7 +33,7 @@
 - [x] **Update `FRONTEND_URL`** in backend env to the live domain — set to the Vercel frontend URL in Render's environment variables; used in email tracking links
 
 ### Database
-- [ ] **Backfill `shortId` on 8 legacy incidents** — 8 of 9 incidents in MongoDB have no `shortId`; run migration script to generate and persist them
+- [x] **Backfill `shortId` on legacy incidents** — checked production DB 2026-07-17: those legacy incidents are gone (cleaned up since this was written) and all 4 incidents currently in the database already have a `shortId`. Nothing to migrate.
 
 ---
 
@@ -63,7 +63,7 @@
 
 ### Monitoring & Ops
 - [x] **Set up error monitoring** — Sentry installed on backend and frontend; set `SENTRY_DSN` (backend) and `VITE_SENTRY_DSN` (frontend) env vars to activate
-- [ ] **Set up uptime monitoring** — Freshping or UptimeRobot to alert if the backend goes down
+- [x] **Set up uptime monitoring** — UptimeRobot monitor pinging `https://charlemontwatch.onrender.com/api/health` every 5 minutes, keeping Render's free tier from cold-starting
 - [ ] **Enable MongoDB Atlas automated backups** — set a daily backup schedule on the Atlas cluster
 
 ### Testing
@@ -100,9 +100,9 @@
 
 | Priority | Total | Done | Remaining |
 |----------|-------|------|-----------|
-| 🔴 Critical | 23 | 22 | 1 |
+| 🔴 Critical | 23 | 23 | 0 |
 | 🟠 Important | 12 | 10 | 2 |
-| 🟡 Nice to have | 21 | 18 | 3 |
-| **Total** | **56** | **50** | **6** |
+| 🟡 Nice to have | 21 | 19 | 2 |
+| **Total** | **56** | **52** | **4** |
 
-**Still open:** shortId backfill on 8 legacy incidents; Resend sender domain verification (SPF/DKIM) — currently sandboxed to the account owner's own email; production email flow testing (blocked on the above); uptime monitoring; MongoDB Atlas automated backups; custom domain DNS.
+**Still open:** Resend sender domain verification — DNS records (SPF/DKIM/DMARC) are correctly in place at Register365, but can't verify until `charlemontwatch.ie` is delegated in the `.ie` registry (pending, no reply from Register365 support yet); production email flow testing (blocked on the above); MongoDB Atlas automated backups; custom domain DNS (same registry delegation blocker).
