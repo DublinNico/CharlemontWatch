@@ -1,15 +1,17 @@
 # CharlemontWatch — Pre-Launch Checklist
 
+**Status: launched 2026-07-16.** Backend live on Render, frontend live on Vercel. This checklist is kept as a historical record and for the small number of items still open post-launch — see the 🔴/🟠/🟡 sections below for what's left.
+
 ---
 
 ## 🔴 Critical — Must fix before going live
 
 ### Security
-- [ ] **Replace JWT_SECRET** — current value in `.env` is a weak placeholder; generate a strong 256-bit random secret for production
-- [x] **Hide admin login from public** — route changed from `/auth` to `/cw-admin`; page only renders if `?key=VITE_ADMIN_KEY` is present in the URL, otherwise redirects to home. Access: `https://your-domain.com/cw-admin?key=charlemont2026`. **Change `VITE_ADMIN_KEY` in `frontend/.env.production` before going live.**
-- [ ] **Restrict CORS to production domain** — `server.js` currently allows all `localhost:*` origins; must be changed to the actual deployed frontend URL
+- [x] **Replace JWT_SECRET** — strong 256-bit random secret generated and set directly in Render's environment variables (not committed)
+- [x] **Hide admin login from public** — route changed from `/auth` to `/cw-admin`; page only renders if `?key=VITE_ADMIN_KEY` is present in the URL, otherwise redirects to home. `VITE_ADMIN_KEY` changed from the placeholder to a strong secret in `frontend/.env.production` before launch.
+- [x] **Restrict CORS to production domain** — `CORS_ALLOWED_ORIGINS` set to the live Vercel frontend URL in Render's environment variables
 - [x] **Add rate limiting** — `express-rate-limit` added to `/api/auth/login` (10 req/min per IP, skipped in test env); ST-005 confirms 429 after threshold
-- [ ] **Enable HTTPS** — without it, admin credentials travel in plaintext; use a host that provides TLS (Vercel, Render, Railway all do this for free)
+- [x] **Enable HTTPS** — both Render and Vercel provide TLS by default; live URLs are HTTPS-only
 - [x] **Add `helmet`** — sets secure HTTP headers (CSP, HSTS, X-Frame-Options, etc.); one-line install on the Express app
 - [x] **Add NoSQL injection protection** — `express-mongo-sanitize` added to `app.js`; ST-003 confirms operator payloads are rejected before reaching the DB
 - [x] **Add email format validation** to the Incident schema (`reporterEmail`) — regex validator added; `"notanemail"` now rejected (UT-033)
@@ -26,9 +28,9 @@
 
 ### Environment & Config
 - [x] **Replace all hardcoded `localhost:5000`** in the frontend — `AppContext.tsx:4` and `TrackReport.tsx:10` both hardcode the local API URL; move to `import.meta.env.VITE_API_URL`
-- [x] **Create `frontend/.env.production`** with `VITE_API_URL=https://your-api-domain.com/api`
-- [ ] **Set `NODE_ENV=production`** on the backend server
-- [ ] **Update `FRONTEND_URL`** in backend `.env` to the live domain — currently `localhost:3000`; used in email tracking links
+- [x] **Create `frontend/.env.production`** with the real deployed API URL — a post-launch bug (fixed via PR #15) found this file still had the placeholder `https://your-api-domain.com/api` baked into the Vite build, silently breaking every API call on the live site; now points at `https://charlemontwatch.onrender.com/api`
+- [x] **Set `NODE_ENV=production`** on the backend server — set in Render's environment variables
+- [x] **Update `FRONTEND_URL`** in backend env to the live domain — set to the Vercel frontend URL in Render's environment variables; used in email tracking links
 
 ### Database
 - [ ] **Backfill `shortId` on 8 legacy incidents** — 8 of 9 incidents in MongoDB have no `shortId`; run migration script to generate and persist them
@@ -87,10 +89,10 @@
 - [x] **Add cookie/consent notice** — not required; no analytics or third-party tracking scripts in use
 
 ### Infrastructure
-- [ ] **Deploy backend** — Railway, Render, or Fly.io recommended for Node/Express
-- [ ] **Deploy frontend** — Vercel or Netlify (automatic from GitHub)
-- [ ] **Set custom domain** and point DNS
-- [ ] **Enforce HTTPS** — ensure the deployment platform redirects HTTP → HTTPS
+- [x] **Deploy backend** — live on Render (free tier), `https://charlemontwatch.onrender.com`
+- [x] **Deploy frontend** — live on Vercel (Hobby/free tier), `https://charlemontwatch-frontend.vercel.app`
+- [ ] **Set custom domain** and point DNS — `charlemontwatch.ie` purchased 2026-07-16, DNS still propagating; not yet pointed at either deployment
+- [x] **Enforce HTTPS** — both Render and Vercel redirect HTTP → HTTPS by default
 
 ---
 
@@ -98,7 +100,9 @@
 
 | Priority | Total | Done | Remaining |
 |----------|-------|------|-----------|
-| 🔴 Critical | 23 | 17 | 6 |
+| 🔴 Critical | 23 | 22 | 1 |
 | 🟠 Important | 12 | 10 | 2 |
-| 🟡 Nice to have | 21 | 15 | 6 |
-| **Total** | **56** | **42** | **14** |
+| 🟡 Nice to have | 21 | 18 | 3 |
+| **Total** | **56** | **50** | **6** |
+
+**Still open:** shortId backfill on 8 legacy incidents; Resend sender domain verification (SPF/DKIM) — currently sandboxed to the account owner's own email; production email flow testing (blocked on the above); uptime monitoring; MongoDB Atlas automated backups; custom domain DNS.

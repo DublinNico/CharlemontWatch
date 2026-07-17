@@ -118,6 +118,11 @@ export function TrackReport() {
     doSearch(searchId);
   };
 
+  // Public-list clicks land here just to view an incident's details, not to
+  // track "your" report — showing the search box would re-expose the ID via
+  // its pre-filled value even with the card's own tracking badge hidden.
+  const fromList = searchParams.get('source') === 'list';
+
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       <Header />
@@ -125,29 +130,38 @@ export function TrackReport() {
       <main className="max-w-7xl mx-auto px-4 py-6 md:py-8 space-y-6">
         <StatsCard />
 
-        <div className="bg-white rounded shadow-sm p-6">
-          <h2 className="text-gray-800 mb-2">Track Your Report</h2>
-          <p className="text-sm text-gray-500 mb-4">
-            Enter the Incident ID you received in your confirmation email when you submitted the report.
-          </p>
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="text"
-              className="flex-1 px-4 py-2 border border-[#eeeeee] rounded focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
-              placeholder="Enter Incident ID (e.g. CW-A3F9B2)"
-              value={searchId}
-              onChange={e => setSearchId(e.target.value)}
-            />
-            <button
-              type="submit"
-              disabled={isSearching}
-              className="px-6 py-2 bg-[#1976d2] hover:bg-[#1565c0] text-white rounded transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
-            >
-              <Search className="w-4 h-4" />
-              {isSearching ? 'Searching…' : 'Search'}
-            </button>
-          </form>
-        </div>
+        {fromList ? (
+          <div className="bg-white rounded shadow-sm p-6">
+            <h2 className="text-gray-800 mb-2">Incident Details</h2>
+            <p className="text-sm text-gray-500">
+              Viewing a publicly listed incident report.
+            </p>
+          </div>
+        ) : (
+          <div className="bg-white rounded shadow-sm p-6">
+            <h2 className="text-gray-800 mb-2">Track Your Report</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Enter the Incident ID you received in your confirmation email when you submitted the report.
+            </p>
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+              <input
+                type="text"
+                className="flex-1 px-4 py-2 border border-[#eeeeee] rounded focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+                placeholder="Enter Incident ID (e.g. CW-A3F9B2)"
+                value={searchId}
+                onChange={e => setSearchId(e.target.value)}
+              />
+              <button
+                type="submit"
+                disabled={isSearching}
+                className="px-6 py-2 bg-[#1976d2] hover:bg-[#1565c0] text-white rounded transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                <Search className="w-4 h-4" />
+                {isSearching ? 'Searching…' : 'Search'}
+              </button>
+            </form>
+          </div>
+        )}
 
         {notFound && (
           <div className="bg-white rounded shadow-sm p-6 text-center">
@@ -166,7 +180,7 @@ export function TrackReport() {
             <IncidentCard
               incident={searchedIncident}
               showFullDetails={true}
-              showTrackingBadge={searchParams.get('source') !== 'list'}
+              showTrackingBadge={!fromList}
             />
           </div>
         )}

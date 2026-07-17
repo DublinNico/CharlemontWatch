@@ -220,7 +220,7 @@ export function About() {
             CharlemontWatch is run and paid for out of pocket, hosting, storage, and email all cost money every month. If this site has been useful to you, a small donation helps keep it running.
           </p>
           <a
-            href="https://ko-fi.com/yourpagename"
+            href="https://ko-fi.com/charlemontwatch"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-2 bg-[#d32f2f] hover:bg-[#b71c1c] text-white rounded transition-colors"
