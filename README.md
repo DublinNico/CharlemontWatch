@@ -35,15 +35,15 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 
 ## Tech Stack
 
-**Frontend** — React + Vite + TypeScript, React Router, Tailwind CSS, shadcn/ui (Radix UI primitives), Axios, Lucide icons
+- **Frontend** — React + Vite + TypeScript, React Router, Tailwind CSS, shadcn/ui (Radix UI primitives), Axios, Lucide icons
 
-**Backend** — Node.js + Express, MongoDB + Mongoose, JWT auth (bcryptjs), Multer + Sharp (photo upload + compression), AWS S3 (photo storage), Resend (email), Sentry (error monitoring), Helmet + express-rate-limit + express-mongo-sanitize (security hardening)
+- **Backend** — Node.js + Express, MongoDB + Mongoose, JWT auth (bcryptjs), Multer + Sharp (photo upload + compression), AWS S3 (photo storage), Resend (email), Sentry (error monitoring), Helmet + express-rate-limit + express-mongo-sanitize (security hardening)
 
-**Deployment** — Vercel (frontend), Render (backend API)
+- **Deployment** — Vercel (frontend), Render (backend API)
 
-**Testing** — Jest + Supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E), Artillery (load testing) — 225 automated tests (172 backend + 38 frontend + 15 E2E) across unit, integration, security, and E2E suites
+- **Testing** — Jest + Supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E), Artillery (load testing) — 225 automated tests (172 backend + 38 frontend + 15 E2E) across unit, integration, security, and E2E suites
 
-**CI** — GitHub Actions runs the full backend and frontend suites plus a frontend type check on every push to `dev` and PR to `main`
+- **CI** — GitHub Actions runs the full backend and frontend suites plus a frontend type check on every push to `dev` and PR to `main`
 
 ## Getting Started
 
