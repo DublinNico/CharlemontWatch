@@ -25,7 +25,7 @@ export function About() {
               <h2 className="text-[#333333] mb-3">Our Mission</h2>
               <p className="text-[#666666]">
                 CharlemontWatch is a community-led incident reporting and tracking platform for residents 
-                of Charlemont Street, Dublin. We empower residents to document safety, maintenance, and 
+                of ffrench-Mullen House, Charlemont Street, Dublin. We empower residents to document safety, maintenance, and 
                 quality-of-life issues, creating a transparent evidence base that holds Túath Housing and 
                 Dublin City Council accountable for maintaining our neighbourhood.
               </p>
