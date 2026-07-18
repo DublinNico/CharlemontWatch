@@ -5,7 +5,9 @@ import { MOCK_INCIDENTS } from './helpers/mock-data';
 test.describe('Admin — login', () => {
   test('ET-008: correct credentials → redirected to admin dashboard', async ({ page }) => {
     await interceptApi(page);
-    await page.goto('/auth');
+    // /auth was renamed to /cw-admin (gated by ?key=VITE_ADMIN_KEY) to hide
+    // the admin login from public discovery — matches frontend/.env locally
+    await page.goto('/cw-admin?key=charlemont2026');
 
     await page.locator('input[type="email"]').fill('admin@test.com');
     await page.locator('input[type="password"]').fill('AdminPass123!');
@@ -20,13 +22,13 @@ test.describe('Admin — login', () => {
       route.fulfill({ status: 401, json: { error: 'Invalid credentials' } });
     });
 
-    await page.goto('/auth');
+    await page.goto('/cw-admin?key=charlemont2026');
     await page.locator('input[type="email"]').fill('wrong@test.com');
     await page.locator('input[type="password"]').fill('wrongpass');
     await page.getByRole('button', { name: /Login/i }).click();
 
     await expect(page.getByText(/Invalid credentials/i)).toBeVisible();
-    await expect(page).toHaveURL(/\/auth/);
+    await expect(page).toHaveURL(/\/cw-admin/);
   });
 });
 
