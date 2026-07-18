@@ -151,6 +151,12 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
   // especially) block remote images by default — the link is the reliable
   // fallback so the evidence is never more than one click away.
   const trackingLink = `${process.env.FRONTEND_URL}/track?id=${incident.shortId}`;
+
+  // Shown unconditionally, unlike photosBlock below — previously the only
+  // clickable link to the site lived inside photosBlock, so a photo-less
+  // report gave Túath/DCC no way to view it online at all.
+  const trackingLinkBlock = `<p><a href="${trackingLink}">View this report on CharlemontWatch</a></p>`;
+
   const photosBlock = incident.photos && incident.photos.length > 0 ? `
     <h3>Photo Evidence (${incident.photos.length})</h3>
     <div style="margin:12px 0;">
@@ -160,7 +166,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
         </a>
       `).join('')}
     </div>
-    <p><a href="${trackingLink}">View ${incident.photos.length > 3 ? `all ${incident.photos.length} photos` : 'full photo evidence'} and incident details on CharlemontWatch</a></p>
+    ${incident.photos.length > 3 ? `<p><a href="${trackingLink}">View all ${incident.photos.length} photos</a></p>` : ''}
   ` : '';
 
   const complainantBlock = `
@@ -207,6 +213,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
         ${complainantBlock}
         <h3>Incident Details</h3>
         ${sharedIncidentBlock}
+        ${trackingLinkBlock}
         ${photosBlock}
         <h3>Nature of Complaint</h3>
         <p>The complainant is reporting an unresolved issue within the Túath Housing managed estate at <strong>${escapeHtml(incident.location)}</strong>.
@@ -214,7 +221,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
         <h3>Desired Outcome</h3>
         <p>The complainant requests a written acknowledgement within 5 working days and resolution within 30 working days, as per the Túath Complaints Procedure.</p>
         <hr style="margin:24px 0;border:none;border-top:1px solid #eee;" />
-        <p style="font-size:12px;color:#888;">This complaint was submitted automatically via CharlemontWatch (charlemontwatch.ie).
+        <p style="font-size:12px;color:#888;">This complaint was submitted automatically via <a href="${process.env.FRONTEND_URL}">CharlemontWatch</a>.
         The incident reference is ${incident.shortId}. Please retain this for your complaints register.</p>
       `
     }).catch(e => console.error('Túath complaint email failed:', e)));
@@ -237,13 +244,14 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
         ${complainantBlock}
         <h3>Incident Details</h3>
         ${sharedIncidentBlock}
+        ${trackingLinkBlock}
         ${photosBlock}
         <h3>Nature of Complaint</h3>
         <p>The complainant is reporting an unresolved issue at <strong>${escapeHtml(incident.location)}</strong> and requests that Dublin City Council investigate and take appropriate action.</p>
         <h3>Desired Outcome</h3>
         <p>The complainant requests a formal acknowledgement within 3 working days and a full response within 15 working days, in line with the Dublin City Council Customer Complaints procedure.</p>
         <hr style="margin:24px 0;border:none;border-top:1px solid #eee;" />
-        <p style="font-size:12px;color:#888;">This complaint was submitted automatically via CharlemontWatch (charlemontwatch.ie).
+        <p style="font-size:12px;color:#888;">This complaint was submitted automatically via <a href="${process.env.FRONTEND_URL}">CharlemontWatch</a>.
         The incident reference is ${incident.shortId}.</p>
       `
     }).catch(e => console.error('DCC complaint email failed:', e)));
