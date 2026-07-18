@@ -56,6 +56,7 @@
 ### Email
 - [ ] **Verify Resend sender domain** — add `charlemontwatch.ie` to Resend → Domains and set up SPF/DKIM DNS records; until then emails send from `onboarding@resend.dev`
 - [ ] **Test all three email flows in production** — resident confirmation, admin notification, status update
+- [ ] **Wire up the Resend webhook in production** — code is done (`POST /api/webhooks/resend`, verified via `svix`), but still needs: add the endpoint URL in Resend → Webhooks (subscribed to `email.bounced`/`email.complained`/`email.delivery_delayed`), then set the resulting `RESEND_WEBHOOK_SECRET` in Render's environment variables. Detects when a Túath/DCC complaint silently bounces or gets marked spam instead of that looking identical to a successful send.
 
 ---
 
@@ -101,8 +102,8 @@
 | Priority | Total | Done | Remaining |
 |----------|-------|------|-----------|
 | 🔴 Critical | 23 | 23 | 0 |
-| 🟠 Important | 12 | 10 | 2 |
+| 🟠 Important | 13 | 10 | 3 |
 | 🟡 Nice to have | 21 | 20 | 1 |
-| **Total** | **56** | **53** | **3** |
+| **Total** | **57** | **53** | **4** |
 
-**Still open:** Resend sender domain verification — DNS records (SPF/DKIM/DMARC) are correctly in place at Register365, but can't verify until `charlemontwatch.ie` is delegated in the `.ie` registry (pending, no reply from Register365 support yet); production email flow testing (blocked on the above); custom domain DNS (same registry delegation blocker).
+**Still open:** Resend sender domain verification — DNS records (SPF/DKIM/DMARC) are correctly in place at Register365, but can't verify until `charlemontwatch.ie` is delegated in the `.ie` registry (pending, no reply from Register365 support yet); production email flow testing (blocked on the above); custom domain DNS (same registry delegation blocker); wiring up the Resend bounce webhook in production (code done, just needs the dashboard/env-var setup).

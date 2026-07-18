@@ -25,6 +25,13 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      # Fails the build on high/critical vulnerabilities only — moderate ones
+      # (currently just the legacy aws-sdk v2 client, pending a v3 migration)
+      # don't block CI, but nothing worse is allowed to land unnoticed
+      - name: Audit dependencies
+        working-directory: backend
+        run: npm audit --audit-level=high
+
       - name: Run tests with coverage
         working-directory: backend
         env:
@@ -52,6 +59,10 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
+
+      - name: Audit dependencies
+        working-directory: frontend
+        run: npm audit --audit-level=high
 
       - name: TypeScript type check
         working-directory: frontend
