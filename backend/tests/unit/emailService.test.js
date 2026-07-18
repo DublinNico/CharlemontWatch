@@ -232,6 +232,32 @@ describe('sendComplaintEmails', () => {
     expect(msg.html).not.toContain('Photo Evidence');
   });
 
+  test('UT-053-A: Túath email still includes the tracking link when there are no photos', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.html).toContain(`View this report on CharlemontWatch`);
+    expect(msg.html).toContain(`/track?id=${mockIncident.shortId}`);
+  });
+
+  test('UT-053-B: DCC email still includes the tracking link when there are no photos', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['dcc']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.html).toContain(`View this report on CharlemontWatch`);
+    expect(msg.html).toContain(`/track?id=${mockIncident.shortId}`);
+  });
+
+  test('UT-053-C: Túath email footer link is built from FRONTEND_URL', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.html).toContain(`via <a href="${process.env.FRONTEND_URL}">CharlemontWatch</a>`);
+  });
+
+  test('UT-053-D: DCC email footer link is built from FRONTEND_URL', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['dcc']);
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.html).toContain(`via <a href="${process.env.FRONTEND_URL}">CharlemontWatch</a>`);
+  });
+
   test('UT-038-F: DCC email contains incident location', async () => {
     await sendComplaintEmails(mockIncident, mockComplainant, ['dcc']);
     const msg = mockSend.mock.calls[0][0];
