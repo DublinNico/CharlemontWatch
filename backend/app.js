@@ -15,6 +15,7 @@ const authRoutes = require('./routes/auth');
 const incidentRoutes = require('./routes/incidents');
 const satisfactionRoutes = require('./routes/satisfaction');
 const contactRoutes = require('./routes/contact');
+const webhookRoutes = require('./routes/webhooks');
 
 const app = express();
 
@@ -44,6 +45,11 @@ app.use((req, res, next) => {
   if (origin && !isAllowedOrigin(origin)) return res.status(403).send('Forbidden');
   next();
 });
+// Mounted before express.json() below — its own route uses express.raw()
+// since Svix webhook signature verification needs the raw request body,
+// not JSON already parsed into an object
+app.use('/api/webhooks', webhookRoutes);
+
 // Parse JSON and URL-encoded bodies (multipart/form-data is handled per-route by multer)
 app.use(express.json());
 app.use(express.urlencoded({ limit: '1mb', extended: true }));

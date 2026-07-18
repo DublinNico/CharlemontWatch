@@ -1,0 +1,56 @@
+const { Webhook } = require('svix');
+const Sentry = require('@sentry/node');
+
+// Event types that mean a complaint email never reached the recipient (or
+// they marked it spam) — the scenario where Túath/DCC's mail server silently
+// rejects us and nobody would otherwise know the complaint didn't land.
+const DELIVERY_FAILURE_EVENTS = new Set([
+  'email.bounced',
+  'email.complained',
+  'email.delivery_delayed',
+]);
+
+// Receives Resend's delivery webhooks (signed via Svix). Verifies the
+// signature, then logs/reports delivery failures with enough context
+// (incident + recipient, from the tags set in emailService.js) to act on.
+const handleResendWebhook = async (req, res) => {
+  const secret = process.env.RESEND_WEBHOOK_SECRET;
+  if (!secret) {
+    console.error('RESEND_WEBHOOK_SECRET not configured — rejecting webhook');
+    return res.status(500).json({ error: 'Webhook not configured' });
+  }
+
+  let event;
+  try {
+    const wh = new Webhook(secret);
+    event = wh.verify(req.body, {
+      'svix-id': req.headers['svix-id'],
+      'svix-timestamp': req.headers['svix-timestamp'],
+      'svix-signature': req.headers['svix-signature'],
+    });
+  } catch (err) {
+    console.error('Resend webhook signature verification failed:', err.message);
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+
+  if (DELIVERY_FAILURE_EVENTS.has(event.type)) {
+    const tags = Object.fromEntries((event.data?.tags || []).map(t => [t.name, t.value]));
+    const context = {
+      eventType: event.type,
+      to: event.data?.to,
+      incidentId: tags.incident_id,
+      recipientType: tags.recipient_type,
+    };
+    console.error('Resend delivery failure:', JSON.stringify(context));
+    if (process.env.SENTRY_DSN) {
+      Sentry.captureMessage(`Resend delivery failure: ${event.type}`, {
+        level: 'warning',
+        extra: context,
+      });
+    }
+  }
+
+  res.status(200).json({ received: true });
+};
+
+module.exports = { handleResendWebhook };
