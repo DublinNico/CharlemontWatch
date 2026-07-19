@@ -106,6 +106,13 @@
 - [x] **Add GitHub Actions workflow** — `.github/workflows/ci.yml` runs backend tests + frontend tests + TypeScript check on push to `dev` and PRs to `main`
 - [x] **Add coverage threshold** — `jest.config.js` now enforces statements/functions/lines ≥ 70%, branches ≥ 65%; CI fails if coverage drops below
 - [x] **Add frontend lint check** — `tsc --noEmit` runs in the `frontend` CI job before Vitest
+- [x] **Add Playwright E2E to CI** — new `e2e` job runs all non-screenshot Playwright specs against Chromium; API calls are fully mocked at the browser layer, so no backend/DB needed
+- [x] **Add `npm audit` to CI** — both `backend` and `frontend` jobs fail on high/critical-severity dependency vulnerabilities (`--audit-level=high`); neither had any dependency security check before
+
+## 🟠 Unit Tests — Resend bounce-webhook
+
+- [x] **`webhookController.test.js`** — Svix signature verification (missing secret, invalid signature), delivery-failure event handling (bounced/complained/delivery_delayed) with incident/recipient tag extraction, Sentry reporting gated on `SENTRY_DSN` (UT-059 – UT-064, 6 tests)
+- [x] **`emailService.test.js` additions** — always-present tracking link and `FRONTEND_URL`-based footer link on photo-less Túath/DCC complaint emails (UT-053-A – UT-053-D, 4 tests)
 
 ---
 
@@ -116,8 +123,9 @@
 | 🔴 Critical gaps (current suite) | 7 (1 accepted gap remaining) |
 | 🟠 Integration tests (Supertest) | 26 (incl. 5 Contact form) |
 | 🟠 Frontend unit tests (Vitest) | 14 (incl. Contact) |
+| 🟠 Bounce-webhook unit tests | 2 (10 tests total) |
 | 🟡 E2E tests (Playwright) | 9 |
 | 🟡 Security tests | 7 |
 | 🟡 Performance tests | 3 |
-| 🟡 CI/CD | 3 |
-| **Total** | **69** |
+| 🟡 CI/CD | 5 |
+| **Total** | **73** |
