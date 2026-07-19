@@ -159,7 +159,8 @@ const getIncident = async (req, res) => {
     }
     res.json(incident);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Get incident error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -182,7 +183,8 @@ const getAllIncidents = async (req, res) => {
     const incidents = await Incident.find(filter).sort({ reportedDate: -1 });
     res.json(incidents);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Get all incidents error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -192,7 +194,8 @@ const getPendingIncidents = async (req, res) => {
     const incidents = await Incident.find({ status: 'PENDING_REVIEW' }).sort({ reportedDate: -1 });
     res.json(incidents);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Get pending incidents error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -233,7 +236,8 @@ const reviewIncident = async (req, res) => {
 
     res.json({ success: true, incident });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Review incident error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -259,7 +263,8 @@ const reviewPhoto = async (req, res) => {
 
     res.json({ success: true, incident });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Review photo error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -285,7 +290,8 @@ const updateIncidentStatus = async (req, res) => {
 
     res.json({ success: true, incident });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Update incident status error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
@@ -339,7 +345,8 @@ const deleteIncident = async (req, res) => {
     await incident.deleteOne();
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Delete incident error:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 };
 
