@@ -204,6 +204,13 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
       to: [process.env.TUATH_COMPLAINT_EMAIL],
       cc: [complainant.email],
       replyTo: complainant.email,
+      // Echoed back on bounce/complaint webhook events so a delivery failure
+      // can be traced to the specific incident and recipient (see
+      // controllers/webhookController.js)
+      tags: [
+        { name: 'incident_id', value: incident.shortId },
+        { name: 'recipient_type', value: 'tuath' },
+      ],
       subject: `Formal Complaint — ${incidentTypeName} at ${sanitizeHeader(incident.location)} [${incident.shortId}]`,
       html: `
         <h2 style="color:#1976d2;">Formal Complaint — Túath Housing</h2>
@@ -235,6 +242,10 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
       to: [process.env.DCC_COMPLAINT_EMAIL],
       cc: [complainant.email],
       replyTo: complainant.email,
+      tags: [
+        { name: 'incident_id', value: incident.shortId },
+        { name: 'recipient_type', value: 'dcc' },
+      ],
       subject: `Formal Complaint — ${incidentTypeName} at ${sanitizeHeader(incident.location)} [${incident.shortId}]`,
       html: `
         <h2 style="color:#1976d2;">Formal Complaint — Dublin City Council</h2>

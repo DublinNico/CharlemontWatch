@@ -8,7 +8,7 @@ export function PrivacyPolicy() {
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
         <div className="bg-white rounded shadow-sm p-8">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Privacy Policy</h1>
-          <p className="text-sm text-gray-400 mb-8">Last updated: May 31, 2026</p>
+          <p className="text-sm text-gray-400 mb-8">Last updated: July 19, 2026</p>
 
           <section className="space-y-4 mb-8">
             <h2 className="text-lg font-semibold text-gray-800">1. Who we are</h2>
@@ -35,7 +35,13 @@ export function PrivacyPolicy() {
               <li>To send you email updates on your report.</li>
               <li>To allow community administrators to review and moderate reports.</li>
             </ul>
-            <p className="text-gray-600">We do not sell, share, or transfer your data to any third party except SendGrid (our email provider) solely for the purpose of sending transactional emails.</p>
+            <p className="text-gray-600">We do not sell your data or use it for advertising. To operate the service, we use the following third-party processors, each acting only on our instructions and only for the purpose stated:</p>
+            <ul className="list-disc pl-5 text-gray-600 space-y-2">
+              <li><strong>Resend:</strong> sends all emails — report confirmations, status updates, and formal complaints to Túath Housing and/or Dublin City Council on your behalf.</li>
+              <li><strong>Amazon Web Services (S3):</strong> stores photos submitted with incident reports.</li>
+              <li><strong>MongoDB Atlas:</strong> hosts our database (incident reports, email addresses, and related data).</li>
+              <li><strong>Sentry:</strong> error monitoring, used only if enabled. We take care to avoid including personal data such as email addresses in error reports sent here.</li>
+            </ul>
           </section>
 
           <section className="space-y-4 mb-8">

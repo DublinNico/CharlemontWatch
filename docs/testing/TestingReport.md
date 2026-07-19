@@ -6,7 +6,7 @@
 | **Name:** | Tony Nicoletti |
 | 
 | **GitHub Repository** | https://github.com/DublinNico/CharlemontWatch |
-| **Date** | 27/05/26 (updated 31/05/26, updated 31/05/26 v2, updated 31/05/26 v3, updated 16/07/26) |
+| **Date** | 27/05/26 (updated 31/05/26, updated 31/05/26 v2, updated 31/05/26 v3, updated 16/07/26, updated 19/07/26) |
 
 ---
 
@@ -107,7 +107,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 225 automated tests pass (112 backend unit + 55 backend integration + 5 security + 38 frontend unit + 15 E2E)
+- All 235 automated tests pass (122 backend unit + 55 backend integration + 5 security + 38 frontend unit + 15 E2E)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -345,14 +345,15 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 |------|---------------------|-------|
 | `tests/unit/generateShortId.test.js` | ID format, prefix, length, uniqueness | UT-001 – UT-002 (5 tests) |
 | `tests/unit/auth.middleware.test.js` | authenticate middleware (all branches), adminOnly middleware (all branches) | UT-005 – UT-010 (9 tests) |
-| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, Resend error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description, CR/LF header-injection stripping in subject lines, sendContactMessage (admin recipient, Reply-To sender, HTML escaping, error swallowed) | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I, UT-044 – UT-045 + additional coverage (39 tests) |
+| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, Resend error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description, CR/LF header-injection stripping in subject lines, always-present tracking link + FRONTEND_URL-based footer link on photo-less reports, sendContactMessage (admin recipient, Reply-To sender, HTML escaping, error swallowed) | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I, UT-044 – UT-045, UT-053-A – UT-053-D + additional coverage (43 tests) |
 | `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array, mandatory reporterEmail (format + anonymous-still-allowed) | UT-014 – UT-018, UT-033 (19 tests) |
 | `tests/unit/userModel.test.js` | Pre-save bcrypt hook, comparePassword, schema validation, role default/enum | UT-019 – UT-025, UT-034 (10 tests) |
 | `tests/unit/authController.test.js` | Login input validation, credential checks, JWT generation, email normalisation, 500 error path | UT-026 – UT-032 (15 tests) |
 | `tests/unit/upload.middleware.test.js` | MIME type filter, 5MB size limit, magic-byte validation (JPEG/PNG/WebP/spoofed PDF), no-file passthrough | UT-038 – UT-042 (8 tests) |
 | `tests/unit/satisfactionVoteModel.test.js` | Required field validation (email, rating), email format, rating enum (low/medium/high) | UT-043-A – UT-043-G (7 tests) |
+| `tests/unit/webhookController.test.js` | Resend bounce-webhook signature verification (missing secret, invalid signature), delivery-failure event handling (bounced/complained/delivery_delayed) with incident/recipient tag extraction, Sentry reporting gated on SENTRY_DSN | UT-059 – UT-064 (6 tests) |
 
-**Unit test total: 112 tests across 8 test suites** *(recount 16/07/26 — `emailService.test.js` had grown to 39 tests since this table was last updated; prior figure of 26 was stale)*
+**Unit test total: 122 tests across 9 test suites** *(recount 19/07/26 — `emailService.test.js` grew to 43 tests with the tracking-link coverage; `webhookController.test.js` is new)*
 
 #### Integration Tests
 
@@ -413,7 +414,7 @@ Artillery scenarios run against a live backend (`npm run dev` in `/backend` firs
 
 Observed results on 31/05/26: GET p95 = 72ms, POST p95 = 95ms — both well inside thresholds.
 
-**Grand total: 225 automated tests across 26 test suites**
+**Grand total: 235 automated tests across 27 test suites**
 
 ---
 
@@ -562,20 +563,21 @@ All 220 tests were executed on 16/07/26.
 ```
 PASS tests/unit/generateShortId.test.js        (5 tests)
 PASS tests/unit/auth.middleware.test.js        (9 tests)
-PASS tests/unit/emailService.test.js          (39 tests)
+PASS tests/unit/emailService.test.js          (43 tests)
 PASS tests/unit/incidentModel.test.js         (19 tests)
 PASS tests/unit/userModel.test.js             (10 tests)
 PASS tests/unit/authController.test.js        (15 tests)
 PASS tests/unit/upload.middleware.test.js      (8 tests)
 PASS tests/unit/satisfactionVoteModel.test.js  (7 tests)
+PASS tests/unit/webhookController.test.js      (6 tests)
 PASS tests/integration/incidents.test.js      (36 tests)
 PASS tests/integration/auth.test.js            (4 tests)
 PASS tests/integration/satisfaction.test.js    (8 tests)
 PASS tests/integration/contact.test.js         (7 tests)
 PASS tests/security/security.test.js           (5 tests)
 
-Test Suites: 13 passed, 13 total
-Tests:       172 passed, 172 total
+Test Suites: 14 passed, 14 total
+Tests:       182 passed, 182 total
 ```
 
 **Frontend** (`npm test` in `/frontend`):
@@ -612,19 +614,20 @@ Running 30 tests using 5 workers
 
 #### Backend Coverage
 
-*(refreshed 16/07/26 — this table was several features out of date; `contactController.js`, `routes/contact.js`, `satisfactionController.js`, and `models/SatisfactionVote.js` were missing entirely)*
+*(refreshed 19/07/26 — added `controllers/webhookController.js`, `routes/webhooks.js`, and `utils/validators.js`, all missing from the previous table)*
 
 ```
 ----------------------------|---------|----------|---------|---------|
 File                        | % Stmts | % Branch | % Funcs | % Lines |
 ----------------------------|---------|----------|---------|---------|
-All files                   |   80.94 |    75.33 |   86.27 |   82.76 |
- app.js                     |   76.47 |    40.00 |   42.85 |   82.60 |
+All files                   |   82.20 |    75.74 |   86.79 |   83.93 |
+ app.js                     |   77.35 |    40.00 |   42.85 |   83.33 |
  controllers/                |         |          |         |         |
   authController.js          |  100.00 |   100.00 |  100.00 |  100.00 |
   contactController.js       |   90.47 |   100.00 |  100.00 |   90.47 |
   incidentController.js      |   64.32 |    68.88 |   80.00 |   65.43 |
   satisfactionController.js  |   72.41 |    66.66 |  100.00 |   71.42 |
+  webhookController.js       |  100.00 |    87.50 |  100.00 |  100.00 |
  middleware/                 |         |          |         |         |
   auth.js                    |  100.00 |   100.00 |  100.00 |  100.00 |
   upload.js                  |   95.65 |    96.96 |  100.00 |  100.00 |
@@ -637,18 +640,21 @@ All files                   |   80.94 |    75.33 |   86.27 |   82.76 |
   contact.js                 |  100.00 |   100.00 |  100.00 |  100.00 |
   incidents.js               |  100.00 |   100.00 |  100.00 |  100.00 |
   satisfaction.js            |  100.00 |   100.00 |  100.00 |  100.00 |
+  webhooks.js                |  100.00 |   100.00 |  100.00 |  100.00 |
  services/                   |         |          |         |         |
-  emailService.js            |   92.95 |    71.05 |  100.00 |   96.87 |
+  emailService.js            |   93.05 |    71.05 |  100.00 |   96.92 |
  utils/                      |         |          |         |         |
   idUtils.js                 |  100.00 |   100.00 |  100.00 |  100.00 |
+  validators.js               |  100.00 |   100.00 |  100.00 |  100.00 |
 ----------------------------|---------|----------|---------|---------|
 ```
 
 **Key observations:**
-- `auth.js`, `authController.js`, `Incident.js`, `SatisfactionVote.js`, `User.js`, `idUtils.js`, `routes/*` — 100% across all metrics
+- `auth.js`, `authController.js`, `Incident.js`, `SatisfactionVote.js`, `User.js`, `idUtils.js`, `validators.js`, `routes/*` — 100% across all metrics
 - `contactController.js` — 90.5% statements; the two uncovered lines are the generic 500 catch-block, not exercised by IT-045–051 which only cover the validation and success paths
 - `upload.js` — 95.6% statements (one unreachable branch in the WebP multi-file path; all critical paths covered by UT-038–UT-042)
 - `emailService.js` — 93% statements/97% lines; ~71% branch (untested branches are template literal ternary expressions for optional photo count display — not logic branches)
+- `webhookController.js` — 100% statements/lines, 87.5% branch; the one uncovered branch is the `event.data?.tags` optional-chaining fallback for a malformed webhook payload with no `data` object at all — every test scenario sends a well-formed payload, so this defensive-only branch is never exercised
 - `incidentController.js` — 64.3% statements; the uncovered paths are type-specific field extraction branches (graffiti, antisocial, safetyhazard, maintenance sub-fields), S3 error handling, and `addPhoto`/`reviewIncident`/`reviewPhoto` endpoints not yet covered by integration tests
 - `satisfactionController.js` — 72.4% statements; uncovered paths are error-handling branches
 - `app.js` — 76.5% statements; CORS rejection path and error handlers not exercised in current integration tests (tested manually)

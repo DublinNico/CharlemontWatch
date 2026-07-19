@@ -56,6 +56,7 @@
 ### Email
 - [ ] **Verify Resend sender domain** — add `charlemontwatch.ie` to Resend → Domains and set up SPF/DKIM DNS records; until then emails send from `onboarding@resend.dev`
 - [ ] **Test all three email flows in production** — resident confirmation, admin notification, status update
+- [ ] **Wire up the Resend webhook in production** — code is done (`POST /api/webhooks/resend`, verified via `svix`), but still needs: add the endpoint URL in Resend → Webhooks (subscribed to `email.bounced`/`email.complained`/`email.delivery_delayed`), then set the resulting `RESEND_WEBHOOK_SECRET` in Render's environment variables. Detects when a Túath/DCC complaint silently bounces or gets marked spam instead of that looking identical to a successful send.
 
 ---
 
@@ -67,10 +68,10 @@
 - [x] **Set up database backups** — Atlas Cloud Backups aren't available on the M0 free tier at all (hard platform limit, not a config toggle); instead added `.github/workflows/backup.yml` — daily `mongodump`, GPG-encrypted (repo is public) before upload as a 30-day-retention workflow artifact. Pending: PR #20 merge + one manual `workflow_dispatch` run to confirm end-to-end (untestable pre-merge since GitHub only allows dispatching workflows that already exist on the default branch).
 
 ### Testing
-- [x] **Add Supertest integration tests** — 37 integration tests covering all incident, auth, and satisfaction routes (IT-001 – IT-033)
-- [x] **Add frontend unit tests** — 33 Vitest + React Testing Library tests covering AppContext, Header, TrackReport, AdminDashboard, ReportIncident, SatisfactionWidget (FT-001 – FT-016)
-- [x] **Add E2E tests (Playwright)** — 15 test cases × 2 browser profiles = 30 runs; covers report, track, browse, admin login/update/delete, mobile viewport (ET-001 – ET-014)
-- [x] **Set up GitHub Actions CI** — `.github/workflows/ci.yml` runs backend tests + coverage threshold + frontend tsc + Vitest on push to `dev` and PRs to `main`
+- [x] **Add Supertest integration tests** — 55 integration tests covering all incident, auth, satisfaction, and contact routes (IT-001 – IT-051)
+- [x] **Add frontend unit tests** — 38 Vitest + React Testing Library tests covering AppContext, Header, TrackReport, AdminDashboard, ReportIncident, SatisfactionWidget, Contact (FT-001 – FT-017)
+- [x] **Add E2E tests (Playwright)** — 15 test cases × 2 browser profiles = 30 runs; covers report, track, browse, admin login/update/delete, mobile viewport (ET-001 – ET-014); now runs in CI too, not just locally
+- [x] **Set up GitHub Actions CI** — `.github/workflows/ci.yml` runs backend tests + coverage threshold + frontend tsc + Vitest + Playwright E2E + `npm audit` (high/critical) on push to `dev` and PRs to `main`
 
 ### Features
 - [x] **Add resident satisfaction voting system** — public low/medium/high vote on Túath Housing (`/api/satisfaction`); one vote per email, upserted so residents can change their vote; results shown as a public bar chart on the Home page, no emails exposed via `/api/satisfaction/summary`
@@ -101,8 +102,8 @@
 | Priority | Total | Done | Remaining |
 |----------|-------|------|-----------|
 | 🔴 Critical | 23 | 23 | 0 |
-| 🟠 Important | 12 | 10 | 2 |
+| 🟠 Important | 13 | 10 | 3 |
 | 🟡 Nice to have | 21 | 20 | 1 |
-| **Total** | **56** | **53** | **3** |
+| **Total** | **57** | **53** | **4** |
 
-**Still open:** Resend sender domain verification — DNS records (SPF/DKIM/DMARC) are correctly in place at Register365, but can't verify until `charlemontwatch.ie` is delegated in the `.ie` registry (pending, no reply from Register365 support yet); production email flow testing (blocked on the above); custom domain DNS (same registry delegation blocker).
+**Still open:** Resend sender domain verification — DNS records (SPF/DKIM/DMARC) are correctly in place at Register365, but can't verify until `charlemontwatch.ie` is delegated in the `.ie` registry (pending, no reply from Register365 support yet); production email flow testing (blocked on the above); custom domain DNS (same registry delegation blocker); wiring up the Resend bounce webhook in production (code done, just needs the dashboard/env-var setup).
