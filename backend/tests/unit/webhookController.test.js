@@ -81,6 +81,28 @@ describe('handleResendWebhook', () => {
     consoleSpy.mockRestore();
   });
 
+  test('UT-062-A: masks the recipient email in both console.error and Sentry extras', async () => {
+    mockVerify.mockReturnValue({
+      type: 'email.bounced',
+      data: { to: ['jane.resident@example.com'], tags: [] },
+    });
+    process.env.SENTRY_DSN = 'https://fake@sentry.io/1';
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const res = makeRes();
+
+    await handleResendWebhook(makeReq(), res);
+
+    const loggedArg = consoleSpy.mock.calls.find(call => call[0] === 'Resend delivery failure:')[1];
+    expect(loggedArg).not.toContain('jane.resident@example.com');
+    expect(loggedArg).toContain('j***@example.com');
+
+    expect(Sentry.captureMessage).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ extra: expect.objectContaining({ to: ['j***@example.com'] }) })
+    );
+    consoleSpy.mockRestore();
+  });
+
   test('UT-063: treats email.complained and email.delivery_delayed as delivery failures too', async () => {
     mockVerify.mockReturnValue({
       type: 'email.complained',

@@ -10,6 +10,18 @@ const DELIVERY_FAILURE_EVENTS = new Set([
   'email.delivery_delayed',
 ]);
 
+// Masks an email's local-part to its first character (e.g.
+// "jane@example.com" -> "j***@example.com"). This handler fires on a bounce
+// for ANY email sent via Resend, not just Túath/DCC complaints — a resident
+// confirmation or status update bouncing would otherwise put a real
+// resident's address into server logs and Sentry (a third party).
+const maskEmail = (email) => {
+  if (typeof email !== 'string') return '***';
+  const at = email.indexOf('@');
+  if (at <= 0) return '***';
+  return `${email[0]}***${email.slice(at)}`;
+};
+
 // Receives Resend's delivery webhooks (signed via Svix). Verifies the
 // signature, then logs/reports delivery failures with enough context
 // (incident + recipient, from the tags set in emailService.js) to act on.
@@ -37,7 +49,7 @@ const handleResendWebhook = async (req, res) => {
     const tags = Object.fromEntries((event.data?.tags || []).map(t => [t.name, t.value]));
     const context = {
       eventType: event.type,
-      to: event.data?.to,
+      to: (event.data?.to || []).map(maskEmail),
       incidentId: tags.incident_id,
       recipientType: tags.recipient_type,
     };
