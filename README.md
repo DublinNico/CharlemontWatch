@@ -41,7 +41,7 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 
 - **Deployment** — Vercel (frontend), Render (backend API), UptimeRobot (uptime monitoring + cold-start prevention)
 
-- **Testing** — Jest + Supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E), Artillery (load testing) — 235 automated tests (182 backend + 38 frontend + 15 E2E) across unit, integration, security, and E2E suites
+- **Testing** — Jest + Supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E), Artillery (load testing) — 243 automated tests (190 backend + 38 frontend + 15 E2E) across unit, integration, security, and E2E suites
 
 - **CI/CD** — GitHub Actions runs the full backend and frontend suites, a frontend type check, Playwright E2E, and an `npm audit` dependency check on every push to `dev` and PR to `main`, plus a daily encrypted `mongodump` backup workflow (GPG-encrypted before upload since the repo is public)
 

@@ -111,8 +111,12 @@
 
 ## 🟠 Unit Tests — Resend bounce-webhook
 
-- [x] **`webhookController.test.js`** — Svix signature verification (missing secret, invalid signature), delivery-failure event handling (bounced/complained/delivery_delayed) with incident/recipient tag extraction, Sentry reporting gated on `SENTRY_DSN` (UT-059 – UT-064, 6 tests)
+- [x] **`webhookController.test.js`** — Svix signature verification (missing secret, invalid signature), delivery-failure event handling (bounced/complained/delivery_delayed) with incident/recipient tag extraction, Sentry reporting gated on `SENTRY_DSN`, recipient email masked before logging/Sentry (UT-059 – UT-064, UT-062-A, 7 tests)
 - [x] **`emailService.test.js` additions** — always-present tracking link and `FRONTEND_URL`-based footer link on photo-less Túath/DCC complaint emails (UT-053-A – UT-053-D, 4 tests)
+
+## 🟠 Unit Tests — incidentController 500-path hardening
+
+- [x] **`incidentController.test.js`** — `getIncident`, `getAllIncidents`, `getPendingIncidents`, `reviewIncident`, `reviewPhoto`, `updateIncidentStatus`, `deleteIncident` all previously returned raw `error.message` to the client on an unexpected 500; now return a generic message and log the real error server-side, matching the pattern already used in `createIncident`/`addPhoto` (UT-065 – UT-071, 7 tests)
 
 ---
 
@@ -123,9 +127,10 @@
 | 🔴 Critical gaps (current suite) | 7 (1 accepted gap remaining) |
 | 🟠 Integration tests (Supertest) | 26 (incl. 5 Contact form) |
 | 🟠 Frontend unit tests (Vitest) | 14 (incl. Contact) |
-| 🟠 Bounce-webhook unit tests | 2 (10 tests total) |
+| 🟠 Bounce-webhook unit tests | 2 (11 tests total) |
+| 🟠 incidentController 500-path unit tests | 1 (7 tests total) |
 | 🟡 E2E tests (Playwright) | 9 |
 | 🟡 Security tests | 7 |
 | 🟡 Performance tests | 3 |
 | 🟡 CI/CD | 5 |
-| **Total** | **73** |
+| **Total** | **74** |
