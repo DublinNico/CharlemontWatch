@@ -150,11 +150,10 @@ const createIncident = async (req, res) => {
 };
 
 // Get single incident (public — reporters can track their own pending submission).
-// PENDING_REVIEW/REJECTED incidents aren't listed publicly, and anyone who
-// knows/guesses the ID can still reach this endpoint, so for non-admins those
-// two statuses get their PII (reporter/complainant details, unapproved photos)
-// stripped rather than the full document — status/type/location/description
-// stay visible so the "track my pending report" flow keeps working.
+// Anyone who knows/guesses an ID can reach this endpoint regardless of status,
+// so non-admins always get PII (reporter/complainant details, unapproved
+// photos) stripped rather than the full document — status/type/location/
+// description stay visible so the "track my report" flow keeps working.
 const getIncident = async (req, res) => {
   try {
     const { id } = req.params;
@@ -164,8 +163,7 @@ const getIncident = async (req, res) => {
       return res.status(404).json({ error: 'Incident not found' });
     }
 
-    const isUnpublished = incident.status === 'PENDING_REVIEW' || incident.status === 'REJECTED';
-    if (isUnpublished && !isAdminRequest(req)) {
+    if (!isAdminRequest(req)) {
       const sanitized = incident.toObject();
       delete sanitized.reporterEmail;
       delete sanitized.complainantName;
@@ -206,6 +204,7 @@ const getAllIncidents = async (req, res) => {
         delete obj.reporterEmail;
         delete obj.complainantName;
         delete obj.complainantAddress;
+        obj.photos = obj.photos.filter(photo => photo.approved);
         return obj;
       });
       return res.json(sanitized);

@@ -196,6 +196,23 @@ describe('GET /api/incidents', () => {
     expect(res.body.length).toBeGreaterThan(0);
     expect(res.body.every(i => i.reporterEmail === validBody.reporterEmail)).toBe(true);
   });
+
+  test('IT-008-C: anonymous caller only receives approved photos', async () => {
+    await Incident.create({
+      ...validBody,
+      shortId: 'CW-PHOTOS',
+      status: 'NEW',
+      photos: [
+        { url: 'https://s3.example.com/approved.jpg', approved: true },
+        { url: 'https://s3.example.com/unapproved.jpg', approved: false },
+      ],
+    });
+    const res = await request(app).get('/api/incidents');
+    expect(res.status).toBe(200);
+    const withPhotos = res.body.find(i => i.shortId === 'CW-PHOTOS');
+    expect(withPhotos.photos).toHaveLength(1);
+    expect(withPhotos.photos[0].url).toBe('https://s3.example.com/approved.jpg');
+  });
 });
 
 // ─── GET /api/incidents/:id ───────────────────────────────────────────────────
@@ -222,6 +239,27 @@ describe('GET /api/incidents/:id', () => {
   test('IT-011: unknown ID returns 404', async () => {
     const res = await request(app).get('/api/incidents/CW-UNKNOWN');
     expect(res.status).toBe(404);
+  });
+
+  test('IT-011-D: ACTIVE incident strips PII and unapproved photos for an anonymous caller', async () => {
+    await Incident.create({
+      ...validBody,
+      shortId: 'CW-ACTIVE',
+      status: 'NEW',
+      complainantName: 'Jane Doe',
+      complainantAddress: '1 Charlemont Street',
+      photos: [
+        { url: 'https://s3.example.com/approved.jpg', approved: true },
+        { url: 'https://s3.example.com/unapproved.jpg', approved: false },
+      ],
+    });
+    const res = await request(app).get('/api/incidents/CW-ACTIVE');
+    expect(res.status).toBe(200);
+    expect(res.body.reporterEmail).toBeUndefined();
+    expect(res.body.complainantName).toBeUndefined();
+    expect(res.body.complainantAddress).toBeUndefined();
+    expect(res.body.photos).toHaveLength(1);
+    expect(res.body.photos[0].url).toBe('https://s3.example.com/approved.jpg');
   });
 
   test('IT-011-A: PENDING_REVIEW incident strips PII for an anonymous caller', async () => {
