@@ -180,6 +180,22 @@ describe('GET /api/incidents', () => {
     expect(res.status).toBe(200);
     expect(res.body.every(i => i.incidentType === 'graffiti')).toBe(true);
   });
+
+  test('IT-008-A: anonymous caller does not receive reporterEmail', async () => {
+    const res = await request(app).get('/api/incidents');
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body.every(i => i.reporterEmail === undefined)).toBe(true);
+  });
+
+  test('IT-008-B: admin caller receives reporterEmail', async () => {
+    const res = await request(app)
+      .get('/api/incidents')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body.every(i => i.reporterEmail === validBody.reporterEmail)).toBe(true);
+  });
 });
 
 // ─── GET /api/incidents/:id ───────────────────────────────────────────────────
@@ -206,6 +222,45 @@ describe('GET /api/incidents/:id', () => {
   test('IT-011: unknown ID returns 404', async () => {
     const res = await request(app).get('/api/incidents/CW-UNKNOWN');
     expect(res.status).toBe(404);
+  });
+
+  test('IT-011-A: PENDING_REVIEW incident strips PII for an anonymous caller', async () => {
+    await Incident.create({
+      ...validBody,
+      shortId: 'CW-PENDNG',
+      status: 'PENDING_REVIEW',
+      complainantName: 'Jane Doe',
+      complainantAddress: '1 Charlemont Street',
+      photos: [
+        { url: 'https://s3.example.com/approved.jpg', approved: true },
+        { url: 'https://s3.example.com/unapproved.jpg', approved: false },
+      ],
+    });
+    const res = await request(app).get('/api/incidents/CW-PENDNG');
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('PENDING_REVIEW');
+    expect(res.body.location).toBe(validBody.location);
+    expect(res.body.reporterEmail).toBeUndefined();
+    expect(res.body.complainantName).toBeUndefined();
+    expect(res.body.complainantAddress).toBeUndefined();
+    expect(res.body.photos).toHaveLength(1);
+    expect(res.body.photos[0].url).toBe('https://s3.example.com/approved.jpg');
+  });
+
+  test('IT-011-B: REJECTED incident strips PII for an anonymous caller', async () => {
+    await Incident.create({ ...validBody, shortId: 'CW-REJECT', status: 'REJECTED' });
+    const res = await request(app).get('/api/incidents/CW-REJECT');
+    expect(res.status).toBe(200);
+    expect(res.body.reporterEmail).toBeUndefined();
+  });
+
+  test('IT-011-C: PENDING_REVIEW incident returns full PII for an admin caller', async () => {
+    await Incident.create({ ...validBody, shortId: 'CW-ADMPND', status: 'PENDING_REVIEW' });
+    const res = await request(app)
+      .get('/api/incidents/CW-ADMPND')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+    expect(res.body.reporterEmail).toBe(validBody.reporterEmail);
   });
 });
 

@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const sharp = require('sharp');
 const { generateShortId } = require('../utils/idUtils');
 const { EMAIL_REGEX } = require('../utils/validators');
+const { isAdminRequest } = require('../middleware/auth');
 const { sendResidentConfirmation, sendAdminNotification, sendStatusUpdate, sendComplaintEmails } = require('../services/emailService');
 
 const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
@@ -148,7 +149,12 @@ const createIncident = async (req, res) => {
   }
 };
 
-// Get single incident (public — reporters can track their own pending submission)
+// Get single incident (public — reporters can track their own pending submission).
+// PENDING_REVIEW/REJECTED incidents aren't listed publicly, and anyone who
+// knows/guesses the ID can still reach this endpoint, so for non-admins those
+// two statuses get their PII (reporter/complainant details, unapproved photos)
+// stripped rather than the full document — status/type/location/description
+// stay visible so the "track my pending report" flow keeps working.
 const getIncident = async (req, res) => {
   try {
     const { id } = req.params;
@@ -157,6 +163,17 @@ const getIncident = async (req, res) => {
     if (!incident) {
       return res.status(404).json({ error: 'Incident not found' });
     }
+
+    const isUnpublished = incident.status === 'PENDING_REVIEW' || incident.status === 'REJECTED';
+    if (isUnpublished && !isAdminRequest(req)) {
+      const sanitized = incident.toObject();
+      delete sanitized.reporterEmail;
+      delete sanitized.complainantName;
+      delete sanitized.complainantAddress;
+      sanitized.photos = sanitized.photos.filter(photo => photo.approved);
+      return res.json(sanitized);
+    }
+
     res.json(incident);
   } catch (error) {
     console.error('Get incident error:', error);
@@ -166,7 +183,8 @@ const getIncident = async (req, res) => {
 
 // Get all incidents (public — PENDING_REVIEW and REJECTED are never returned).
 // Supports optional ?status= and ?type= filters, both restricted to
-// publicly-visible values.
+// publicly-visible values. Also backs the admin dashboard's manage-incidents
+// view, which is why reporterEmail is only stripped for non-admin callers.
 const getAllIncidents = async (req, res) => {
   try {
     const { status, type } = req.query;
@@ -181,6 +199,18 @@ const getAllIncidents = async (req, res) => {
     if (type) filter.incidentType = type;
 
     const incidents = await Incident.find(filter).sort({ reportedDate: -1 });
+
+    if (!isAdminRequest(req)) {
+      const sanitized = incidents.map(incident => {
+        const obj = incident.toObject();
+        delete obj.reporterEmail;
+        delete obj.complainantName;
+        delete obj.complainantAddress;
+        return obj;
+      });
+      return res.json(sanitized);
+    }
+
     res.json(incidents);
   } catch (error) {
     console.error('Get all incidents error:', error);

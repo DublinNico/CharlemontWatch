@@ -146,11 +146,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Loads the public incident feed (used by Home/AllIncidents/TrackReport)
+  // Loads the incident feed (used by Home/AllIncidents/TrackReport, and by
+  // AdminDashboard's manage-incidents tab). Sends the admin token when present
+  // so the API includes reporterEmail — anonymous callers get it stripped.
   const refreshIncidents = async () => {
     setIsLoadingIncidents(true);
     try {
-      const response = await axios.get(`${API_BASE}/incidents`);
+      const response = await axios.get(`${API_BASE}/incidents`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       setIncidents(response.data.map(mapApiToIncident));
     } catch {
       // silently fail — network may be unavailable
