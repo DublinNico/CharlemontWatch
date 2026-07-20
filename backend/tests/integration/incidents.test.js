@@ -388,6 +388,20 @@ describe('PATCH /api/incidents/admin/:id/review', () => {
     expect(res.body.incident.status).toBe('NEW');
   });
 
+  test('IT-034-A: approving marks all of the incident\'s photos approved', async () => {
+    incident.photos = [
+      { url: 'https://s3.example.com/one.jpg', approved: false },
+      { url: 'https://s3.example.com/two.jpg', approved: false },
+    ];
+    await incident.save();
+    const res = await request(app)
+      .patch(`/api/incidents/admin/${incident.shortId}/review`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ action: 'approve' });
+    expect(res.status).toBe(200);
+    expect(res.body.incident.photos.every(p => p.approved)).toBe(true);
+  });
+
   test('IT-035: admin JWT rejects a pending incident, moving it to REJECTED', async () => {
     const res = await request(app)
       .patch(`/api/incidents/admin/${incident.shortId}/review`)

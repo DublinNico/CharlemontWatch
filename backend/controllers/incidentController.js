@@ -248,6 +248,7 @@ const reviewIncident = async (req, res) => {
 
     if (action === 'approve') {
       incident.status = 'NEW';
+      incident.photos.forEach(photo => { photo.approved = true; });
     } else {
       incident.status = 'REJECTED';
     }
