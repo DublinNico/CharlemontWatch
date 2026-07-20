@@ -35,7 +35,7 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 
 ## Tech Stack
 
-- **Frontend** — React + Vite + TypeScript, React Router, Tailwind CSS, shadcn/ui (Radix UI primitives), Axios, Lucide icons
+- **Frontend** — React + Vite + TypeScript, React Router, Tailwind CSS, shadcn/ui (Radix UI primitives), Axios, Lucide icons, Leaflet + OpenStreetMap (site footer location map)
 
 - **Backend** — Node.js + Express, MongoDB + Mongoose, JWT auth (bcryptjs), Multer + Sharp (photo upload + compression), AWS S3 (photo storage), Resend (email), Sentry (error monitoring), Helmet + express-rate-limit + express-mongo-sanitize (security hardening)
 

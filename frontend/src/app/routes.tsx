@@ -10,13 +10,13 @@ import { Auth } from "./pages/Auth";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
 import { NotFound } from "./pages/NotFound";
-import { ScrollToTop } from "./components/ScrollToTop";
+import { MainLayout } from "./components/MainLayout";
 
-// All app routes. ScrollToTop wraps every page so navigating between routes
-// always lands at the top of the page; "*" is the catch-all 404.
+// All app routes. MainLayout wraps every page: resets scroll position on
+// navigation and renders the shared Footer; "*" is the catch-all 404.
 export const router = createBrowserRouter([
   {
-    element: <ScrollToTop />,
+    element: <MainLayout />,
     children: [
       { path: "/", element: <Home /> },
       { path: "/report", element: <ReportIncident /> },
