@@ -196,7 +196,7 @@ export function Home() {
       </section>
 
       {/* Main Actions */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
+      <section className="max-w-7xl mx-auto px-4 pt-16 pb-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">What would you like to do?</h2>
           <p className="text-lg text-muted-foreground">Choose an action to get started</p>
@@ -237,7 +237,7 @@ export function Home() {
       </section>
 
       {/* Satisfaction Voting */}
-      <section className="max-w-3xl mx-auto px-4 py-16">
+      <section className="max-w-3xl mx-auto px-4 pt-8 pb-16">
         <SatisfactionWidget />
       </section>
 
