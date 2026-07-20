@@ -26,4 +26,16 @@ const adminOnly = (req, res, next) => {
   next();
 };
 
-module.exports = { authenticate, adminOnly };
+// Best-effort admin check for routes that stay public but return more to an
+// admin caller — a missing or invalid token just means "not admin", not a 401
+const isAdminRequest = (req) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return false;
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET)?.role === 'admin';
+  } catch (error) {
+    return false;
+  }
+};
+
+module.exports = { authenticate, adminOnly, isAdminRequest };

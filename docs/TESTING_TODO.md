@@ -118,6 +118,12 @@
 
 - [x] **`incidentController.test.js`** — `getIncident`, `getAllIncidents`, `getPendingIncidents`, `reviewIncident`, `reviewPhoto`, `updateIncidentStatus`, `deleteIncident` all previously returned raw `error.message` to the client on an unexpected 500; now return a generic message and log the real error server-side, matching the pattern already used in `createIncident`/`addPhoto` (UT-065 – UT-071, 7 tests)
 
+## 🟠 IDOR fix — PII/photo redaction for non-admin callers
+
+- [x] **`incidents.test.js` additions** — `GET /api/incidents` and `GET /api/incidents/:id` stripped `reporterEmail`/`complainantName`/`complainantAddress` and unapproved photos for non-admin callers only on `PENDING_REVIEW`/`REJECTED` incidents; a CodeRabbit review on the fix caught that active-status incidents were still fully exposed via `:id`, and that the list endpoint never filtered photos at all despite `addPhoto` being able to attach an unapproved photo to an incident in any status. Both endpoints now redact consistently for every non-admin caller regardless of status (IT-008-A – IT-008-C, IT-011-A – IT-011-D, 7 tests)
+- [x] **`auth.middleware.test.js` additions** — new `isAdminRequest()` best-effort JWT/role check backing the redaction above; covers no-token, invalid-token, valid-non-admin, and valid-admin cases (UT-072-A – UT-072-D, 4 tests)
+- [x] **`incidents.test.js` addition — BUG-019 regression** — the redaction fix above exposed a dormant bug: `reviewIncident`'s approve action never actually marked an incident's photos `approved`, despite its own comment claiming it did, so every already-published incident's photos were sitting at `approved: false` and silently disappeared from public view the moment redaction started enforcing that flag. Fixed `reviewIncident` to mark photos approved on approve, backfilled the already-published incidents in the live database, and added a regression test (IT-034-A, 1 test)
+
 ---
 
 ## Summary
@@ -129,8 +135,9 @@
 | 🟠 Frontend unit tests (Vitest) | 14 (incl. Contact) |
 | 🟠 Bounce-webhook unit tests | 2 (11 tests total) |
 | 🟠 incidentController 500-path unit tests | 1 (7 tests total) |
+| 🟠 IDOR fix — PII/photo redaction | 3 (12 tests total) |
 | 🟡 E2E tests (Playwright) | 9 |
 | 🟡 Security tests | 7 |
 | 🟡 Performance tests | 3 |
 | 🟡 CI/CD | 5 |
-| **Total** | **74** |
+| **Total** | **77** |

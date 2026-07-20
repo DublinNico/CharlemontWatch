@@ -91,7 +91,7 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
                   <div key={photo.id} className="relative group">
                     <img
                       src={photo.url}
-                      alt="Incident photo"
+                      alt={photo.caption || 'Incident photo'}
                       className={`w-20 h-20 object-cover rounded border-2 transition-all ${
                         isQueue
                           ? photo.approved

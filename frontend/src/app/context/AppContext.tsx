@@ -26,6 +26,7 @@ export interface Photo {
   url: string;
   approved?: boolean;
   file?: File;
+  caption?: string;
 }
 
 export interface Incident {
@@ -127,7 +128,7 @@ function mapApiToIncident(api: any): Incident {
     reporterEmail: api.reporterEmail,
     status: api.status,
     date: api.reportedDate || api.createdAt,
-    photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url, approved: p.approved })),
+    photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url, approved: p.approved, caption: p.caption })),
     typeSpecificData: Object.keys(typeSpecificData).length > 0 ? typeSpecificData : undefined,
     sendComplaintTo: api.sendComplaintTo,
   };
@@ -146,11 +147,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // Loads the public incident feed (used by Home/AllIncidents/TrackReport)
+  // Loads the incident feed (used by Home/AllIncidents/TrackReport, and by
+  // AdminDashboard's manage-incidents tab). Sends the admin token when present
+  // so the API includes reporterEmail — anonymous callers get it stripped.
   const refreshIncidents = async () => {
     setIsLoadingIncidents(true);
     try {
-      const response = await axios.get(`${API_BASE}/incidents`);
+      const response = await axios.get(`${API_BASE}/incidents`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
       setIncidents(response.data.map(mapApiToIncident));
     } catch {
       // silently fail — network may be unavailable

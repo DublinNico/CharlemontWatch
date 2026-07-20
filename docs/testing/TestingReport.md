@@ -107,7 +107,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 243 automated tests pass (129 backend unit + 55 backend integration + 5 security + 38 frontend unit + 15 E2E)
+- All 255 automated tests pass (134 backend unit + 63 backend integration + 5 security + 38 frontend unit + 15 E2E)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -344,7 +344,7 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 | File | Functionality Tested | Tests |
 |------|---------------------|-------|
 | `tests/unit/generateShortId.test.js` | ID format, prefix, length, uniqueness | UT-001 – UT-002 (5 tests) |
-| `tests/unit/auth.middleware.test.js` | authenticate middleware (all branches), adminOnly middleware (all branches) | UT-005 – UT-010 (9 tests) |
+| `tests/unit/auth.middleware.test.js` | authenticate middleware (all branches), adminOnly middleware (all branches), isAdminRequest best-effort admin check (no token, invalid token, valid non-admin token, valid admin token) | UT-005 – UT-010, UT-072-A – UT-072-D (13 tests) |
 | `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, Resend error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description, CR/LF header-injection stripping in subject lines, always-present tracking link + FRONTEND_URL-based footer link on photo-less reports, sendContactMessage (admin recipient, Reply-To sender, HTML escaping, error swallowed) | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I, UT-044 – UT-045, UT-053-A – UT-053-D + additional coverage (43 tests) |
 | `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array, mandatory reporterEmail (format + anonymous-still-allowed) | UT-014 – UT-018, UT-033 (19 tests) |
 | `tests/unit/userModel.test.js` | Pre-save bcrypt hook, comparePassword, schema validation, role default/enum | UT-019 – UT-025, UT-034 (10 tests) |
@@ -354,18 +354,18 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 | `tests/unit/webhookController.test.js` | Resend bounce-webhook signature verification (missing secret, invalid signature), delivery-failure event handling (bounced/complained/delivery_delayed) with incident/recipient tag extraction, Sentry reporting gated on SENTRY_DSN, recipient email masked in logs/Sentry extras | UT-059 – UT-062-A, UT-063 – UT-064 (7 tests) |
 | `tests/unit/incidentController.test.js` | Unexpected-error (500) paths on getIncident, getAllIncidents, getPendingIncidents, reviewIncident, reviewPhoto, updateIncidentStatus, deleteIncident all return a generic message and log the real error server-side, rather than leaking `error.message` to the client | UT-065 – UT-071 (7 tests) |
 
-**Unit test total: 129 tests across 10 test suites** *(recount 19/07/26 — `emailService.test.js` grew to 43 tests with the tracking-link coverage; `webhookController.test.js` and `incidentController.test.js` are new)*
+**Unit test total: 134 tests across 10 test suites** *(recount 20/07/26 — `auth.middleware.test.js` grew to 13 tests covering the new `isAdminRequest` helper, added alongside the IDOR fix below to close a coverage gap on its invalid-token catch branch; also carries forward the 19/07/26 recount where `emailService.test.js` grew to 43 tests and `webhookController.test.js`/`incidentController.test.js` were added)*
 
 #### Integration Tests
 
 | File | Functionality Tested | Tests |
 |------|---------------------|-------|
-| `tests/integration/incidents.test.js` | POST/GET/PATCH/DELETE incident routes; auth guards; photo upload; 11-file limit; status filtering; reporter identity validation (reporterEmail mandatory, anonymous reports allowed without name/address, complainantName/complainantAddress required only when sendComplaintTo is set); photo compression to JPEG before S3 upload; sendComplaintTo values trimmed so "tuath, dcc" keeps both recipients | IT-001 – IT-017, IT-022 – IT-023, IT-032 – IT-033 + additional coverage (36 tests) |
+| `tests/integration/incidents.test.js` | POST/GET/PATCH/DELETE incident routes; auth guards; photo upload; 11-file limit; status filtering; reporter identity validation (reporterEmail mandatory, anonymous reports allowed without name/address, complainantName/complainantAddress required only when sendComplaintTo is set); photo compression to JPEG before S3 upload; sendComplaintTo values trimmed so "tuath, dcc" keeps both recipients; PII (reporterEmail/complainantName/complainantAddress) and unapproved photos stripped from both the list and single-incident endpoints for non-admin callers regardless of status, admin JWT still gets the full document; approving a pending incident marks all of its photos approved | IT-001 – IT-017, IT-022 – IT-023, IT-032 – IT-033, IT-008-A – IT-008-C, IT-011-A – IT-011-D, IT-034-A + additional coverage (44 tests) |
 | `tests/integration/auth.test.js` | Login (correct/wrong/unknown); register route removed (404) | IT-018 – IT-021 (4 tests) |
 | `tests/integration/satisfaction.test.js` | POST vote validation (email/rating), upsert-on-revote (no duplicates), case-insensitive email matching, GET summary aggregation (zero state, accurate counts, no emails exposed) | IT-024 – IT-031 (8 tests) |
 | `tests/integration/contact.test.js` | POST /api/contact: valid submission sends email with admin recipient + sender Reply-To (IT-045); 400 on missing name/email/message (IT-046 – IT-048); 400 when message exceeds 5000 chars (IT-049); honeypot field silently drops spam without sending (IT-050); HTML-special characters escaped in email body (IT-051) | IT-045 – IT-051 (7 tests) |
 
-**Integration test total: 55 tests across 4 test suites** *(recount 16/07/26 — `incidents.test.js` had grown to 36 tests since this table was last updated; prior figure of 25 was stale. `contact.test.js` is new.)*
+**Integration test total: 63 tests across 4 test suites** *(recount 20/07/26 — `incidents.test.js` grew from 36 to 44 tests: an IDOR fix (PENDING_REVIEW/REJECTED and, after a CodeRabbit follow-up, all statuses redact PII/unapproved photos for non-admins on both `GET /api/incidents` and `GET /api/incidents/:id`) plus a photo-approval regression test for a bug the IDOR fix exposed — `reviewIncident`'s approve action never actually marked photos approved despite its own comment claiming it did, so every published incident's photos were silently public before the fix and would have vanished from view after it without this correction; see BUG-019.)*
 
 #### Frontend Unit Tests (Vitest + React Testing Library)
 
@@ -415,7 +415,7 @@ Artillery scenarios run against a live backend (`npm run dev` in `/backend` firs
 
 Observed results on 31/05/26: GET p95 = 72ms, POST p95 = 95ms — both well inside thresholds.
 
-**Grand total: 243 automated tests across 28 test suites**
+**Grand total: 255 automated tests across 28 test suites**
 
 ---
 
@@ -557,13 +557,13 @@ describe('User model — comparePassword', () => {
 
 ### 5.4 Test Execution Results
 
-All 220 tests were executed on 16/07/26.
+All 255 automated tests (202 backend + 38 frontend + 15 E2E test cases, 30 runs across Desktop Chrome + mobile) were executed on 20/07/26.
 
 **Backend** (`npm test` in `/backend`):
 
 ```
 PASS tests/unit/generateShortId.test.js        (5 tests)
-PASS tests/unit/auth.middleware.test.js        (9 tests)
+PASS tests/unit/auth.middleware.test.js       (13 tests)
 PASS tests/unit/emailService.test.js          (43 tests)
 PASS tests/unit/incidentModel.test.js         (19 tests)
 PASS tests/unit/userModel.test.js             (10 tests)
@@ -572,14 +572,14 @@ PASS tests/unit/upload.middleware.test.js      (8 tests)
 PASS tests/unit/satisfactionVoteModel.test.js  (7 tests)
 PASS tests/unit/webhookController.test.js      (7 tests)
 PASS tests/unit/incidentController.test.js     (7 tests)
-PASS tests/integration/incidents.test.js      (36 tests)
+PASS tests/integration/incidents.test.js      (44 tests)
 PASS tests/integration/auth.test.js            (4 tests)
 PASS tests/integration/satisfaction.test.js    (8 tests)
 PASS tests/integration/contact.test.js         (7 tests)
 PASS tests/security/security.test.js           (5 tests)
 
 Test Suites: 15 passed, 15 total
-Tests:       190 passed, 190 total
+Tests:       202 passed, 202 total
 ```
 
 **Frontend** (`npm test` in `/frontend`):
@@ -616,18 +616,18 @@ Running 30 tests using 5 workers
 
 #### Backend Coverage
 
-*(refreshed 19/07/26 v2 — `incidentController.js` gained a unit test suite for its 500-path error handling, raising its coverage from 64.32% to 75.84% statements)*
+*(refreshed 20/07/26 — `incidentController.js` gained coverage from the IDOR-fix redaction branches (now 78.39% statements, up from 75.84%); `auth.js` middleware briefly dropped to 95.45% when the new `isAdminRequest` helper's invalid-token catch branch went untested, closed same-session with UT-072-A – UT-072-D, back to 100%)*
 
 ```
 ----------------------------|---------|----------|---------|---------|
 File                        | % Stmts | % Branch | % Funcs | % Lines |
 ----------------------------|---------|----------|---------|---------|
-All files                   |   85.79 |    76.76 |   90.74 |   88.04 |
+All files                   |   86.53 |    77.32 |   91.52 |    88.60 |
  app.js                     |   77.35 |    40.00 |   42.85 |   83.33 |
  controllers/                |         |          |         |         |
   authController.js          |  100.00 |   100.00 |  100.00 |  100.00 |
   contactController.js       |   90.47 |   100.00 |  100.00 |   90.47 |
-  incidentController.js      |   75.84 |    73.33 |   93.33 |   77.51 |
+  incidentController.js      |   78.39 |    74.46 |   94.73 |   79.67 |
   satisfactionController.js  |   72.41 |    66.66 |  100.00 |   71.42 |
   webhookController.js       |   93.10 |    71.42 |  100.00 |  100.00 |
  middleware/                 |         |          |         |         |
@@ -657,7 +657,7 @@ All files                   |   85.79 |    76.76 |   90.74 |   88.04 |
 - `upload.js` — 95.6% statements (one unreachable branch in the WebP multi-file path; all critical paths covered by UT-038–UT-042)
 - `emailService.js` — 93% statements/97% lines; ~71% branch (untested branches are template literal ternary expressions for optional photo count display — not logic branches)
 - `webhookController.js` — 93.1% statements, 71.4% branch; uncovered branches are the `event.data?.tags`/`typeof email !== 'string'`/malformed-address defensive fallbacks in `maskEmail` — every test scenario sends well-formed data, so these defensive-only paths are never exercised
-- `incidentController.js` — 75.8% statements (up from 64.3% — `tests/unit/incidentController.test.js` now covers the generic-500-error path on 7 endpoints); remaining uncovered paths are type-specific field extraction branches (graffiti, antisocial, safetyhazard, maintenance sub-fields), S3 upload error handling in `createIncident`, and the full body of `addPhoto` (all exercised by manual testing, not yet by an automated test)
+- `incidentController.js` — 78.4% statements (up from 64.3% pre-19/07 — `tests/unit/incidentController.test.js` covers the generic-500-error path on 7 endpoints, and the 20/07 IDOR-fix redaction branches added further coverage); remaining uncovered paths are type-specific field extraction branches (graffiti, antisocial, safetyhazard, maintenance sub-fields), S3 upload error handling in `createIncident`, and the full body of `addPhoto` (all exercised by manual testing, not yet by an automated test)
 - `satisfactionController.js` — 72.4% statements; uncovered paths are error-handling branches
 - `app.js` — 76.5% statements; CORS rejection path and error handlers not exercised in current integration tests (tested manually)
 

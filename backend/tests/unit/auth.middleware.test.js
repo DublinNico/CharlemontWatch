@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 process.env.JWT_SECRET = 'charlemont-test-secret-key';
 
-const { authenticate, adminOnly } = require('../../middleware/auth');
+const { authenticate, adminOnly, isAdminRequest } = require('../../middleware/auth');
 
 // ─── authenticate ─────────────────────────────────────────────────────────────
 
@@ -126,5 +126,27 @@ describe('adminOnly middleware', () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(next).not.toHaveBeenCalled();
+  });
+});
+
+// ─── isAdminRequest ─────────────────────────────────────────────────────────
+
+describe('isAdminRequest', () => {
+  test('UT-072-A: returns false when no Authorization header is present', () => {
+    expect(isAdminRequest({ headers: {} })).toBe(false);
+  });
+
+  test('UT-072-B: returns false for a tampered/invalid token', () => {
+    expect(isAdminRequest({ headers: { authorization: 'Bearer not.a.valid.jwt' } })).toBe(false);
+  });
+
+  test('UT-072-C: returns false for a valid token with a non-admin role', () => {
+    const token = jwt.sign({ role: 'resident' }, 'charlemont-test-secret-key', { expiresIn: '1h' });
+    expect(isAdminRequest({ headers: { authorization: `Bearer ${token}` } })).toBe(false);
+  });
+
+  test('UT-072-D: returns true for a valid token with role "admin"', () => {
+    const token = jwt.sign({ role: 'admin' }, 'charlemont-test-secret-key', { expiresIn: '1h' });
+    expect(isAdminRequest({ headers: { authorization: `Bearer ${token}` } })).toBe(true);
   });
 });

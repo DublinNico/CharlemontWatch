@@ -22,3 +22,4 @@ All bugs discovered during development and testing.
 | [BUG-016](BUG-016-validation-error-returns-500.md) | Mongoose ValidationError Returned as 500 Instead of 400 | Medium | Fixed | Backend / API |
 | [BUG-017](BUG-017-vitest-glob-picked-up-e2e-specs.md) | Vitest Picked Up Playwright E2E Spec Files | Low | Fixed | Frontend / Test Infrastructure |
 | [BUG-018](BUG-018-incidentController-error-message-leak.md) | Internal Error Message Leaked to Client in incidentController 500 Responses | Medium | Fixed | Backend / Security |
+| [BUG-019](BUG-019-photos-never-marked-approved.md) | Incident Photos Never Actually Marked Approved, Exposed by an IDOR Fix | High | Fixed | Backend / Security, Backend / Data |

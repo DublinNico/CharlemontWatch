@@ -94,7 +94,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
                 <div key={photo.id} className="relative w-20 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
                   <img
                     src={photo.url}
-                    alt="Incident photo"
+                    alt={photo.caption || 'Incident photo'}
                     className="w-full h-full object-cover"
                   />
                   {isLast && (
@@ -147,7 +147,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
               >
                 <img
                   src={photo.url}
-                  alt="Incident evidence"
+                  alt={photo.caption || 'Incident evidence'}
                   className="w-full h-full object-cover hover:scale-105 transition-transform"
                 />
               </div>
@@ -183,7 +183,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
 
         <img
           src={incident.photos[lightboxIndex].url}
-          alt="Incident evidence"
+          alt={incident.photos[lightboxIndex].caption || 'Incident evidence'}
           className="max-h-[90vh] max-w-[90vw] object-contain rounded-lg"
           onClick={e => e.stopPropagation()}
         />
