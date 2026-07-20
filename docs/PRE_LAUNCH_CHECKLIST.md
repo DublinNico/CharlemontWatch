@@ -55,6 +55,11 @@
 
 ### Email
 - [ ] **Verify Resend sender domain** — add `charlemontwatch.ie` to Resend → Domains and set up SPF/DKIM DNS records; until then emails send from `onboarding@resend.dev`
+- [ ] **Add a DMARC record** — `_dmarc.charlemontwatch.ie` TXT, e.g. `v=DMARC1; p=none; rua=mailto:you@...`. Start at `p=none` (monitor-only) since the domain has no send history yet; tighten to `quarantine`/`reject` after a few weeks of clean sending
+- [ ] **Set `RESEND_FROM_EMAIL` in Render** — currently unset, so `emailService.js` falls back to `onboarding@resend.dev` (`FROM` default, `emailService.js:5`); point it at `reports@charlemontwatch.ie` once the sender domain is verified
+- [ ] **Test deliverability before relying on it** — run a few real sends through mail-tester.com or check Google Postmaster Tools once the domain is verified, to confirm SPF/DKIM/DMARC actually align (a misconfigured record can silently fail even when it looks right)
+- [ ] **Ask Túath/DCC contacts to allowlist the sending address** — SPF/DKIM/DMARC passing doesn't guarantee a first-time institutional sender skips a human spam-quarantine review; a direct heads-up to allowlist `reports@charlemontwatch.ie` is the highest-leverage step for these two specific recipients
+- [ ] **Fix complaint-email display-name spoofing pattern** — `emailService.js:185-186` builds the From header as `"<Resident Name> via CharlemontWatch" <FROM>`, a real person's name paired with a third-party address, which reads as friendly-name spoofing to institutional filters independent of domain verification. Deferred until the domain fix lands first (2026-07-20 decision) — change to something like `"CharlemontWatch (on behalf of <Name>)" <reports@charlemontwatch.ie>`
 - [ ] **Test all three email flows in production** — resident confirmation, admin notification, status update
 - [ ] **Wire up the Resend webhook in production** — code is done (`POST /api/webhooks/resend`, verified via `svix`), but still needs: add the endpoint URL in Resend → Webhooks (subscribed to `email.bounced`/`email.complained`/`email.delivery_delayed`), then set the resulting `RESEND_WEBHOOK_SECRET` in Render's environment variables. Detects when a Túath/DCC complaint silently bounces or gets marked spam instead of that looking identical to a successful send.
 
@@ -102,8 +107,8 @@
 | Priority | Total | Done | Remaining |
 |----------|-------|------|-----------|
 | 🔴 Critical | 23 | 23 | 0 |
-| 🟠 Important | 13 | 10 | 3 |
+| 🟠 Important | 18 | 10 | 8 |
 | 🟡 Nice to have | 21 | 20 | 1 |
-| **Total** | **57** | **53** | **4** |
+| **Total** | **62** | **53** | **9** |
 
-**Still open:** Resend sender domain verification — DNS records (SPF/DKIM/DMARC) are correctly in place at Register365, but can't verify until `charlemontwatch.ie` is delegated in the `.ie` registry (pending, no reply from Register365 support yet); production email flow testing (blocked on the above); custom domain DNS (same registry delegation blocker); wiring up the Resend bounce webhook in production (code done, just needs the dashboard/env-var setup).
+**Still open:** Resend sender domain verification, DMARC record, `RESEND_FROM_EMAIL`, deliverability testing, and the Túath/DCC allowlist ask are all blocked on (or sequenced after) `charlemontwatch.ie` clearing `serverHold` in the `.ie` registry — ID verification submitted to Register 365 2026-07-18, still pending as of 2026-07-20. The complaint-email display-name fix is a code change, not blocked, but deliberately deferred until the domain fix lands first. Production email flow testing is blocked on domain verification. Custom domain DNS is the same registry delegation blocker. Wiring up the Resend bounce webhook in production is not blocked — code's done, just needs the dashboard/env-var setup.
