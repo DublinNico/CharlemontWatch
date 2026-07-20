@@ -1,4 +1,4 @@
-import { Shield, Search, List, Info, Lock, User, ArrowRight, Bell, MapPin, Users, FileText, Eye, CheckCircle, Send } from 'lucide-react';
+import { Shield, Search, List, ArrowRight, Bell, MapPin, Users, FileText, Eye, CheckCircle, Send } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { SatisfactionWidget } from '../components/SatisfactionWidget';
@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { Badge } from '../components/ui/badge';
 
 // Landing page: hero, stats, how-it-works, incident types, main actions,
-// satisfaction voting, and quick links
+// and satisfaction voting
 export function Home() {
   const navigate = useNavigate();
   const { isAuthenticated, incidents } = useApp();
@@ -60,28 +60,6 @@ export function Home() {
       onClick: () => navigate('/incidents'),
       variant: 'secondary' as const,
       show: true,
-    },
-  ];
-
-  // Footer-area links — Admin/Account entries only show once logged in
-  const quickLinks = [
-    {
-      icon: Lock,
-      title: 'Admin Dashboard',
-      onClick: () => navigate('/admin'),
-      show: isAuthenticated,
-    },
-    {
-      icon: Info,
-      title: 'About Us',
-      onClick: () => navigate('/about'),
-      show: true,
-    },
-    {
-      icon: User,
-      title: 'Account',
-      onClick: () => navigate(`/cw-admin?key=${import.meta.env.VITE_ADMIN_KEY}`),
-      show: isAuthenticated,
     },
   ];
 
@@ -263,35 +241,6 @@ export function Home() {
         <SatisfactionWidget />
       </section>
 
-      {/* Quick Links */}
-      <section className="bg-gradient-to-br from-slate-50 to-indigo-50 py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex flex-wrap gap-4 justify-center">
-            {quickLinks.filter(link => link.show).map((link, index) => (
-              <Button
-                key={index}
-                variant="ghost"
-                onClick={link.onClick}
-                className="gap-2 text-slate-700 hover:text-indigo-600 hover:bg-white"
-              >
-                <link.icon className="w-4 h-4" />
-                {link.title}
-              </Button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <footer className="py-6 text-center text-sm text-muted-foreground border-t border-border bg-white">
-        <button
-          onClick={() => navigate('/privacy')}
-          className="underline hover:text-indigo-600 transition-colors"
-        >
-          Privacy Policy
-        </button>
-        <span className="mx-2">·</span>
-        © {new Date().getFullYear()} CharlemontWatch
-      </footer>
     </div>
   );
 }
