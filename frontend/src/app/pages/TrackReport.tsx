@@ -50,7 +50,7 @@ function mapApiToIncident(api: any): Incident {
     reporterEmail: api.reporterEmail,
     status: api.status,
     date: api.reportedDate || api.createdAt,
-    photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url })),
+    photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url, caption: p.caption })),
     typeSpecificData: Object.keys(typeSpecificData).length > 0 ? typeSpecificData : undefined,
     sendComplaintTo: api.sendComplaintTo,
   };

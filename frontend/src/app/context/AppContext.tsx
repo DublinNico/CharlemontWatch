@@ -26,6 +26,7 @@ export interface Photo {
   url: string;
   approved?: boolean;
   file?: File;
+  caption?: string;
 }
 
 export interface Incident {
@@ -127,7 +128,7 @@ function mapApiToIncident(api: any): Incident {
     reporterEmail: api.reporterEmail,
     status: api.status,
     date: api.reportedDate || api.createdAt,
-    photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url, approved: p.approved })),
+    photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url, approved: p.approved, caption: p.caption })),
     typeSpecificData: Object.keys(typeSpecificData).length > 0 ? typeSpecificData : undefined,
     sendComplaintTo: api.sendComplaintTo,
   };
