@@ -24,8 +24,22 @@ const LOCALHOST_RE = /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
 const extraOrigins = process.env.CORS_ALLOWED_ORIGINS
   ? process.env.CORS_ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
   : [];
+
+// Also allow the www./non-www. counterpart of each configured origin, so a
+// single saved value (dashboard env var edits have repeatedly ended up with
+// only one of the two variants persisted) still covers both.
+const allowedOrigins = new Set();
+for (const origin of extraOrigins) {
+  allowedOrigins.add(origin);
+  const match = origin.match(/^(https?:\/\/)(www\.)?(.+)$/);
+  if (match) {
+    const [, protocol, www, rest] = match;
+    allowedOrigins.add(www ? `${protocol}${rest}` : `${protocol}www.${rest}`);
+  }
+}
+
 const isAllowedOrigin = (origin) =>
-  LOCALHOST_RE.test(origin) || extraOrigins.includes(origin);
+  LOCALHOST_RE.test(origin) || allowedOrigins.has(origin);
 
 // Secure HTTP headers (CSP, HSTS, X-Frame-Options, etc.)
 app.use(helmet());
