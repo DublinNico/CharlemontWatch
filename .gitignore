@@ -6,3 +6,5 @@ dist/
 coverage/
 test-results/
 .claude/settings.local.json
+docs/PRE_LAUNCH_CHECKLIST.md
+docs/TESTING_TODO.md
