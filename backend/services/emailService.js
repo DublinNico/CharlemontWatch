@@ -46,6 +46,7 @@ const sendResidentConfirmation = async (incident, residentEmail) => {
     await send({
       from: FROM,
       to: [residentEmail],
+      replyTo: process.env.ADMIN_EMAIL,
       subject: `Your Incident Report ${incident.shortId} - CharlemontWatch`,
       html: `
         <h2>Thank you for reporting this incident</h2>
@@ -80,6 +81,7 @@ const sendAdminNotification = async (incident) => {
     await send({
       from: FROM,
       to: [adminEmail],
+      replyTo: incident.reporterEmail,
       subject: `[NEW] ${getIncidentTypeName(incident.incidentType)} at ${sanitizeHeader(incident.location)}`,
       html: `
         <h2>New Incident Report</h2>
@@ -114,6 +116,7 @@ const sendStatusUpdate = async (incident, residentEmail) => {
     await send({
       from: FROM,
       to: [residentEmail],
+      replyTo: process.env.ADMIN_EMAIL,
       subject: `Incident #${incident._id.toString().slice(-8).toUpperCase()} - Status: ${incident.status}`,
       html: `
         <h2>Status Update</h2>
@@ -177,13 +180,13 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
     </table>
   `;
 
-  // Shows the resident's name in the inbox ("Jane Resident via CharlemontWatch")
-  // even though the technical sending address is CharlemontWatch's own domain —
-  // you can't actually send "From" an address on a domain you don't control
-  // (SPF/DKIM/DMARC would reject it as spoofing), so this is the closest
-  // deliverable approximation. Quotes stripped so they can't break the header.
-  const fromDisplayName = (sanitizeHeader(complainant.name) || 'A Resident').replace(/"/g, '');
-  const fromHeader = `"${fromDisplayName} via CharlemontWatch" <${FROM}>`;
+  // Deliberately doesn't put the resident's name in the From display name
+  // (e.g. "Jane Resident via CharlemontWatch") — pairing a real person's name
+  // with a third-party sending domain reads as friendly-name spoofing to
+  // institutional mail filters regardless of SPF/DKIM/DMARC passing. The
+  // resident's name is still fully visible in complainantBlock, and replyTo
+  // points straight to them.
+  const fromHeader = `"CharlemontWatch" <${FROM}>`;
 
   const correspondenceNote = `
     <p style="background:#fff3e0;border-left:4px solid #f57c00;padding:10px 14px;margin:16px 0;">

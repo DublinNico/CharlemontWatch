@@ -193,18 +193,18 @@ describe('sendComplaintEmails', () => {
     expect(msg.subject.split('\n')).toHaveLength(1);
   });
 
-  test('UT-049: From header shows the complainant\'s name "via CharlemontWatch"', async () => {
+  test('UT-049: From header is just "CharlemontWatch", not the complainant\'s name', async () => {
     await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
     const msg = mockSend.mock.calls[0][0];
-    expect(msg.from).toContain('Jane Resident via CharlemontWatch');
+    expect(msg.from).toBe('"CharlemontWatch" <reports@charlemontwatch.ie>');
+    expect(msg.from).not.toContain('Jane Resident');
   });
 
-  test('UT-050: strips CR/LF and quotes from the complainant name in the From header', async () => {
+  test('UT-050: From header is unaffected by the complainant name, even a malicious one', async () => {
     const injectedComplainant = { ...mockComplainant, name: 'Jane\r\nBcc: attacker@evil.com "quoted"' };
     await sendComplaintEmails(mockIncident, injectedComplainant, ['tuath']);
     const msg = mockSend.mock.calls[0][0];
-    expect(msg.from).not.toMatch(/[\r\n]/);
-    expect(msg.from).not.toContain('"quoted"');
+    expect(msg.from).toBe('"CharlemontWatch" <reports@charlemontwatch.ie>');
   });
 
   test('UT-051: body tells the recipient to correspond directly with the resident, not CharlemontWatch', async () => {
