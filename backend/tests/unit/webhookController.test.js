@@ -7,6 +7,9 @@ jest.mock('svix', () => ({
 jest.mock('@sentry/node', () => ({ captureMessage: jest.fn() }));
 const Sentry = require('@sentry/node');
 
+jest.mock('../../models/Incident');
+const Incident = require('../../models/Incident');
+
 const { handleResendWebhook } = require('../../controllers/webhookController');
 
 const makeRes = () => ({
@@ -27,6 +30,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   process.env.RESEND_WEBHOOK_SECRET = 'whsec_test_secret';
   delete process.env.SENTRY_DSN;
+  Incident.updateOne = jest.fn().mockResolvedValue({});
 });
 
 describe('handleResendWebhook', () => {
@@ -130,6 +134,67 @@ describe('handleResendWebhook', () => {
 
     expect(res.status).toHaveBeenCalledWith(200);
     expect(Sentry.captureMessage).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
+  });
+
+  test('UT-073: records a complaintDeliveryIssue on the incident when a tagged complaint email bounces', async () => {
+    mockVerify.mockReturnValue({
+      type: 'email.bounced',
+      data: {
+        to: ['tuath@example.com'],
+        tags: [
+          { name: 'incident_id', value: 'CW-ABC123' },
+          { name: 'recipient_type', value: 'tuath' },
+        ],
+      },
+    });
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const res = makeRes();
+
+    await handleResendWebhook(makeReq(), res);
+
+    expect(Incident.updateOne).toHaveBeenCalledWith(
+      { shortId: 'CW-ABC123' },
+      { $push: { complaintDeliveryIssues: { recipientType: 'tuath', eventType: 'email.bounced' } } }
+    );
+    expect(res.status).toHaveBeenCalledWith(200);
+    consoleSpy.mockRestore();
+  });
+
+  test('UT-074: does not touch the database when the event has no incident_id/recipient_type tags (e.g. a resident-facing email)', async () => {
+    mockVerify.mockReturnValue({
+      type: 'email.bounced',
+      data: { to: ['jane@example.com'], tags: [] },
+    });
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const res = makeRes();
+
+    await handleResendWebhook(makeReq(), res);
+
+    expect(Incident.updateOne).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(200);
+    consoleSpy.mockRestore();
+  });
+
+  test('UT-075: still responds 200 and logs if the Incident.updateOne write fails', async () => {
+    mockVerify.mockReturnValue({
+      type: 'email.bounced',
+      data: {
+        to: ['dcc@example.com'],
+        tags: [
+          { name: 'incident_id', value: 'CW-XYZ999' },
+          { name: 'recipient_type', value: 'dcc' },
+        ],
+      },
+    });
+    Incident.updateOne = jest.fn().mockRejectedValue(new Error('DB unavailable'));
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const res = makeRes();
+
+    await handleResendWebhook(makeReq(), res);
+
+    expect(res.status).toHaveBeenCalledWith(200);
+    expect(consoleSpy).toHaveBeenCalledWith('Failed to record complaint delivery issue on incident:', 'DB unavailable');
     consoleSpy.mockRestore();
   });
 });
