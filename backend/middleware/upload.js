@@ -2,11 +2,18 @@ const multer = require('multer');
 
 const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
 
+// Thrown by fileFilter/validateMagicBytes on an unsupported format — a
+// distinct type so app.js's error handler can tell it apart from unexpected
+// failures and respond 400 with a real message instead of a generic 500.
+class UnsupportedFileTypeError extends Error {}
+
+const UNSUPPORTED_FILE_MESSAGE = 'Photos must be JPEG, PNG, or WebP. If you\'re on an iPhone, HEIC photos aren\'t supported yet — switch to "Most Compatible" under Settings > Camera > Formats, or choose "Use Original" when picking the photo.';
+
 // First-pass filter based on the declared MIME type — cheap but
 // spoofable, so it's backed up by validateMagicBytes below
 const fileFilter = (req, file, cb) => {
   if (!allowedMimes.includes(file.mimetype)) {
-    return cb(new Error('Only JPEG, PNG, and WebP allowed'));
+    return cb(new UnsupportedFileTypeError(UNSUPPORTED_FILE_MESSAGE));
   }
   cb(null, true);
 };
@@ -47,4 +54,4 @@ const validateMagicBytes = (req, res, next) => {
   next();
 };
 
-module.exports = { upload, validateMagicBytes };
+module.exports = { upload, validateMagicBytes, UnsupportedFileTypeError };

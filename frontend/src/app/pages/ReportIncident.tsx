@@ -84,8 +84,8 @@ export function ReportIncident() {
         typeSpecificData,
       }, complaintData);
       navigate(`/success/${incidentId}?complaint=${sendingComplaint}`);
-    } catch {
-      setSubmitError('Failed to submit report. Please check your connection and try again.');
+    } catch (err: any) {
+      setSubmitError(err.response?.data?.error || 'Failed to submit report. Please check your connection and try again.');
     } finally {
       setIsSubmitting(false);
     }

@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const multer = require('multer');
 const mongoSanitize = require('express-mongo-sanitize');
+const { UnsupportedFileTypeError } = require('./middleware/upload');
 
 // Error monitoring — only active when SENTRY_DSN is configured (no-op otherwise)
 if (process.env.SENTRY_DSN) {
@@ -82,6 +83,15 @@ app.get('/api/health', (req, res) => res.json({ status: 'OK' }));
 // Multer file limit errors → 400 (not 500)
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
+    return res.status(400).json({ error: err.message });
+  }
+  next(err);
+});
+
+// Unsupported photo format (e.g. HEIC) rejected by fileFilter → 400 with a
+// real, actionable message instead of falling through to the generic 500
+app.use((err, req, res, next) => {
+  if (err instanceof UnsupportedFileTypeError) {
     return res.status(400).json({ error: err.message });
   }
   next(err);
