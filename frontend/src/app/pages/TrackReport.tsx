@@ -53,6 +53,7 @@ function mapApiToIncident(api: any): Incident {
     photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url, caption: p.caption })),
     typeSpecificData: Object.keys(typeSpecificData).length > 0 ? typeSpecificData : undefined,
     sendComplaintTo: api.sendComplaintTo,
+    complaintDeliveryIssues: api.complaintDeliveryIssues,
   };
 }
 

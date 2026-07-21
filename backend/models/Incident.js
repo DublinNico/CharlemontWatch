@@ -84,6 +84,16 @@ const incidentSchema = new mongoose.Schema({
   complainantAddress: String,
   sendComplaintTo: [{ type: String, enum: ['tuath', 'dcc'] }],
 
+  // Populated by the Resend bounce webhook (webhookController.js) when a
+  // complaint email to Túath/DCC bounces, gets marked spam, or is delayed —
+  // lets the resident see on /track that their complaint didn't land, instead
+  // of the tracking page looking identical to a successful send.
+  complaintDeliveryIssues: [{
+    recipientType: { type: String, enum: ['tuath', 'dcc'] },
+    eventType: String,
+    occurredAt: { type: Date, default: Date.now }
+  }],
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

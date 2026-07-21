@@ -44,6 +44,9 @@ export interface Incident {
   // Present only when the resident requested a formal complaint; approving a
   // PENDING_REVIEW incident with this set sends real emails to those orgs
   sendComplaintTo?: ('tuath' | 'dcc')[];
+  // Populated by the Resend bounce webhook when a complaint email to Túath/DCC
+  // bounces, gets marked spam, or is delayed — empty/absent means no known issue
+  complaintDeliveryIssues?: { recipientType: 'tuath' | 'dcc'; eventType: string; occurredAt: string }[];
 }
 
 export interface User {
@@ -131,6 +134,7 @@ function mapApiToIncident(api: any): Incident {
     photos: (api.photos || []).map((p: any) => ({ id: p._id || p.url, url: p.url, approved: p.approved, caption: p.caption })),
     typeSpecificData: Object.keys(typeSpecificData).length > 0 ? typeSpecificData : undefined,
     sendComplaintTo: api.sendComplaintTo,
+    complaintDeliveryIssues: api.complaintDeliveryIssues,
   };
 }
 

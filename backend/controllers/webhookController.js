@@ -1,5 +1,6 @@
 const { Webhook } = require('svix');
 const Sentry = require('@sentry/node');
+const Incident = require('../models/Incident');
 
 // Event types that mean a complaint email never reached the recipient (or
 // they marked it spam) — the scenario where Túath/DCC's mail server silently
@@ -59,6 +60,20 @@ const handleResendWebhook = async (req, res) => {
         level: 'warning',
         extra: context,
       });
+    }
+
+    // Only complaint emails (Túath/DCC) are tagged with incident_id/recipient_type
+    // — resident confirmation/status-update emails aren't, so this is skipped
+    // for those (nothing on /track to surface for a CharlemontWatch-internal email).
+    if (tags.incident_id && tags.recipient_type) {
+      try {
+        await Incident.updateOne(
+          { shortId: tags.incident_id },
+          { $push: { complaintDeliveryIssues: { recipientType: tags.recipient_type, eventType: event.type } } }
+        );
+      } catch (err) {
+        console.error('Failed to record complaint delivery issue on incident:', err.message);
+      }
     }
   }
 

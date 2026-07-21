@@ -6,7 +6,7 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 
 [![CI](https://github.com/DublinNico/CharlemontWatch/actions/workflows/ci.yml/badge.svg)](https://github.com/DublinNico/CharlemontWatch/actions/workflows/ci.yml)
 
-**Live:** [charlemontwatch-frontend.vercel.app](https://charlemontwatch-frontend.vercel.app) (frontend) · [charlemontwatch.onrender.com](https://charlemontwatch.onrender.com) (backend API) — custom domain `charlemontwatch.ie` pending DNS propagation
+**Live:** [charlemontwatch.ie](https://charlemontwatch.ie) — frontend on Vercel, backend API on Render (`charlemontwatch.onrender.com`)
 
 ![CharlemontWatch home page](docs/images/home.png)
 
@@ -41,7 +41,7 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 
 - **Deployment** — Vercel (frontend), Render (backend API), UptimeRobot (uptime monitoring + cold-start prevention)
 
-- **Testing** — Jest + Supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E), Artillery (load testing) — 255 automated tests (202 backend + 38 frontend + 15 E2E) across unit, integration, security, and E2E suites
+- **Testing** — Jest + Supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E), Artillery (load testing) — 267 automated tests (208 backend + 44 frontend + 15 E2E) across unit, integration, security, and E2E suites
 
 - **CI/CD** — GitHub Actions runs the full backend and frontend suites, a frontend type check, Playwright E2E, and an `npm audit` dependency check on every push to `dev` and PR to `main`, plus a daily encrypted `mongodump` backup workflow (GPG-encrypted before upload since the repo is public)
 
@@ -101,7 +101,6 @@ cd frontend && npm run test:e2e
 
 ## Documentation
 
-- [`docs/PRE_LAUNCH_CHECKLIST.md`](docs/PRE_LAUNCH_CHECKLIST.md) — security, config, and deployment checklist (app has launched; kept for the few remaining post-launch items)
 - [`docs/testing/TestingReport.md`](docs/testing/TestingReport.md) — full test plan, coverage, and execution results
 - [`docs/use-cases/`](docs/use-cases) — use case documentation
 - [`docs/bugs/`](docs/bugs) — resolved bug write-ups

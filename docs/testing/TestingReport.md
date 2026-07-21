@@ -107,7 +107,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 255 automated tests pass (134 backend unit + 63 backend integration + 5 security + 38 frontend unit + 15 E2E)
+- All 267 automated tests pass (137 backend unit + 66 backend integration + 5 security + 44 frontend unit + 15 E2E)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -345,16 +345,16 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 |------|---------------------|-------|
 | `tests/unit/generateShortId.test.js` | ID format, prefix, length, uniqueness | UT-001 – UT-002 (5 tests) |
 | `tests/unit/auth.middleware.test.js` | authenticate middleware (all branches), adminOnly middleware (all branches), isAdminRequest best-effort admin check (no token, invalid token, valid non-admin token, valid admin token) | UT-005 – UT-010, UT-072-A – UT-072-D (13 tests) |
-| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, Resend error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description, CR/LF header-injection stripping in subject lines, always-present tracking link + FRONTEND_URL-based footer link on photo-less reports, sendContactMessage (admin recipient, Reply-To sender, HTML escaping, error swallowed) | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I, UT-044 – UT-045, UT-053-A – UT-053-D + additional coverage (43 tests) |
+| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, Resend error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description, CR/LF header-injection stripping in subject lines, fixed `"CharlemontWatch" <FROM>` header on complaint emails (no resident name, to avoid friendly-name spoofing patterns), always-present tracking link + FRONTEND_URL-based footer link on photo-less reports, sendContactMessage (admin recipient, Reply-To sender, HTML escaping, error swallowed) | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I, UT-044 – UT-045, UT-049 – UT-050, UT-053-A – UT-053-D + additional coverage (43 tests) |
 | `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array, mandatory reporterEmail (format + anonymous-still-allowed) | UT-014 – UT-018, UT-033 (19 tests) |
 | `tests/unit/userModel.test.js` | Pre-save bcrypt hook, comparePassword, schema validation, role default/enum | UT-019 – UT-025, UT-034 (10 tests) |
 | `tests/unit/authController.test.js` | Login input validation, credential checks, JWT generation, email normalisation, 500 error path | UT-026 – UT-032 (15 tests) |
 | `tests/unit/upload.middleware.test.js` | MIME type filter, 5MB size limit, magic-byte validation (JPEG/PNG/WebP/spoofed PDF), no-file passthrough | UT-038 – UT-042 (8 tests) |
 | `tests/unit/satisfactionVoteModel.test.js` | Required field validation (email, rating), email format, rating enum (low/medium/high) | UT-043-A – UT-043-G (7 tests) |
-| `tests/unit/webhookController.test.js` | Resend bounce-webhook signature verification (missing secret, invalid signature), delivery-failure event handling (bounced/complained/delivery_delayed) with incident/recipient tag extraction, Sentry reporting gated on SENTRY_DSN, recipient email masked in logs/Sentry extras | UT-059 – UT-062-A, UT-063 – UT-064 (7 tests) |
+| `tests/unit/webhookController.test.js` | Resend bounce-webhook signature verification (missing secret, invalid signature), delivery-failure event handling (bounced/complained/delivery_delayed) with incident/recipient tag extraction, Sentry reporting gated on SENTRY_DSN, recipient email masked in logs/Sentry extras, `Incident.complaintDeliveryIssues` recorded on a tagged complaint-email failure, skipped when tags are absent (resident-facing emails), failure to write logged but still responds 200 | UT-059 – UT-062-A, UT-063 – UT-064, UT-073 – UT-075 (10 tests) |
 | `tests/unit/incidentController.test.js` | Unexpected-error (500) paths on getIncident, getAllIncidents, getPendingIncidents, reviewIncident, reviewPhoto, updateIncidentStatus, deleteIncident all return a generic message and log the real error server-side, rather than leaking `error.message` to the client | UT-065 – UT-071 (7 tests) |
 
-**Unit test total: 134 tests across 10 test suites** *(recount 20/07/26 — `auth.middleware.test.js` grew to 13 tests covering the new `isAdminRequest` helper, added alongside the IDOR fix below to close a coverage gap on its invalid-token catch branch; also carries forward the 19/07/26 recount where `emailService.test.js` grew to 43 tests and `webhookController.test.js`/`incidentController.test.js` were added)*
+**Unit test total: 137 tests across 10 test suites** *(recount 21/07/26 — `webhookController.test.js` grew from 7 to 10 tests covering the new complaint-delivery-failure tracking on the Incident model; carries forward the 20/07/26 recount where `auth.middleware.test.js` grew to 13 tests covering the new `isAdminRequest` helper, added alongside the IDOR fix below to close a coverage gap on its invalid-token catch branch, and the 19/07/26 recount where `emailService.test.js` grew to 43 tests and `webhookController.test.js`/`incidentController.test.js` were added)*
 
 #### Integration Tests
 
@@ -364,8 +364,9 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 | `tests/integration/auth.test.js` | Login (correct/wrong/unknown); register route removed (404) | IT-018 – IT-021 (4 tests) |
 | `tests/integration/satisfaction.test.js` | POST vote validation (email/rating), upsert-on-revote (no duplicates), case-insensitive email matching, GET summary aggregation (zero state, accurate counts, no emails exposed) | IT-024 – IT-031 (8 tests) |
 | `tests/integration/contact.test.js` | POST /api/contact: valid submission sends email with admin recipient + sender Reply-To (IT-045); 400 on missing name/email/message (IT-046 – IT-048); 400 when message exceeds 5000 chars (IT-049); honeypot field silently drops spam without sending (IT-050); HTML-special characters escaped in email body (IT-051) | IT-045 – IT-051 (7 tests) |
+| `tests/integration/cors.test.js` | Configuring only the apex origin also allows its `www.` counterpart and vice versa; an unrelated origin is still rejected | IT-052-A – IT-052-C (3 tests) |
 
-**Integration test total: 63 tests across 4 test suites** *(recount 20/07/26 — `incidents.test.js` grew from 36 to 44 tests: an IDOR fix (PENDING_REVIEW/REJECTED and, after a CodeRabbit follow-up, all statuses redact PII/unapproved photos for non-admins on both `GET /api/incidents` and `GET /api/incidents/:id`) plus a photo-approval regression test for a bug the IDOR fix exposed — `reviewIncident`'s approve action never actually marked photos approved despite its own comment claiming it did, so every published incident's photos were silently public before the fix and would have vanished from view after it without this correction; see BUG-019.)*
+**Integration test total: 66 tests across 5 test suites** *(recount 21/07/26 — added `cors.test.js` (3 tests) covering the www/non-www CORS auto-allow feature; carries forward the 20/07/26 recount where `incidents.test.js` grew from 36 to 44 tests: an IDOR fix (PENDING_REVIEW/REJECTED and, after a CodeRabbit follow-up, all statuses redact PII/unapproved photos for non-admins on both `GET /api/incidents` and `GET /api/incidents/:id`) plus a photo-approval regression test for a bug the IDOR fix exposed — `reviewIncident`'s approve action never actually marked photos approved despite its own comment claiming it did, so every published incident's photos were silently public before the fix and would have vanished from view after it without this correction; see BUG-019.)*
 
 #### Frontend Unit Tests (Vitest + React Testing Library)
 
@@ -378,8 +379,9 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 | `src/test/ReportIncident.test.tsx` | Graffiti submission calls `addIncident` with correct payload; navigates to success on submit; shows error on failure; submit disabled without type; `addIncident` not called without type | FT-013 – FT-014 (6 tests) |
 | `src/test/SatisfactionWidget.test.tsx` | Results bar percentages and zero-vote state; validation errors (missing rating/email); `submitSatisfactionVote` called with correct args; confirmation + "Update Vote" state after submit; error message on rejected submit | FT-015 – FT-016 (8 tests) |
 | `src/test/Contact.test.tsx` | POST payload shape including empty honeypot field; "Message Sent" confirmation; server-provided and generic error messages; disabled/"Sending…" state while in flight | FT-017 (5 tests) |
+| `src/test/IncidentCard.test.tsx` | Complaint delivery failure banner: hidden when no issues/empty array; shown with recipient name + reason on a bounce/complaint event; one line per distinct recipient; deduplicates to the latest issue per recipient; hidden when showFullDetails is false | FT-018-A – FT-018-F (6 tests) |
 
-**Frontend unit test total: 38 tests across 7 test suites**
+**Frontend unit test total: 44 tests across 8 test suites** *(recount 21/07/26 — added `IncidentCard.test.tsx` (6 tests) covering the new complaint-delivery-failure banner)*
 
 #### E2E Tests (Playwright)
 
@@ -415,7 +417,7 @@ Artillery scenarios run against a live backend (`npm run dev` in `/backend` firs
 
 Observed results on 31/05/26: GET p95 = 72ms, POST p95 = 95ms — both well inside thresholds.
 
-**Grand total: 255 automated tests across 28 test suites**
+**Grand total: 267 automated tests across 29 test suites** (208 backend + 44 frontend + 15 E2E test cases)
 
 ---
 
@@ -557,7 +559,7 @@ describe('User model — comparePassword', () => {
 
 ### 5.4 Test Execution Results
 
-All 255 automated tests (202 backend + 38 frontend + 15 E2E test cases, 30 runs across Desktop Chrome + mobile) were executed on 20/07/26.
+All 267 automated tests (208 backend + 44 frontend + 15 E2E test cases, 30 runs across Desktop Chrome + mobile) were executed on 21/07/26.
 
 **Backend** (`npm test` in `/backend`):
 
@@ -570,16 +572,17 @@ PASS tests/unit/userModel.test.js             (10 tests)
 PASS tests/unit/authController.test.js        (15 tests)
 PASS tests/unit/upload.middleware.test.js      (8 tests)
 PASS tests/unit/satisfactionVoteModel.test.js  (7 tests)
-PASS tests/unit/webhookController.test.js      (7 tests)
+PASS tests/unit/webhookController.test.js     (10 tests)
 PASS tests/unit/incidentController.test.js     (7 tests)
 PASS tests/integration/incidents.test.js      (44 tests)
 PASS tests/integration/auth.test.js            (4 tests)
 PASS tests/integration/satisfaction.test.js    (8 tests)
 PASS tests/integration/contact.test.js         (7 tests)
+PASS tests/integration/cors.test.js            (3 tests)
 PASS tests/security/security.test.js           (5 tests)
 
-Test Suites: 15 passed, 15 total
-Tests:       202 passed, 202 total
+Test Suites: 16 passed, 16 total
+Tests:       208 passed, 208 total
 ```
 
 **Frontend** (`npm test` in `/frontend`):
@@ -592,9 +595,10 @@ PASS src/test/AdminDashboard.test.tsx         (3 tests)
 PASS src/test/ReportIncident.test.tsx          (6 tests)
 PASS src/test/SatisfactionWidget.test.tsx      (8 tests)
 PASS src/test/Contact.test.tsx                 (5 tests)
+PASS src/test/IncidentCard.test.tsx            (6 tests)
 
-Test Files:  7 passed (7)
-Tests:       38 passed (38)
+Test Files:  8 passed (8)
+Tests:       44 passed (44)
 ```
 
 **E2E** (`npm run test:e2e` in `/frontend`):

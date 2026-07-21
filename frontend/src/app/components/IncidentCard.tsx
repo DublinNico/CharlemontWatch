@@ -3,7 +3,31 @@ import { Incident, IncidentType } from '../context/AppContext';
 import { StatusBadge } from './StatusBadge';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Badge } from './ui/badge';
-import { MapPin, Calendar, Image as ImageIcon, X, ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
+import { MapPin, Calendar, Image as ImageIcon, X, ChevronLeft, ChevronRight, Copy, Check, AlertTriangle } from 'lucide-react';
+
+const recipientNames: Record<'tuath' | 'dcc', string> = {
+  tuath: 'Túath Housing',
+  dcc: 'Dublin City Council',
+};
+
+const deliveryIssueMessages: Record<string, string> = {
+  'email.bounced': 'could not be delivered',
+  'email.complained': 'was marked as spam',
+  'email.delivery_delayed': 'is delayed',
+};
+
+// One line per recipient, keeping only the most recent issue if a recipient
+// shows up more than once (e.g. delayed, then later bounced)
+function latestIssuePerRecipient(issues: NonNullable<Incident['complaintDeliveryIssues']>) {
+  const latest = new Map<string, (typeof issues)[number]>();
+  for (const issue of issues) {
+    const existing = latest.get(issue.recipientType);
+    if (!existing || new Date(issue.occurredAt) > new Date(existing.occurredAt)) {
+      latest.set(issue.recipientType, issue);
+    }
+  }
+  return Array.from(latest.values());
+}
 
 interface IncidentCardProps {
   incident: Incident;
@@ -77,6 +101,20 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
       </CardHeader>
 
       <CardContent className="space-y-4">
+        {showFullDetails && incident.complaintDeliveryIssues && incident.complaintDeliveryIssues.length > 0 && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm">
+            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div>
+              {latestIssuePerRecipient(incident.complaintDeliveryIssues).map(issue => (
+                <p key={issue.recipientType}>
+                  Your formal complaint to <strong>{recipientNames[issue.recipientType]}</strong> {deliveryIssueMessages[issue.eventType] || 'had a delivery problem'}.
+                  You may want to follow up with them directly.
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-start gap-2 text-sm">
           <MapPin className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
           <span className="font-medium">{incident.location}</span>
