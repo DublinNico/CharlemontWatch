@@ -94,7 +94,10 @@ export default function Footer() {
 
       <div className="mt-12 border-t border-white/[0.25] py-5 flex flex-col md:flex-row justify-between items-center gap-3 text-center md:text-left text-[13px] text-[#e9e4ff]">
         <div>© 2026 CharlemontWatch · Community Safety Platform</div>
-        <Link to="/privacy" className="text-[#e9e4ff] no-underline">Privacy Policy</Link>
+        <div className="flex gap-4">
+          <Link to="/privacy" className="text-[#e9e4ff] no-underline">Privacy Policy</Link>
+          <Link to="/terms" className="text-[#e9e4ff] no-underline">Terms and Conditions</Link>
+        </div>
       </div>
     </footer>
   );

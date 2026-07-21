@@ -9,6 +9,7 @@ import { Contact } from "./pages/Contact";
 import { Auth } from "./pages/Auth";
 import { AdminDashboard } from "./pages/AdminDashboard";
 import { PrivacyPolicy } from "./pages/PrivacyPolicy";
+import { TermsAndConditions } from "./pages/TermsAndConditions";
 import { NotFound } from "./pages/NotFound";
 import { MainLayout } from "./components/MainLayout";
 
@@ -28,6 +29,7 @@ export const router = createBrowserRouter([
       { path: "/cw-admin", element: <Auth /> },
       { path: "/admin", element: <AdminDashboard /> },
       { path: "/privacy", element: <PrivacyPolicy /> },
+      { path: "/terms", element: <TermsAndConditions /> },
       { path: "*", element: <NotFound /> },
     ],
   },
