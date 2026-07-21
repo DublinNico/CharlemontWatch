@@ -91,11 +91,41 @@ export function ReportIncident() {
     }
   };
 
+  // Downscales and re-encodes a photo as JPEG client-side before it's ever
+  // uploaded — phone camera photos can be 10-20MB, which times out or fails
+  // outright on a slow/weak mobile connection well before the server's own
+  // compression step (which only runs after the full original file has
+  // already been received) ever gets a chance to shrink it. Falls back to
+  // the original file if the browser can't decode it (e.g. HEIC, which the
+  // server rejects anyway with a clear message).
+  const compressForUpload = (file: File): Promise<File> => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const maxDim = 1920;
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return resolve(file);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((blob) => {
+        URL.revokeObjectURL(img.src);
+        if (!blob) return resolve(file);
+        resolve(new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' }));
+      }, 'image/jpeg', 0.8);
+    };
+    img.onerror = () => resolve(file);
+    img.src = URL.createObjectURL(file);
+  });
+
   // Adds newly-selected files as local preview Photos, capped at 10 total
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && photos.length < 10) {
-      const newPhotos: Photo[] = Array.from(files).slice(0, 10 - photos.length).map((file, index) => ({
+      const selected = Array.from(files).slice(0, 10 - photos.length);
+      const compressed = await Promise.all(selected.map(compressForUpload));
+      const newPhotos: Photo[] = compressed.map((file, index) => ({
         id: `photo-${Date.now()}-${index}`,
         url: URL.createObjectURL(file),
         file,
