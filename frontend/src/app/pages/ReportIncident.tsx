@@ -10,6 +10,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Checkbox } from '../components/ui/checkbox';
+import { TurnstileWidget } from '../components/Turnstile';
 
 // Incident report submission form — type selection, common fields, per-type
 // detail fields, photo upload, and optional formal complaint escalation
@@ -28,6 +29,7 @@ export function ReportIncident() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const [complaint, setComplaint] = useState({
     sendToTuath: true,
@@ -61,6 +63,11 @@ export function ReportIncident() {
       return;
     }
 
+    if (import.meta.env.VITE_TURNSTILE_SITE_KEY && !turnstileToken) {
+      setSubmitError('Please complete the verification challenge.');
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitError('');
 
@@ -82,7 +89,7 @@ export function ReportIncident() {
         status: 'NEW',
         photos,
         typeSpecificData,
-      }, complaintData);
+      }, complaintData, turnstileToken);
       navigate(`/success/${incidentId}?complaint=${sendingComplaint}`);
     } catch (err: any) {
       setSubmitError(err.response?.data?.error || 'Failed to submit report. Please check your connection and try again.');
@@ -620,6 +627,8 @@ export function ReportIncident() {
               )}
             </CardContent>
           </Card>
+
+          <TurnstileWidget onVerify={setTurnstileToken} onExpire={() => setTurnstileToken('')} />
 
           <div className="flex gap-4">
             <Button

@@ -60,7 +60,7 @@ interface AppContextType {
   incidents: Incident[];
   isLoadingIncidents: boolean;
   refreshIncidents: () => Promise<void>;
-  addIncident: (incident: Omit<Incident, 'id' | 'date'>, complaint?: ComplaintData) => Promise<string>;
+  addIncident: (incident: Omit<Incident, 'id' | 'date'>, complaint?: ComplaintData, turnstileToken?: string) => Promise<string>;
   updateIncidentStatus: (id: string, status: IncidentStatus) => Promise<void>;
   deleteIncident: (id: string) => Promise<void>;
   getIncidentById: (id: string) => Incident | undefined;
@@ -215,12 +215,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // Submits a new incident report as multipart/form-data (photos require it).
   // Complaint fields are only appended if the resident opted to escalate.
-  const addIncident = async (incident: Omit<Incident, 'id' | 'date'>, complaint?: ComplaintData): Promise<string> => {
+  const addIncident = async (incident: Omit<Incident, 'id' | 'date'>, complaint?: ComplaintData, turnstileToken?: string): Promise<string> => {
     const form = new FormData();
     form.append('incidentType', typeToApi[incident.type]);
     form.append('location', incident.location);
     form.append('description', incident.description);
     form.append('reporterEmail', incident.reporterEmail ?? '');
+    form.append('turnstileToken', turnstileToken ?? '');
 
     if (incident.typeSpecificData) {
       Object.entries(incident.typeSpecificData).forEach(([key, value]) => {
