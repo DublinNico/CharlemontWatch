@@ -50,17 +50,17 @@ export function AllIncidents() {
       <Header />
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-bold mb-2">All Incidents</h1>
             <p className="text-muted-foreground">Browse and filter community reports</p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="grid grid-cols-2 md:flex md:flex-1 gap-3 md:gap-6 w-full md:w-auto md:justify-center">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-                <div className="text-xs text-muted-foreground">{stat.label}</div>
+                <div className={`text-[44px] leading-none font-bold ${stat.color}`}>{stat.value}</div>
+                <div className="text-xs text-muted-foreground mt-1">{stat.label}</div>
               </div>
             ))}
           </div>

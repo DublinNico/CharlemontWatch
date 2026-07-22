@@ -6,6 +6,7 @@ const { generateShortId } = require('../utils/idUtils');
 const { EMAIL_REGEX } = require('../utils/validators');
 const { isAdminRequest } = require('../middleware/auth');
 const { sendResidentConfirmation, sendAdminNotification, sendStatusUpdate, sendComplaintEmails } = require('../services/emailService');
+const { verifyTurnstile } = require('../utils/turnstile');
 
 const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
 
@@ -39,6 +40,16 @@ const createIncident = async (req, res) => {
     const sendComplaintTo = req.body.sendComplaintTo
       ? String(req.body.sendComplaintTo).split(',').map(v => v.trim()).filter(v => ['tuath', 'dcc'].includes(v))
       : [];
+
+    // Bot check — runs first so scripted floods are rejected before any
+    // validation, S3 upload, or email work happens
+    const turnstileResult = await verifyTurnstile(req.body.turnstileToken, req.ip);
+    if (turnstileResult === 'unavailable') {
+      return res.status(503).json({ error: 'Verification service is temporarily unavailable. Please try again shortly.' });
+    }
+    if (!turnstileResult) {
+      return res.status(400).json({ error: 'CAPTCHA verification failed. Please try again.' });
+    }
 
     // Required-field validation — runs before any DB or type-specific logic
     const VALID_TYPES = ['graffiti', 'antisocial', 'safetyhazard', 'maintenance'];

@@ -20,6 +20,11 @@ const webhookRoutes = require('./routes/webhooks');
 
 const app = express();
 
+// Render sits behind a single reverse proxy hop — without this, req.ip and
+// the X-Forwarded-For-derived IP used by rate limiting/Turnstile's remoteip
+// resolve to the proxy's address instead of the actual client's.
+app.set('trust proxy', 1);
+
 // Allow any localhost port (dev) plus explicitly configured production origins
 const LOCALHOST_RE = /^http:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
 const extraOrigins = process.env.CORS_ALLOWED_ORIGINS
