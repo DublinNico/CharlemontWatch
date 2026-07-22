@@ -1,4 +1,5 @@
 const { Resend } = require('resend');
+const Incident = require('../models/Incident');
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -197,6 +198,20 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
     </p>
   `;
 
+  // Records a confirmed successful send on the incident itself (atomic push,
+  // since tuath/dcc sends can resolve concurrently) so the admin dashboard
+  // can show a real "sent" confirmation instead of assuming the
+  // fire-and-forget send after approval worked.
+  const recordComplaintSent = async (recipientType) => {
+    try {
+      await Incident.findByIdAndUpdate(incident._id, {
+        $push: { complaintsSent: { recipientType, sentAt: new Date() } }
+      });
+    } catch (error) {
+      console.error(`Failed to record ${recipientType} complaint as sent:`, error);
+    }
+  };
+
   const sends = [];
 
   if (recipients.includes('tuath')) {
@@ -234,7 +249,8 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
         <p style="font-size:12px;color:#888;">This complaint was submitted automatically via <a href="${process.env.FRONTEND_URL}">CharlemontWatch</a>.
         The incident reference is ${incident.shortId}. Please retain this for your complaints register.</p>
       `
-    }).catch(e => console.error('Túath complaint email failed:', e)));
+    }).then(() => recordComplaintSent('tuath'))
+      .catch(e => console.error('Túath complaint email failed:', e)));
   }
 
   if (recipients.includes('dcc')) {
@@ -268,7 +284,8 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
         <p style="font-size:12px;color:#888;">This complaint was submitted automatically via <a href="${process.env.FRONTEND_URL}">CharlemontWatch</a>.
         The incident reference is ${incident.shortId}.</p>
       `
-    }).catch(e => console.error('DCC complaint email failed:', e)));
+    }).then(() => recordComplaintSent('dcc'))
+      .catch(e => console.error('DCC complaint email failed:', e)));
   }
 
   await Promise.all(sends);
