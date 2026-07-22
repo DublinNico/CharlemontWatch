@@ -13,24 +13,31 @@ export function Home() {
   const navigate = useNavigate();
   const { isAuthenticated, incidents } = useApp();
 
-  // Summary counts shown in the "Incident Types" section
+  // Summary counts shown in the "Incident Types" section — mirrors the
+  // Total/New/In Progress/Resolved breakdown on the All Incidents page
   const stats = [
     {
-      label: 'Total Reports',
+      label: 'Total',
       value: incidents.length,
       icon: Bell,
-      color: 'text-indigo-600',
+      color: 'text-slate-600',
     },
     {
-      label: 'Active Cases',
-      value: incidents.filter(i => i.status !== 'RESOLVED').length,
+      label: 'New',
+      value: incidents.filter(i => i.status === 'NEW').length,
+      icon: Send,
+      color: 'text-blue-600',
+    },
+    {
+      label: 'In Progress',
+      value: incidents.filter(i => i.status === 'IN_PROGRESS').length,
       icon: MapPin,
       color: 'text-amber-600',
     },
     {
       label: 'Resolved',
       value: incidents.filter(i => i.status === 'RESOLVED').length,
-      icon: Shield,
+      icon: CheckCircle,
       color: 'text-emerald-600',
     },
   ];
@@ -175,7 +182,7 @@ export function Home() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
             {stats.map((stat, index) => (
               <Card key={index} className="border-0 shadow-lg">
                 <CardContent className="p-6">
