@@ -6,7 +6,7 @@
 | **Name:** | Tony Nicoletti |
 | 
 | **GitHub Repository** | https://github.com/DublinNico/CharlemontWatch |
-| **Date** | 27/05/26 (updated 31/05/26, updated 31/05/26 v2, updated 31/05/26 v3, updated 16/07/26, updated 19/07/26) |
+| **Date** | 27/05/26 (updated 31/05/26, updated 31/05/26 v2, updated 31/05/26 v3, updated 16/07/26, updated 19/07/26, updated 22/07/26) |
 
 ---
 
@@ -107,7 +107,7 @@ The application is a full-stack system comprising:
 
 ### 2.6 Exit Criteria
 
-- All 267 automated tests pass (137 backend unit + 66 backend integration + 5 security + 44 frontend unit + 15 E2E)
+- All 277 automated tests pass (147 backend unit + 66 backend integration + 5 security + 44 frontend unit + 15 E2E)
 - All black-box and white-box manual test cases documented with PASS/FAIL
 - Coverage reports generated and reviewed for both backend and frontend
 - All critical-path branches (authentication middleware) at 100% coverage
@@ -345,7 +345,8 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 |------|---------------------|-------|
 | `tests/unit/generateShortId.test.js` | ID format, prefix, length, uniqueness | UT-001 – UT-002 (5 tests) |
 | `tests/unit/auth.middleware.test.js` | authenticate middleware (all branches), adminOnly middleware (all branches), isAdminRequest best-effort admin check (no token, invalid token, valid non-admin token, valid admin token) | UT-005 – UT-010, UT-072-A – UT-072-D (13 tests) |
-| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, Resend error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description, CR/LF header-injection stripping in subject lines, fixed `"CharlemontWatch" <FROM>` header on complaint emails (no resident name, to avoid friendly-name spoofing patterns), always-present tracking link + FRONTEND_URL-based footer link on photo-less reports, sendContactMessage (admin recipient, Reply-To sender, HTML escaping, error swallowed) | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I, UT-044 – UT-045, UT-049 – UT-050, UT-053-A – UT-053-D + additional coverage (43 tests) |
+| `tests/unit/emailService.test.js` | Skip-on-null guard, email addressing, subject content, admin notification, Resend error catch-paths, sendComplaintEmails (Túath/DCC/both/empty/content/error), HTML escaping of complainant name and incident description, CR/LF header-injection stripping in subject lines, fixed `"CharlemontWatch" <FROM>` header on complaint emails (no resident name, to avoid friendly-name spoofing patterns), always-present tracking link + FRONTEND_URL-based footer link on photo-less reports, sendContactMessage (admin recipient, Reply-To sender, HTML escaping, error swallowed), `recordComplaintSent` confirmation tracking on a successful send per recipient and on a MongoDB persistence failure (doesn't reject the whole `sendComplaintEmails` call) | UT-011 – UT-013, UT-035 – UT-037, UT-038-A – UT-038-I, UT-044 – UT-045, UT-049 – UT-050, UT-053-A – UT-053-D, UT-076-A – UT-076-C + additional coverage (46 tests) |
+| `tests/unit/turnstile.test.js` | Cloudflare Turnstile verification: bypassed in the test environment, bypassed outside production when no secret key is configured, fails closed in production with no secret key, rejects a missing token, returns true/false on Cloudflare's success/failure response (including the request body sent to Cloudflare), returns `'unavailable'` (not `false`) on a network/timeout failure so the caller can 503 rather than blame the visitor | UT-TS-A – UT-TS-G (7 tests) |
 | `tests/unit/incidentModel.test.js` | Required field validation, enum validation (incidentType, status), defaults, photo array, mandatory reporterEmail (format + anonymous-still-allowed) | UT-014 – UT-018, UT-033 (19 tests) |
 | `tests/unit/userModel.test.js` | Pre-save bcrypt hook, comparePassword, schema validation, role default/enum | UT-019 – UT-025, UT-034 (10 tests) |
 | `tests/unit/authController.test.js` | Login input validation, credential checks, JWT generation, email normalisation, 500 error path | UT-026 – UT-032 (15 tests) |
@@ -354,7 +355,7 @@ npm run test:e2e:ui   # open Playwright visual dashboard
 | `tests/unit/webhookController.test.js` | Resend bounce-webhook signature verification (missing secret, invalid signature), delivery-failure event handling (bounced/complained/delivery_delayed) with incident/recipient tag extraction, Sentry reporting gated on SENTRY_DSN, recipient email masked in logs/Sentry extras, `Incident.complaintDeliveryIssues` recorded on a tagged complaint-email failure, skipped when tags are absent (resident-facing emails), failure to write logged but still responds 200 | UT-059 – UT-062-A, UT-063 – UT-064, UT-073 – UT-075 (10 tests) |
 | `tests/unit/incidentController.test.js` | Unexpected-error (500) paths on getIncident, getAllIncidents, getPendingIncidents, reviewIncident, reviewPhoto, updateIncidentStatus, deleteIncident all return a generic message and log the real error server-side, rather than leaking `error.message` to the client | UT-065 – UT-071 (7 tests) |
 
-**Unit test total: 137 tests across 10 test suites** *(recount 21/07/26 — `webhookController.test.js` grew from 7 to 10 tests covering the new complaint-delivery-failure tracking on the Incident model; carries forward the 20/07/26 recount where `auth.middleware.test.js` grew to 13 tests covering the new `isAdminRequest` helper, added alongside the IDOR fix below to close a coverage gap on its invalid-token catch branch, and the 19/07/26 recount where `emailService.test.js` grew to 43 tests and `webhookController.test.js`/`incidentController.test.js` were added)*
+**Unit test total: 147 tests across 11 test suites** *(recount 22/07/26 — new `turnstile.test.js` (7 tests) added for the Cloudflare Turnstile CAPTCHA integration, and `emailService.test.js` grew from 43 to 46 tests covering the new complaint-sent confirmation tracking; carries forward the 21/07/26 recount where `webhookController.test.js` grew from 7 to 10 tests covering the new complaint-delivery-failure tracking on the Incident model, the 20/07/26 recount where `auth.middleware.test.js` grew to 13 tests covering the new `isAdminRequest` helper, added alongside the IDOR fix below to close a coverage gap on its invalid-token catch branch, and the 19/07/26 recount where `emailService.test.js` grew to 43 tests and `webhookController.test.js`/`incidentController.test.js` were added)*
 
 #### Integration Tests
 
@@ -417,7 +418,7 @@ Artillery scenarios run against a live backend (`npm run dev` in `/backend` firs
 
 Observed results on 31/05/26: GET p95 = 72ms, POST p95 = 95ms — both well inside thresholds.
 
-**Grand total: 267 automated tests across 29 test suites** (208 backend + 44 frontend + 15 E2E test cases)
+**Grand total: 277 automated tests across 30 test suites** (218 backend + 44 frontend + 15 E2E test cases)
 
 ---
 
@@ -559,14 +560,14 @@ describe('User model — comparePassword', () => {
 
 ### 5.4 Test Execution Results
 
-All 267 automated tests (208 backend + 44 frontend + 15 E2E test cases, 30 runs across Desktop Chrome + mobile) were executed on 21/07/26.
+All 277 automated tests (218 backend + 44 frontend + 15 E2E test cases, 30 runs across Desktop Chrome + mobile) were executed on 21/07/26, backend re-verified on 22/07/26 after the CAPTCHA/rate-limiting, complaint-sent-confirmation, and code-review-fix work (see [[project-remaining-tasks]] for that day's changes).
 
 **Backend** (`npm test` in `/backend`):
 
 ```
 PASS tests/unit/generateShortId.test.js        (5 tests)
 PASS tests/unit/auth.middleware.test.js       (13 tests)
-PASS tests/unit/emailService.test.js          (43 tests)
+PASS tests/unit/emailService.test.js          (46 tests)
 PASS tests/unit/incidentModel.test.js         (19 tests)
 PASS tests/unit/userModel.test.js             (10 tests)
 PASS tests/unit/authController.test.js        (15 tests)
@@ -574,6 +575,7 @@ PASS tests/unit/upload.middleware.test.js      (8 tests)
 PASS tests/unit/satisfactionVoteModel.test.js  (7 tests)
 PASS tests/unit/webhookController.test.js     (10 tests)
 PASS tests/unit/incidentController.test.js     (7 tests)
+PASS tests/unit/turnstile.test.js              (7 tests)
 PASS tests/integration/incidents.test.js      (44 tests)
 PASS tests/integration/auth.test.js            (4 tests)
 PASS tests/integration/satisfaction.test.js    (8 tests)
@@ -581,9 +583,11 @@ PASS tests/integration/contact.test.js         (7 tests)
 PASS tests/integration/cors.test.js            (3 tests)
 PASS tests/security/security.test.js           (5 tests)
 
-Test Suites: 16 passed, 16 total
-Tests:       208 passed, 208 total
+Test Suites: 17 passed, 17 total
+Tests:       218 passed, 218 total
 ```
+
+`turnstile.test.js` (new 22/07/26) covers `verifyTurnstile`'s environment bypass/fail-closed behaviour, missing-token rejection, Cloudflare success/failure responses, and the network-unavailable case. The 3 new `emailService.test.js` cases cover `recordComplaintSent` — that a successful send records a timestamped confirmation per recipient, and that a MongoDB persistence failure there doesn't reject the whole `sendComplaintEmails` call.
 
 **Frontend** (`npm test` in `/frontend`):
 
@@ -620,23 +624,23 @@ Running 30 tests using 5 workers
 
 #### Backend Coverage
 
-*(refreshed 20/07/26 — `incidentController.js` gained coverage from the IDOR-fix redaction branches (now 78.39% statements, up from 75.84%); `auth.js` middleware briefly dropped to 95.45% when the new `isAdminRequest` helper's invalid-token catch branch went untested, closed same-session with UT-072-A – UT-072-D, back to 100%)*
+*(refreshed 22/07/26 — `app.js` branch coverage jumped from 40.0% to 69.2% now that `trust proxy` is set and exercised; `turnstile.js` added at 100% statements/91.7% branch; `emailService.js` and `webhookController.js` both ticked up slightly from the new `recordComplaintSent` tracking. Carries forward the 20/07/26 refresh where `incidentController.js` gained coverage from the IDOR-fix redaction branches (78.39% statements, up from 75.84%) and `auth.js` middleware briefly dropped to 95.45% when the new `isAdminRequest` helper's invalid-token catch branch went untested, closed same-session with UT-072-A – UT-072-D, back to 100%)*
 
 ```
 ----------------------------|---------|----------|---------|---------|
 File                        | % Stmts | % Branch | % Funcs | % Lines |
 ----------------------------|---------|----------|---------|---------|
-All files                   |   86.53 |    77.32 |   91.52 |    88.60 |
- app.js                     |   77.35 |    40.00 |   42.85 |   83.33 |
+All files                   |   87.81 |    80.07 |   95.38 |    89.34 |
+ app.js                     |   84.84 |    69.23 |   75.00 |   86.88 |
  controllers/                |         |          |         |         |
   authController.js          |  100.00 |   100.00 |  100.00 |  100.00 |
   contactController.js       |   90.47 |   100.00 |  100.00 |   90.47 |
-  incidentController.js      |   78.39 |    74.46 |   94.73 |   79.67 |
+  incidentController.js      |   78.04 |    73.46 |   94.73 |   79.27 |
   satisfactionController.js  |   72.41 |    66.66 |  100.00 |   71.42 |
-  webhookController.js       |   93.10 |    71.42 |  100.00 |  100.00 |
+  webhookController.js       |   94.11 |    77.77 |  100.00 |  100.00 |
  middleware/                 |         |          |         |         |
   auth.js                    |  100.00 |   100.00 |  100.00 |  100.00 |
-  upload.js                  |   95.65 |    96.96 |  100.00 |  100.00 |
+  upload.js                  |   95.83 |    96.96 |  100.00 |  100.00 |
  models/                     |         |          |         |         |
   Incident.js                |  100.00 |   100.00 |  100.00 |  100.00 |
   SatisfactionVote.js        |  100.00 |   100.00 |  100.00 |  100.00 |
@@ -648,9 +652,10 @@ All files                   |   86.53 |    77.32 |   91.52 |    88.60 |
   satisfaction.js            |  100.00 |   100.00 |  100.00 |  100.00 |
   webhooks.js                |  100.00 |   100.00 |  100.00 |  100.00 |
  services/                   |         |          |         |         |
-  emailService.js            |   93.05 |    71.05 |  100.00 |   96.92 |
+  emailService.js            |   93.58 |    72.22 |  100.00 |   97.18 |
  utils/                      |         |          |         |         |
   idUtils.js                 |  100.00 |   100.00 |  100.00 |  100.00 |
+  turnstile.js                |  100.00 |    91.66 |  100.00 |  100.00 |
   validators.js               |  100.00 |   100.00 |  100.00 |  100.00 |
 ----------------------------|---------|----------|---------|---------|
 ```
@@ -658,12 +663,13 @@ All files                   |   86.53 |    77.32 |   91.52 |    88.60 |
 **Key observations:**
 - `auth.js`, `authController.js`, `Incident.js`, `SatisfactionVote.js`, `User.js`, `idUtils.js`, `validators.js`, `routes/*` — 100% across all metrics
 - `contactController.js` — 90.5% statements; the two uncovered lines are the generic 500 catch-block, not exercised by IT-045–051 which only cover the validation and success paths
-- `upload.js` — 95.6% statements (one unreachable branch in the WebP multi-file path; all critical paths covered by UT-038–UT-042)
-- `emailService.js` — 93% statements/97% lines; ~71% branch (untested branches are template literal ternary expressions for optional photo count display — not logic branches)
-- `webhookController.js` — 93.1% statements, 71.4% branch; uncovered branches are the `event.data?.tags`/`typeof email !== 'string'`/malformed-address defensive fallbacks in `maskEmail` — every test scenario sends well-formed data, so these defensive-only paths are never exercised
-- `incidentController.js` — 78.4% statements (up from 64.3% pre-19/07 — `tests/unit/incidentController.test.js` covers the generic-500-error path on 7 endpoints, and the 20/07 IDOR-fix redaction branches added further coverage); remaining uncovered paths are type-specific field extraction branches (graffiti, antisocial, safetyhazard, maintenance sub-fields), S3 upload error handling in `createIncident`, and the full body of `addPhoto` (all exercised by manual testing, not yet by an automated test)
+- `upload.js` — 95.8% statements (one unreachable branch in the WebP multi-file path; all critical paths covered by UT-038–UT-042)
+- `emailService.js` — 93.6% statements/97.2% lines; ~72% branch (untested branches are template literal ternary expressions for optional photo count display, not logic branches)
+- `turnstile.js` (new 22/07/26) — 100% statements, 91.7% branch; the one uncovered branch is the `if (remoteIp)` false case in the siteverify request body, since every test provides a remote IP
+- `webhookController.js` — 94.1% statements, 77.8% branch; uncovered branches are the `event.data?.tags`/`typeof email !== 'string'`/malformed-address defensive fallbacks in `maskEmail` — every test scenario sends well-formed data, so these defensive-only paths are never exercised
+- `incidentController.js` — 78.0% statements; remaining uncovered paths are type-specific field extraction branches (graffiti, antisocial, safetyhazard, maintenance sub-fields), S3 upload error handling in `createIncident`, and the full body of `addPhoto` (all exercised by manual testing, not yet by an automated test)
 - `satisfactionController.js` — 72.4% statements; uncovered paths are error-handling branches
-- `app.js` — 76.5% statements; CORS rejection path and error handlers not exercised in current integration tests (tested manually)
+- `app.js` — 84.8% statements, 69.2% branch (up from 40.0% now that `trust proxy` is set and exercised by the rate limiter/Turnstile remoteip tests); CORS rejection path and remaining error handlers not exercised in current integration tests (tested manually)
 
 #### Frontend Coverage
 

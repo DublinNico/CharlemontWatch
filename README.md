@@ -17,10 +17,13 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 - **Report an incident** — Graffiti, Anti-Social Behaviour, Safety Hazards, and Maintenance Issues, each with type-specific detail fields
 - **Photo evidence** — up to 10 photos per report, validated by real file content (not just declared MIME type) and automatically compressed before storage
 - **Formal complaints** — optionally escalate a report directly to Túath Housing and/or Dublin City Council, with a formatted complaint email sent on the resident's behalf
+- **Complaint-sent confirmation** — the admin dashboard shows a live "Sent" badge per recipient once Resend confirms a complaint email actually delivered, rather than assuming the fire-and-forget send after approval worked
+- **Bot protection** — Cloudflare Turnstile CAPTCHA (verified server-side) plus per-IP rate limiting on report submissions, with the token generated on demand at submit time so a long-filled-out report doesn't submit a stale token
 - **Track by ID** — every report gets a unique `CW-XXXXXX` reference for status lookups, no account required
 - **Satisfaction voting** — residents can publicly rate their satisfaction with Túath Housing (low/medium/high), one vote per email, changeable at any time
 - **Admin dashboard** — JWT-authenticated review queue, photo moderation, and status updates (New → In Progress → Resolved)
 - **Contact Us** — spam-protected general enquiry form for questions, feedback, or press, separate from the incident-report flow
+- **Safety guidance** — clear notices pointing residents to An Garda Síochána directly for emergencies or serious anti-social behaviour, since this platform isn't monitored in real time
 - **Privacy by design** — GDPR-compliant privacy policy, no analytics or third-party tracking, defined data retention periods
 
 ## Screenshots
@@ -37,11 +40,11 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 
 - **Frontend** — React + Vite + TypeScript, React Router, Tailwind CSS, shadcn/ui (Radix UI primitives), Axios, Lucide icons, Leaflet + OpenStreetMap (site footer location map)
 
-- **Backend** — Node.js + Express, MongoDB + Mongoose, JWT auth (bcryptjs), Multer + Sharp (photo upload + compression), AWS S3 (photo storage), Resend (email), Sentry (error monitoring), Helmet + express-rate-limit + express-mongo-sanitize (security hardening)
+- **Backend** — Node.js + Express, MongoDB + Mongoose, JWT auth (bcryptjs), Multer + Sharp (photo upload + compression), AWS S3 (photo storage), Resend (email), Sentry (error monitoring), Helmet + express-rate-limit + express-mongo-sanitize + Cloudflare Turnstile (security hardening)
 
-- **Deployment** — Vercel (frontend), Render (backend API), UptimeRobot (uptime monitoring + cold-start prevention)
+- **Deployment** — Vercel (frontend), Render (backend API), UptimeRobot + a redundant GitHub Actions keep-alive ping (uptime monitoring + cold-start prevention)
 
-- **Testing** — Jest + Supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E), Artillery (load testing) — 267 automated tests (208 backend + 44 frontend + 15 E2E) across unit, integration, security, and E2E suites
+- **Testing** — Jest + Supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E), Artillery (load testing) — 277 automated tests (218 backend + 44 frontend + 15 E2E) across unit, integration, security, and E2E suites
 
 - **CI/CD** — GitHub Actions runs the full backend and frontend suites, a frontend type check, Playwright E2E, and an `npm audit` dependency check on every push to `dev` and PR to `main`, plus a daily encrypted `mongodump` backup workflow (GPG-encrypted before upload since the repo is public)
 

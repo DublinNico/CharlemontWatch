@@ -273,20 +273,20 @@ describe('sendComplaintEmails', () => {
     expect(msg.html).toContain('Block A, Charlemont Street');
   });
 
-  test('UT-059-A: records a successful send on the incident for each recipient', async () => {
+  test('UT-076-A: records a successful send on the incident for each recipient', async () => {
     await sendComplaintEmails(mockIncident, mockComplainant, ['tuath', 'dcc']);
     expect(mockFindByIdAndUpdate).toHaveBeenCalledTimes(2);
     const recordedTypes = mockFindByIdAndUpdate.mock.calls.map(([, update]) => update.$push.complaintsSent.recipientType);
     expect(recordedTypes.sort()).toEqual(['dcc', 'tuath']);
   });
 
-  test('UT-059-B: does not record a send when Resend itself fails', async () => {
+  test('UT-076-B: does not record a send when Resend itself fails', async () => {
     mockSend.mockRejectedValue(new Error('Resend down'));
     await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
     expect(mockFindByIdAndUpdate).not.toHaveBeenCalled();
   });
 
-  test('UT-059-C: a persistence failure recording the sent confirmation does not reject sendComplaintEmails', async () => {
+  test('UT-076-C: a persistence failure recording the sent confirmation does not reject sendComplaintEmails', async () => {
     mockFindByIdAndUpdate.mockRejectedValue(new Error('Mongo unavailable'));
     await expect(
       sendComplaintEmails(mockIncident, mockComplainant, ['tuath'])
