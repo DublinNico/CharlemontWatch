@@ -44,6 +44,7 @@ const mockIncident = {
 beforeEach(() => {
   jest.clearAllMocks();
   mockSend.mockResolvedValue({ data: { id: 'mock-id' }, error: null });
+  mockFindByIdAndUpdate.mockResolvedValue({});
 });
 
 // ─── sendResidentConfirmation ─────────────────────────────────────────────────
@@ -283,6 +284,14 @@ describe('sendComplaintEmails', () => {
     mockSend.mockRejectedValue(new Error('Resend down'));
     await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
     expect(mockFindByIdAndUpdate).not.toHaveBeenCalled();
+  });
+
+  test('UT-059-C: a persistence failure recording the sent confirmation does not reject sendComplaintEmails', async () => {
+    mockFindByIdAndUpdate.mockRejectedValue(new Error('Mongo unavailable'));
+    await expect(
+      sendComplaintEmails(mockIncident, mockComplainant, ['tuath'])
+    ).resolves.toBeUndefined();
+    expect(mockFindByIdAndUpdate).toHaveBeenCalledTimes(1);
   });
 
   test('UT-038-G: swallows Resend errors silently', async () => {

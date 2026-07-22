@@ -146,6 +146,10 @@ export function About() {
                   <span className="text-[#f57c00]">•</span>
                   <span>Respect privacy while maintaining accountability</span>
                 </li>
+                <li className="flex gap-2">
+                  <span className="text-[#f57c00]">•</span>
+                  <span>For a crime in progress, an emergency, or serious anti-social behaviour, contact An Garda Síochána directly — this platform isn't monitored in real time</span>
+                </li>
               </ul>
             </div>
           </div>

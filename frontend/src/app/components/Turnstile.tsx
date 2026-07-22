@@ -60,6 +60,12 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
   function TurnstileWidget({ onVerify, onExpire, onError }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetId = useRef<string | null>(null);
+    // execute() can be called before render() has finished (script still
+    // loading) — Cloudflare's execute() requires the widget to already be
+    // rendered on the container, so a call that arrives too early is queued
+    // here and flushed the moment render() completes, instead of silently
+    // doing nothing.
+    const pendingExecuteRef = useRef(false);
     const id = useId();
     const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
@@ -70,8 +76,10 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
         }
       },
       execute: () => {
-        if (containerRef.current && window.turnstile) {
+        if (widgetId.current && containerRef.current && window.turnstile) {
           window.turnstile.execute(containerRef.current);
+        } else {
+          pendingExecuteRef.current = true;
         }
       },
     }), []);
@@ -89,6 +97,10 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
           'expired-callback': onExpire,
           'error-callback': onError,
         });
+        if (pendingExecuteRef.current) {
+          pendingExecuteRef.current = false;
+          window.turnstile.execute(containerRef.current);
+        }
       }).catch(error => {
         console.error(error);
         onError?.();

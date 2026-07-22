@@ -31,6 +31,7 @@ export function ReportIncident() {
   const [submitError, setSubmitError] = useState('');
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
   const turnstileResolveRef = useRef<((token: string) => void) | null>(null);
+  const turnstileRejectRef = useRef<((error: Error) => void) | null>(null);
 
   // Requests a fresh Turnstile token at the moment it's actually needed,
   // rather than reusing whatever token (if any) was captured whenever the
@@ -40,10 +41,12 @@ export function ReportIncident() {
     if (!import.meta.env.VITE_TURNSTILE_SITE_KEY) return Promise.resolve('');
     return new Promise((resolve, reject) => {
       turnstileResolveRef.current = resolve;
+      turnstileRejectRef.current = reject;
       turnstileRef.current?.execute();
       setTimeout(() => {
         if (turnstileResolveRef.current === resolve) {
           turnstileResolveRef.current = null;
+          turnstileRejectRef.current = null;
           reject(new Error('Verification challenge timed out'));
         }
       }, 15000);
@@ -88,8 +91,14 @@ export function ReportIncident() {
     let turnstileToken = '';
     try {
       turnstileToken = await requestTurnstileToken();
-    } catch {
-      setSubmitError('Verification challenge timed out. Please try again.');
+    } catch (err: any) {
+      // onError/onExpire below already set a specific message when that's
+      // what caused the rejection — only fall back to a generic one for the
+      // plain 15s timeout case, so we don't overwrite a more useful message.
+      if (err?.message === 'Verification challenge timed out') {
+        setSubmitError('Verification challenge timed out. Please try again.');
+      }
+      turnstileRef.current?.reset();
       setIsSubmitting(false);
       return;
     }
@@ -243,6 +252,14 @@ export function ReportIncident() {
               <CardDescription>Additional information about the incident</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="flex gap-3 p-3 bg-white border border-red-200 rounded-lg">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-900">
+                  For a crime in progress, an emergency, or serious anti-social behaviour, contact An Garda
+                  Síochána directly. This platform isn't monitored in real time, and reports submitted here are
+                  not sent to An Garda Síochána.
+                </p>
+              </div>
               <div>
                 <Label htmlFor="antisocial-type">Type of Behaviour</Label>
                 <Select
@@ -671,8 +688,20 @@ export function ReportIncident() {
             onVerify={token => {
               turnstileResolveRef.current?.(token);
               turnstileResolveRef.current = null;
+              turnstileRejectRef.current = null;
             }}
-            onError={() => setSubmitError('Verification challenge failed to load. Please refresh the page and try again.')}
+            onExpire={() => {
+              setSubmitError('Verification challenge expired. Please try again.');
+              turnstileRejectRef.current?.(new Error('Turnstile challenge expired'));
+              turnstileResolveRef.current = null;
+              turnstileRejectRef.current = null;
+            }}
+            onError={() => {
+              setSubmitError('Verification challenge failed to load. Please refresh the page and try again.');
+              turnstileRejectRef.current?.(new Error('Turnstile widget error'));
+              turnstileResolveRef.current = null;
+              turnstileRejectRef.current = null;
+            }}
           />
 
           <div className="flex gap-4">

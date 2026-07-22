@@ -51,7 +51,7 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
             {incident.sendComplaintTo && incident.sendComplaintTo.length > 0 && (
               isQueue ? (
                 <span
-                  className="text-xs font-semibold text-white bg-[#d32f2f] px-2 py-1 rounded"
+                  className="text-xs font-semibold text-white bg-destructive px-2 py-1 rounded"
                   title="Approving this will email a formal complaint"
                 >
                   Complaint: {incident.sendComplaintTo.map(o => o === 'tuath' ? 'Túath' : 'DCC').join(', ')}
@@ -63,7 +63,7 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
                   return (
                     <span
                       key={recipient}
-                      className={`flex items-center gap-1 text-xs font-semibold text-white px-2 py-1 rounded ${sent ? 'bg-emerald-600' : 'bg-[#d32f2f]'}`}
+                      className={`flex items-center gap-1 text-xs font-semibold text-white px-2 py-1 rounded ${sent ? 'bg-emerald-600' : 'bg-destructive'}`}
                       title={sent ? `Complaint confirmed sent to ${label}` : `Complaint to ${label} has not been confirmed sent yet`}
                     >
                       {sent && <CheckCircle className="w-3 h-3" />}

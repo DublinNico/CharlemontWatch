@@ -99,8 +99,8 @@ const incidentSchema = new mongoose.Schema({
   // dashboard show a real "sent" confirmation instead of just assuming the
   // fire-and-forget send after approval worked.
   complaintsSent: [{
-    recipientType: { type: String, enum: ['tuath', 'dcc'] },
-    sentAt: { type: Date, default: Date.now }
+    recipientType: { type: String, enum: ['tuath', 'dcc'], required: true },
+    sentAt: { type: Date, default: Date.now, required: true }
   }],
 
   createdAt: { type: Date, default: Date.now },
