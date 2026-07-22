@@ -6,6 +6,7 @@ declare global {
       render: (container: HTMLElement, options: Record<string, unknown>) => string;
       remove: (widgetId: string) => void;
       reset: (widgetId: string) => void;
+      execute: (container: HTMLElement, options?: Record<string, unknown>) => void;
     };
   }
 }
@@ -42,11 +43,19 @@ interface TurnstileWidgetProps {
 
 export interface TurnstileWidgetHandle {
   reset: () => void;
+  execute: () => void;
 }
 
 // Renders a Cloudflare Turnstile challenge and reports the verification token
 // back to the parent form. Renders nothing if VITE_TURNSTILE_SITE_KEY isn't
 // set, so the CAPTCHA step is opt-in until that's configured.
+//
+// Uses execution: 'execute' rather than the default auto-run — reports here
+// can take residents several minutes to fill out (writing a description,
+// taking/uploading several photos, often backgrounding the tab for the
+// camera), and Turnstile tokens expire after ~5 minutes with unreliable
+// auto-refresh on a backgrounded mobile tab. Generating the token on-demand
+// right before submit, via execute(), avoids submitting a stale token.
 export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidgetProps>(
   function TurnstileWidget({ onVerify, onExpire, onError }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -60,6 +69,11 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
           window.turnstile.reset(widgetId.current);
         }
       },
+      execute: () => {
+        if (containerRef.current && window.turnstile) {
+          window.turnstile.execute(containerRef.current);
+        }
+      },
     }), []);
 
     useEffect(() => {
@@ -70,6 +84,7 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
         if (cancelled || !containerRef.current || !window.turnstile) return;
         widgetId.current = window.turnstile.render(containerRef.current, {
           sitekey: siteKey,
+          execution: 'execute',
           callback: onVerify,
           'expired-callback': onExpire,
           'error-callback': onError,

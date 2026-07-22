@@ -29,8 +29,26 @@ export function ReportIncident() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
-  const [turnstileToken, setTurnstileToken] = useState('');
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
+  const turnstileResolveRef = useRef<((token: string) => void) | null>(null);
+
+  // Requests a fresh Turnstile token at the moment it's actually needed,
+  // rather than reusing whatever token (if any) was captured whenever the
+  // widget first loaded — reports can take residents several minutes to
+  // fill out, long enough for an earlier token to expire.
+  const requestTurnstileToken = (): Promise<string> => {
+    if (!import.meta.env.VITE_TURNSTILE_SITE_KEY) return Promise.resolve('');
+    return new Promise((resolve, reject) => {
+      turnstileResolveRef.current = resolve;
+      turnstileRef.current?.execute();
+      setTimeout(() => {
+        if (turnstileResolveRef.current === resolve) {
+          turnstileResolveRef.current = null;
+          reject(new Error('Verification challenge timed out'));
+        }
+      }, 15000);
+    });
+  };
 
   const [complaint, setComplaint] = useState({
     sendToTuath: true,
@@ -64,13 +82,17 @@ export function ReportIncident() {
       return;
     }
 
-    if (import.meta.env.VITE_TURNSTILE_SITE_KEY && !turnstileToken) {
-      setSubmitError('Please complete the verification challenge.');
-      return;
-    }
-
     setIsSubmitting(true);
     setSubmitError('');
+
+    let turnstileToken = '';
+    try {
+      turnstileToken = await requestTurnstileToken();
+    } catch {
+      setSubmitError('Verification challenge timed out. Please try again.');
+      setIsSubmitting(false);
+      return;
+    }
 
     const complaintData: ComplaintData | undefined = sendingComplaint ? {
       name: complainantName,
@@ -95,9 +117,9 @@ export function ReportIncident() {
     } catch (err: any) {
       setSubmitError(err.response?.data?.error || 'Failed to submit report. Please check your connection and try again.');
       // Turnstile tokens are single-use — Cloudflare will reject a retry with
-      // the same token even if the original failure was unrelated, so clear
-      // it and force a fresh challenge before the next submit attempt.
-      setTurnstileToken('');
+      // the same token even if the original failure was unrelated, so reset
+      // the widget; the next submit attempt requests a fresh one anyway via
+      // requestTurnstileToken(), but this clears any stuck internal state.
       turnstileRef.current?.reset();
     } finally {
       setIsSubmitting(false);
@@ -580,9 +602,19 @@ export function ReportIncident() {
                     onCheckedChange={v => setComplaint(c => ({ ...c, sendToDCC: !!v }))}
                   />
                   <Label htmlFor="send-dcc" className="cursor-pointer font-medium">
-                    Dublin City Council
+                    <span className="whitespace-nowrap">Dublin City Council</span>
                     <span className="block text-xs text-muted-foreground font-normal">
-                      For issues on public roads, footpaths, or council-managed areas
+                      For issues on public roads, footpaths, or council-managed areas. DCC directs these through their{' '}
+                      <a
+                        href="https://citizenhub.dublincity.ie/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        Citizen Hub
+                      </a>{' '}
+                      portal — we still send this automatically as a courtesy, but for a guaranteed formal response you may also want to submit there directly.
                     </span>
                   </Label>
                 </div>
@@ -636,8 +668,10 @@ export function ReportIncident() {
 
           <TurnstileWidget
             ref={turnstileRef}
-            onVerify={setTurnstileToken}
-            onExpire={() => setTurnstileToken('')}
+            onVerify={token => {
+              turnstileResolveRef.current?.(token);
+              turnstileResolveRef.current = null;
+            }}
             onError={() => setSubmitError('Verification challenge failed to load. Please refresh the page and try again.')}
           />
 
