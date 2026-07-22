@@ -56,7 +56,7 @@ export function AllIncidents() {
             <p className="text-muted-foreground">Browse and filter community reports</p>
           </div>
 
-          <div className="flex md:flex-1 justify-between md:justify-center gap-3 md:gap-6 w-full md:w-auto">
+          <div className="grid grid-cols-2 md:flex md:flex-1 gap-3 md:gap-6 w-full md:w-auto md:justify-center">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
                 <div className={`text-[44px] leading-none font-bold ${stat.color}`}>{stat.value}</div>

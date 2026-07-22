@@ -43,8 +43,11 @@ const createIncident = async (req, res) => {
 
     // Bot check — runs first so scripted floods are rejected before any
     // validation, S3 upload, or email work happens
-    const turnstileOk = await verifyTurnstile(req.body.turnstileToken, req.ip);
-    if (!turnstileOk) {
+    const turnstileResult = await verifyTurnstile(req.body.turnstileToken, req.ip);
+    if (turnstileResult === 'unavailable') {
+      return res.status(503).json({ error: 'Verification service is temporarily unavailable. Please try again shortly.' });
+    }
+    if (!turnstileResult) {
       return res.status(400).json({ error: 'CAPTCHA verification failed. Please try again.' });
     }
 

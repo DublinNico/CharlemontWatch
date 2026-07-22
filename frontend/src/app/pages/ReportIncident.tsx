@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { ArrowLeft, Upload, X, AlertCircle, MapPin, FileText, Mail, ImageIcon, User, Send } from 'lucide-react';
 
 import { useNavigate } from 'react-router';
@@ -10,7 +10,7 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { Checkbox } from '../components/ui/checkbox';
-import { TurnstileWidget } from '../components/Turnstile';
+import { TurnstileWidget, TurnstileWidgetHandle } from '../components/Turnstile';
 
 // Incident report submission form — type selection, common fields, per-type
 // detail fields, photo upload, and optional formal complaint escalation
@@ -30,6 +30,7 @@ export function ReportIncident() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
   const [complaint, setComplaint] = useState({
     sendToTuath: true,
@@ -93,6 +94,11 @@ export function ReportIncident() {
       navigate(`/success/${incidentId}?complaint=${sendingComplaint}`);
     } catch (err: any) {
       setSubmitError(err.response?.data?.error || 'Failed to submit report. Please check your connection and try again.');
+      // Turnstile tokens are single-use — Cloudflare will reject a retry with
+      // the same token even if the original failure was unrelated, so clear
+      // it and force a fresh challenge before the next submit attempt.
+      setTurnstileToken('');
+      turnstileRef.current?.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -628,7 +634,12 @@ export function ReportIncident() {
             </CardContent>
           </Card>
 
-          <TurnstileWidget onVerify={setTurnstileToken} onExpire={() => setTurnstileToken('')} />
+          <TurnstileWidget
+            ref={turnstileRef}
+            onVerify={setTurnstileToken}
+            onExpire={() => setTurnstileToken('')}
+            onError={() => setSubmitError('Verification challenge failed to load. Please refresh the page and try again.')}
+          />
 
           <div className="flex gap-4">
             <Button

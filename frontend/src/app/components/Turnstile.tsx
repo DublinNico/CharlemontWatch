@@ -1,10 +1,11 @@
-import { useEffect, useId, useRef } from 'react';
+import { forwardRef, useEffect, useId, useImperativeHandle, useRef } from 'react';
 
 declare global {
   interface Window {
     turnstile?: {
       render: (container: HTMLElement, options: Record<string, unknown>) => string;
       remove: (widgetId: string) => void;
+      reset: (widgetId: string) => void;
     };
   }
 }
@@ -21,7 +22,12 @@ const loadTurnstileScript = (): Promise<void> => {
       script.async = true;
       script.defer = true;
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Turnstile script'));
+      script.onerror = () => {
+        // Clear the cached promise so a later remount can retry the load
+        // instead of replaying the same rejection forever.
+        scriptLoadingPromise = null;
+        reject(new Error('Failed to load Turnstile script'));
+      };
       document.head.appendChild(script);
     });
   }
@@ -31,40 +37,59 @@ const loadTurnstileScript = (): Promise<void> => {
 interface TurnstileWidgetProps {
   onVerify: (token: string) => void;
   onExpire?: () => void;
+  onError?: () => void;
+}
+
+export interface TurnstileWidgetHandle {
+  reset: () => void;
 }
 
 // Renders a Cloudflare Turnstile challenge and reports the verification token
 // back to the parent form. Renders nothing if VITE_TURNSTILE_SITE_KEY isn't
 // set, so the CAPTCHA step is opt-in until that's configured.
-export function TurnstileWidget({ onVerify, onExpire }: TurnstileWidgetProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const widgetId = useRef<string | null>(null);
-  const id = useId();
-  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidgetProps>(
+  function TurnstileWidget({ onVerify, onExpire, onError }, ref) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const widgetId = useRef<string | null>(null);
+    const id = useId();
+    const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
-  useEffect(() => {
-    if (!siteKey || !containerRef.current) return;
+    useImperativeHandle(ref, () => ({
+      reset: () => {
+        if (widgetId.current && window.turnstile) {
+          window.turnstile.reset(widgetId.current);
+        }
+      },
+    }), []);
 
-    let cancelled = false;
-    loadTurnstileScript().then(() => {
-      if (cancelled || !containerRef.current || !window.turnstile) return;
-      widgetId.current = window.turnstile.render(containerRef.current, {
-        sitekey: siteKey,
-        callback: onVerify,
-        'expired-callback': onExpire,
+    useEffect(() => {
+      if (!siteKey || !containerRef.current) return;
+
+      let cancelled = false;
+      loadTurnstileScript().then(() => {
+        if (cancelled || !containerRef.current || !window.turnstile) return;
+        widgetId.current = window.turnstile.render(containerRef.current, {
+          sitekey: siteKey,
+          callback: onVerify,
+          'expired-callback': onExpire,
+          'error-callback': onError,
+        });
+      }).catch(error => {
+        console.error(error);
+        onError?.();
       });
-    }).catch(error => console.error(error));
 
-    return () => {
-      cancelled = true;
-      if (widgetId.current && window.turnstile) {
-        window.turnstile.remove(widgetId.current);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      return () => {
+        cancelled = true;
+        if (widgetId.current && window.turnstile) {
+          window.turnstile.remove(widgetId.current);
+        }
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-  if (!siteKey) return null;
+    if (!siteKey) return null;
 
-  return <div ref={containerRef} id={`turnstile-${id}`} className="my-2" />;
-}
+    return <div ref={containerRef} id={`turnstile-${id}`} className="my-2" />;
+  }
+);
