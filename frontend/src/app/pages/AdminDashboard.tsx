@@ -49,12 +49,29 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
             <span className="text-xs text-white bg-indigo-600 px-2 py-1 rounded">{incident.id}</span>
             {!isQueue && <StatusBadge status={incident.status} />}
             {incident.sendComplaintTo && incident.sendComplaintTo.length > 0 && (
-              <span
-                className="text-xs font-semibold text-white bg-[#d32f2f] px-2 py-1 rounded"
-                title={isQueue ? 'Approving this will email a formal complaint' : 'A formal complaint was sent when this was approved'}
-              >
-                Complaint: {incident.sendComplaintTo.map(o => o === 'tuath' ? 'Túath' : 'DCC').join(', ')}
-              </span>
+              isQueue ? (
+                <span
+                  className="text-xs font-semibold text-white bg-[#d32f2f] px-2 py-1 rounded"
+                  title="Approving this will email a formal complaint"
+                >
+                  Complaint: {incident.sendComplaintTo.map(o => o === 'tuath' ? 'Túath' : 'DCC').join(', ')}
+                </span>
+              ) : (
+                incident.sendComplaintTo.map(recipient => {
+                  const sent = incident.complaintsSent?.some(c => c.recipientType === recipient);
+                  const label = recipient === 'tuath' ? 'Túath' : 'DCC';
+                  return (
+                    <span
+                      key={recipient}
+                      className={`flex items-center gap-1 text-xs font-semibold text-white px-2 py-1 rounded ${sent ? 'bg-emerald-600' : 'bg-[#d32f2f]'}`}
+                      title={sent ? `Complaint confirmed sent to ${label}` : `Complaint to ${label} has not been confirmed sent yet`}
+                    >
+                      {sent && <CheckCircle className="w-3 h-3" />}
+                      {label}{sent ? ' Sent' : ''}
+                    </span>
+                  );
+                })
+              )
             )}
           </div>
 

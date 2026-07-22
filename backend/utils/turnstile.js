@@ -30,6 +30,9 @@ const verifyTurnstile = async (token, remoteIp) => {
       signal: AbortSignal.timeout(5000),
     });
     const data = await res.json();
+    if (!data.success) {
+      console.warn('Turnstile verification rejected:', data['error-codes']);
+    }
     return data.success === true;
   } catch (error) {
     console.error('Turnstile verification request failed:', error);

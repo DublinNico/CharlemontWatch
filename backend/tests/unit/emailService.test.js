@@ -1,9 +1,17 @@
 const mockSend = jest.fn().mockResolvedValue({ data: { id: 'mock-id' }, error: null });
+const mockFindByIdAndUpdate = jest.fn().mockResolvedValue({});
 
 jest.mock('resend', () => ({
   Resend: jest.fn().mockImplementation(() => ({
     emails: { send: mockSend }
   }))
+}));
+
+// This test file has no real MongoDB connection, so without mocking this,
+// sendComplaintEmails' fire-and-forget Incident.findByIdAndUpdate call would
+// buffer forever waiting to connect and hang every test that awaits it.
+jest.mock('../../models/Incident', () => ({
+  findByIdAndUpdate: (...args) => mockFindByIdAndUpdate(...args)
 }));
 
 process.env.RESEND_API_KEY = 'test-key';
@@ -262,6 +270,19 @@ describe('sendComplaintEmails', () => {
     await sendComplaintEmails(mockIncident, mockComplainant, ['dcc']);
     const msg = mockSend.mock.calls[0][0];
     expect(msg.html).toContain('Block A, Charlemont Street');
+  });
+
+  test('UT-059-A: records a successful send on the incident for each recipient', async () => {
+    await sendComplaintEmails(mockIncident, mockComplainant, ['tuath', 'dcc']);
+    expect(mockFindByIdAndUpdate).toHaveBeenCalledTimes(2);
+    const recordedTypes = mockFindByIdAndUpdate.mock.calls.map(([, update]) => update.$push.complaintsSent.recipientType);
+    expect(recordedTypes.sort()).toEqual(['dcc', 'tuath']);
+  });
+
+  test('UT-059-B: does not record a send when Resend itself fails', async () => {
+    mockSend.mockRejectedValue(new Error('Resend down'));
+    await sendComplaintEmails(mockIncident, mockComplainant, ['tuath']);
+    expect(mockFindByIdAndUpdate).not.toHaveBeenCalled();
   });
 
   test('UT-038-G: swallows Resend errors silently', async () => {

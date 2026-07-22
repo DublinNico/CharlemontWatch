@@ -1,0 +1,22 @@
+name: Keep Render Instance Warm
+
+# Render's free tier spins the backend down after ~15 min of inactivity, and
+# the next request pays a 50s+ cold-start penalty. UptimeRobot is meant to
+# ping /api/health often enough to prevent that, but on 2026-07-22 it left a
+# ~36-minute gap between checks (cause unconfirmed), long enough for the
+# instance to sleep and the next check to catch a 502. This is an
+# independent second ping source — even if UptimeRobot skips a beat, this
+# runs on its own schedule so a single gap on one side doesn't leave the
+# instance unmonitored/asleep.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    name: Ping /api/health
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Ping health endpoint
+        run: curl -sf --max-time 60 https://charlemontwatch.onrender.com/api/health

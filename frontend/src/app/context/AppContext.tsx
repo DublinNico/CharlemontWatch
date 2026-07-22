@@ -47,6 +47,10 @@ export interface Incident {
   // Populated by the Resend bounce webhook when a complaint email to Túath/DCC
   // bounces, gets marked spam, or is delayed — empty/absent means no known issue
   complaintDeliveryIssues?: { recipientType: 'tuath' | 'dcc'; eventType: string; occurredAt: string }[];
+  // Populated once a complaint email to a recipient actually sends
+  // successfully — lets the admin dashboard confirm a send rather than
+  // assuming the fire-and-forget send after approval worked
+  complaintsSent?: { recipientType: 'tuath' | 'dcc'; sentAt: string }[];
 }
 
 export interface User {

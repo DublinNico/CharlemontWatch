@@ -94,6 +94,15 @@ const incidentSchema = new mongoose.Schema({
     occurredAt: { type: Date, default: Date.now }
   }],
 
+  // Populated once a complaint email to a recipient actually sends
+  // successfully (see emailService.sendComplaintEmails) — lets the admin
+  // dashboard show a real "sent" confirmation instead of just assuming the
+  // fire-and-forget send after approval worked.
+  complaintsSent: [{
+    recipientType: { type: String, enum: ['tuath', 'dcc'] },
+    sentAt: { type: Date, default: Date.now }
+  }],
+
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
