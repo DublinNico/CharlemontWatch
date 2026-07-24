@@ -28,14 +28,24 @@ describe('businessDaysSince', () => {
   });
 
   test('UT-080: returns 30 at the overdue threshold boundary', () => {
-    expect(businessDaysSince('2025-12-04T09:00:00Z')).toBe(30);
+    // 2025-12-01 -> 2026-01-15 crosses Christmas Day, St. Stephen's Day, and
+    // New Year's Day, all excluded as Irish public holidays
+    expect(businessDaysSince('2025-12-01T09:00:00Z')).toBe(30);
   });
 
   test('UT-081: returns 29 one working day short of the threshold', () => {
-    expect(businessDaysSince('2025-12-05T09:00:00Z')).toBe(29);
+    expect(businessDaysSince('2025-12-02T09:00:00Z')).toBe(29);
   });
 
   test('UT-082: accepts a Date instance as well as an ISO string', () => {
     expect(businessDaysSince(new Date('2026-01-14T09:00:00Z'))).toBe(1);
+  });
+
+  test('UT-089: excludes an Irish public holiday that falls on a weekday', () => {
+    // Now = Mon 2026-01-05. Without holiday-awareness, Wed 2025-12-31 ->
+    // Mon 2026-01-05 would count 3 weekdays (Thu 1 Jan, Fri 2 Jan, Mon 5 Jan).
+    // New Year's Day (Thu 1 Jan) is a public holiday, so only 2 count.
+    jest.setSystemTime(new Date('2026-01-05T12:00:00Z'));
+    expect(businessDaysSince('2025-12-31T09:00:00Z')).toBe(2);
   });
 });

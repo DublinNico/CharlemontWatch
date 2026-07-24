@@ -2,8 +2,10 @@ const { computeOverdueComplaints } = require('../../controllers/incidentControll
 
 // Thursday — matches the fixture used in businessDays.test.js
 const NOW = new Date('2026-01-15T12:00:00Z');
-const THIRTY_BUSINESS_DAYS_AGO = '2025-12-04T09:00:00Z';
-const TWENTY_NINE_BUSINESS_DAYS_AGO = '2025-12-05T09:00:00Z';
+// 2025-12-01 -> 2026-01-15 crosses Christmas Day, St. Stephen's Day, and New
+// Year's Day, all excluded as Irish public holidays (see businessDays.test.js)
+const THIRTY_BUSINESS_DAYS_AGO = '2025-12-01T09:00:00Z';
+const TWENTY_NINE_BUSINESS_DAYS_AGO = '2025-12-02T09:00:00Z';
 
 beforeEach(() => {
   jest.useFakeTimers();
