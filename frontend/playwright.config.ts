@@ -26,7 +26,11 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run start -- --port 5173',
+    // --mode test picks up .env.test, which blanks VITE_TURNSTILE_SITE_KEY —
+    // without it the dev server loads the real site key from .env and the
+    // widget attempts a genuine Cloudflare challenge, which never resolves
+    // in a headless/automated browser and hangs every form-submit test.
+    command: 'npm run start -- --mode test --port 5173',
     port: 5173,
     reuseExistingServer: true,
     timeout: 30000,

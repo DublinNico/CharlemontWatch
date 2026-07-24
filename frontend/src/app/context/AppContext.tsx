@@ -51,6 +51,9 @@ export interface Incident {
   // successfully — lets the admin dashboard confirm a send rather than
   // assuming the fire-and-forget send after approval worked
   complaintsSent?: { recipientType: 'tuath' | 'dcc'; sentAt: string }[];
+  // Server-computed: recipients whose complaint was sent 30+ working days ago
+  // with no response logged yet, while the incident is still NEW/IN_PROGRESS
+  overdueComplaints?: { recipientType: 'tuath' | 'dcc'; sentAt: string; businessDaysElapsed: number }[];
 }
 
 export interface User {
@@ -139,6 +142,8 @@ function mapApiToIncident(api: any): Incident {
     typeSpecificData: Object.keys(typeSpecificData).length > 0 ? typeSpecificData : undefined,
     sendComplaintTo: api.sendComplaintTo,
     complaintDeliveryIssues: api.complaintDeliveryIssues,
+    complaintsSent: api.complaintsSent,
+    overdueComplaints: api.overdueComplaints,
   };
 }
 

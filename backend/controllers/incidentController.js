@@ -7,8 +7,23 @@ const { EMAIL_REGEX } = require('../utils/validators');
 const { isAdminRequest } = require('../middleware/auth');
 const { sendResidentConfirmation, sendAdminNotification, sendStatusUpdate, sendComplaintEmails } = require('../services/emailService');
 const { verifyTurnstile } = require('../utils/turnstile');
+const { businessDaysSince } = require('../utils/businessDays');
 
 const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
+
+// A formal complaint is expected to get a written response within 30 working
+// days. Only flagged while an incident is actively open (RESOLVED/REJECTED
+// mean it's already been dealt with one way or another; PENDING_REVIEW hasn't
+// had a complaint sent yet).
+const OVERDUE_THRESHOLD_DAYS = 30;
+const OVERDUE_ELIGIBLE_STATUSES = ['NEW', 'IN_PROGRESS'];
+
+const computeOverdueComplaints = (incident) => {
+  if (!OVERDUE_ELIGIBLE_STATUSES.includes(incident.status)) return [];
+  return (incident.complaintsSent || [])
+    .map(c => ({ recipientType: c.recipientType, sentAt: c.sentAt, businessDaysElapsed: businessDaysSince(c.sentAt) }))
+    .filter(c => c.businessDaysElapsed >= OVERDUE_THRESHOLD_DAYS);
+};
 
 // Looks an incident up by its human-friendly shortId first, falling back to
 // the raw MongoDB ObjectId — lets both the public tracking page and admin
@@ -174,16 +189,21 @@ const getIncident = async (req, res) => {
       return res.status(404).json({ error: 'Incident not found' });
     }
 
+    const overdueComplaints = computeOverdueComplaints(incident);
+
     if (!isAdminRequest(req)) {
       const sanitized = incident.toObject();
       delete sanitized.reporterEmail;
       delete sanitized.complainantName;
       delete sanitized.complainantAddress;
       sanitized.photos = sanitized.photos.filter(photo => photo.approved);
+      sanitized.overdueComplaints = overdueComplaints;
       return res.json(sanitized);
     }
 
-    res.json(incident);
+    const withOverdue = incident.toObject();
+    withOverdue.overdueComplaints = overdueComplaints;
+    res.json(withOverdue);
   } catch (error) {
     console.error('Get incident error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -216,12 +236,18 @@ const getAllIncidents = async (req, res) => {
         delete obj.complainantName;
         delete obj.complainantAddress;
         obj.photos = obj.photos.filter(photo => photo.approved);
+        obj.overdueComplaints = computeOverdueComplaints(incident);
         return obj;
       });
       return res.json(sanitized);
     }
 
-    res.json(incidents);
+    const withOverdue = incidents.map(incident => {
+      const obj = incident.toObject();
+      obj.overdueComplaints = computeOverdueComplaints(incident);
+      return obj;
+    });
+    res.json(withOverdue);
   } catch (error) {
     console.error('Get all incidents error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -400,5 +426,6 @@ module.exports = {
   reviewPhoto,
   updateIncidentStatus,
   deleteIncident,
-  addPhoto
+  addPhoto,
+  computeOverdueComplaints
 };

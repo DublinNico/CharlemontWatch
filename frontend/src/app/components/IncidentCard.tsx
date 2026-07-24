@@ -115,6 +115,19 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
           </div>
         )}
 
+        {showFullDetails && incident.overdueComplaints && incident.overdueComplaints.length > 0 && (
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-3 text-sm">
+            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div>
+              {incident.overdueComplaints.map(overdue => (
+                <p key={overdue.recipientType}>
+                  Your formal complaint to <strong>{recipientNames[overdue.recipientType]}</strong> was sent {overdue.businessDaysElapsed} working days ago with no response logged — past the 30 working day threshold. You may want to escalate.
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-start gap-2 text-sm">
           <MapPin className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
           <span className="font-medium">{incident.location}</span>
