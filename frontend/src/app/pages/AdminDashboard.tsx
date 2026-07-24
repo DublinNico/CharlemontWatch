@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Trash2, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Trash2, CheckCircle, XCircle, Eye, EyeOff, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { StatusBadge } from '../components/StatusBadge';
@@ -59,15 +59,16 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
               ) : (
                 incident.sendComplaintTo.map(recipient => {
                   const sent = incident.complaintsSent?.some(c => c.recipientType === recipient);
+                  const overdue = incident.overdueComplaints?.some(o => o.recipientType === recipient);
                   const label = recipient === 'tuath' ? 'Túath' : 'DCC';
                   return (
                     <span
                       key={recipient}
-                      className={`flex items-center gap-1 text-xs font-semibold text-white px-2 py-1 rounded ${sent ? 'bg-emerald-600' : 'bg-destructive'}`}
-                      title={sent ? `Complaint confirmed sent to ${label}` : `Complaint to ${label} has not been confirmed sent yet`}
+                      className={`flex items-center gap-1 text-xs font-semibold text-white px-2 py-1 rounded ${overdue ? 'bg-amber-600' : sent ? 'bg-emerald-600' : 'bg-destructive'}`}
+                      title={overdue ? `Complaint to ${label} sent 30+ working days ago with no response logged` : sent ? `Complaint confirmed sent to ${label}` : `Complaint to ${label} has not been confirmed sent yet`}
                     >
-                      {sent && <CheckCircle className="w-3 h-3" />}
-                      {label}{sent ? ' Sent' : ''}
+                      {overdue ? <AlertTriangle className="w-3 h-3" /> : sent ? <CheckCircle className="w-3 h-3" /> : null}
+                      {label}{overdue ? ' Overdue' : sent ? ' Sent' : ''}
                     </span>
                   );
                 })

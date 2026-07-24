@@ -54,6 +54,8 @@ function mapApiToIncident(api: any): Incident {
     typeSpecificData: Object.keys(typeSpecificData).length > 0 ? typeSpecificData : undefined,
     sendComplaintTo: api.sendComplaintTo,
     complaintDeliveryIssues: api.complaintDeliveryIssues,
+    complaintsSent: api.complaintsSent,
+    overdueComplaints: api.overdueComplaints,
   };
 }
 
