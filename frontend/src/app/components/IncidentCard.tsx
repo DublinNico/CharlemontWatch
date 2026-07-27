@@ -52,7 +52,7 @@ function ComplaintStatusBadges({ incident }: { incident: Incident }) {
         if (!timeline) {
           return (
             <Badge key={recipient} variant="outline" className={`${recipientBadgeStyles.pending} border text-xs font-normal`}>
-              {name}: complaint sent
+              {name}: not yet confirmed sent
             </Badge>
           );
         }
