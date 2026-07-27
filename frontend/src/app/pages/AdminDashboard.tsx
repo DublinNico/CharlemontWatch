@@ -59,16 +59,37 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
               ) : (
                 incident.sendComplaintTo.map(recipient => {
                   const sent = incident.complaintsSent?.some(c => c.recipientType === recipient);
-                  const overdue = incident.overdueComplaints?.some(o => o.recipientType === recipient);
+                  const timeline = incident.complaintTimeline?.find(t => t.recipientType === recipient);
                   const label = recipient === 'tuath' ? 'Túath' : 'DCC';
+
+                  const estimatedSuffix = timeline?.estimated ? ' (est.)' : '';
+                  let colorClass = 'bg-destructive';
+                  let statusText = '';
+                  let title = `Complaint to ${label} has not been confirmed sent yet`;
+                  if (timeline?.responseOverdue) {
+                    colorClass = 'bg-red-700';
+                    statusText = ` Response Overdue${estimatedSuffix}`;
+                    title = `Complaint to ${label} sent ${timeline.businessDaysElapsed} working days ago — past the ${timeline.responseThresholdDays}-day response threshold${timeline.estimated ? ' (sentAt is an estimate from the report date, not a confirmed send)' : ''}`;
+                  } else if (timeline?.acknowledgementOverdue) {
+                    colorClass = 'bg-amber-600';
+                    statusText = ` Ack. Overdue${estimatedSuffix}`;
+                    title = `Complaint to ${label} sent ${timeline.businessDaysElapsed} working days ago — past their ${timeline.acknowledgementThresholdDays}-day acknowledgement window${timeline.estimated ? ' (sentAt is an estimate from the report date, not a confirmed send)' : ''}`;
+                  } else if (sent) {
+                    colorClass = 'bg-emerald-600';
+                    statusText = ` Sent${estimatedSuffix}`;
+                    title = timeline?.estimated
+                      ? `Complaint to ${label} — sentAt is an estimate from the report date, not a confirmed send`
+                      : `Complaint confirmed sent to ${label}`;
+                  }
+
                   return (
                     <span
                       key={recipient}
-                      className={`flex items-center gap-1 text-xs font-semibold text-white px-2 py-1 rounded ${overdue ? 'bg-amber-600' : sent ? 'bg-emerald-600' : 'bg-destructive'}`}
-                      title={overdue ? `Complaint to ${label} sent 30+ working days ago with no response logged` : sent ? `Complaint confirmed sent to ${label}` : `Complaint to ${label} has not been confirmed sent yet`}
+                      className={`flex items-center gap-1 text-xs font-semibold text-white px-2 py-1 rounded ${colorClass}`}
+                      title={title}
                     >
-                      {overdue ? <AlertTriangle className="w-3 h-3" /> : sent ? <CheckCircle className="w-3 h-3" /> : null}
-                      {label}{overdue ? ' Overdue' : sent ? ' Sent' : ''}
+                      {timeline?.responseOverdue || timeline?.acknowledgementOverdue ? <AlertTriangle className="w-3 h-3" /> : sent ? <CheckCircle className="w-3 h-3" /> : null}
+                      {label}{statusText}
                     </span>
                   );
                 })
@@ -76,6 +97,9 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
             )}
           </div>
 
+          {incident.title && (
+            <h4 className="font-semibold text-gray-900 mb-1">{incident.title}</h4>
+          )}
           <p className="text-sm text-gray-800 mb-2">
             <span className="font-medium">Location:</span> {incident.location}
           </p>

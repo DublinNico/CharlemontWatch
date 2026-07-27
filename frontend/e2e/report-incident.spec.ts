@@ -13,6 +13,7 @@ test('ET-001: submit graffiti report → confirmation page shows incident ID', a
   await page.getByRole('option', { name: /Graffiti/i }).first().click();
 
   // Fill required fields — reporterEmail is mandatory on every report
+  await page.getByPlaceholder(/e\.g\. Broken door lock/i).fill('Graffiti tag on the wall');
   await page.getByPlaceholder(/e\.g\. Charlemont/i).fill('Block A, Charlemont Street');
   await page.getByPlaceholder(/Describe what you observed/i).fill('Large graffiti tag on the south wall');
   await page.getByPlaceholder(/your\.email@example\.com/i).fill('jane@example.com');
@@ -37,6 +38,7 @@ test('ET-002: report without a formal complaint (name/address left blank) → su
   await page.getByRole('combobox').first().click();
   await page.getByRole('option', { name: /Maintenance Issue/i }).first().click();
 
+  await page.getByPlaceholder(/e\.g\. Broken door lock/i).fill('Broken door lock');
   await page.getByPlaceholder(/e\.g\. Charlemont/i).fill('Stairwell B');
   await page.getByPlaceholder(/Describe what you observed/i).fill('Broken door lock on level 3');
   await page.getByPlaceholder(/your\.email@example\.com/i).fill('anon-tenant@example.com');

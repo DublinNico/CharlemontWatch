@@ -45,6 +45,7 @@ function mapApiToIncident(api: any): Incident {
   return {
     id: api.shortId || api._id,
     type: typeFromApi[api.incidentType] || 'Maintenance Issue',
+    title: api.title,
     location: api.location,
     description: api.description,
     reporterEmail: api.reporterEmail,
@@ -55,7 +56,7 @@ function mapApiToIncident(api: any): Incident {
     sendComplaintTo: api.sendComplaintTo,
     complaintDeliveryIssues: api.complaintDeliveryIssues,
     complaintsSent: api.complaintsSent,
-    overdueComplaints: api.overdueComplaints,
+    complaintTimeline: api.complaintTimeline,
   };
 }
 

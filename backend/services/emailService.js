@@ -106,7 +106,7 @@ const sendAdminNotification = async (incident) => {
 const sendStatusUpdate = async (incident, residentEmail) => {
   if (!residentEmail) return;
 
-  const trackingLink = `${process.env.FRONTEND_URL}/track/${incident._id}`;
+  const trackingLink = `${process.env.FRONTEND_URL}/track?id=${incident.shortId}`;
   const statusMessages = {
     NEW: 'Your report has been received and is waiting to be processed.',
     IN_PROGRESS: 'Work has started on your report. We\'re on it!',
@@ -118,10 +118,10 @@ const sendStatusUpdate = async (incident, residentEmail) => {
       from: FROM,
       to: [residentEmail],
       replyTo: process.env.ADMIN_EMAIL,
-      subject: `Incident #${incident._id.toString().slice(-8).toUpperCase()} - Status: ${incident.status}`,
+      subject: `Incident ${incident.shortId} - Status: ${incident.status}`,
       html: `
         <h2>Status Update</h2>
-        <p>Your incident (ID: ${incident._id.toString().slice(-8).toUpperCase()}) status has changed.</p>
+        <p>Your incident (ID: ${incident.shortId}) status has changed.</p>
         <p><strong>New Status:</strong> ${incident.status}</p>
         <p>${statusMessages[incident.status]}</p>
         <p><a href="${trackingLink}">View Full Report</a></p>

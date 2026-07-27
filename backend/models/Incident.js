@@ -26,6 +26,15 @@ const incidentSchema = new mongoose.Schema({
     index: true
   },
 
+  // Short, human-written headline (e.g. "Broken door lock") shown above the
+  // location on cards and in the list view — separate from the longer
+  // free-text description.
+  title: {
+    type: String,
+    required: true,
+    trim: true,
+    maxlength: 100
+  },
   location: {
     type: String,
     required: true
@@ -100,7 +109,11 @@ const incidentSchema = new mongoose.Schema({
   // fire-and-forget send after approval worked.
   complaintsSent: [{
     recipientType: { type: String, enum: ['tuath', 'dcc'], required: true },
-    sentAt: { type: Date, default: Date.now, required: true }
+    sentAt: { type: Date, default: Date.now, required: true },
+    // True for records backfilled from reportedDate for complaints sent
+    // before this confirmation tracking existed (2026-07-21) — sentAt is a
+    // best-effort estimate for those, not a confirmed send timestamp.
+    estimated: { type: Boolean, default: false }
   }],
 
   createdAt: { type: Date, default: Date.now },

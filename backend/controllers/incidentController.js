@@ -11,18 +11,34 @@ const { businessDaysSince } = require('../utils/businessDays');
 
 const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
 
-// A formal complaint is expected to get a written response within 30 working
-// days. Only flagged while an incident is actively open (RESOLVED/REJECTED
-// mean it's already been dealt with one way or another; PENDING_REVIEW hasn't
-// had a complaint sent yet).
-const OVERDUE_THRESHOLD_DAYS = 30;
+// Per CharlemontWatch's About page: Túath's Complaints Policy and Dublin City
+// Council's customer complaints process both commit to acknowledging a
+// formal complaint within a few working days, and a full written response
+// within 30 working days. The "overdue" booleans below are only ever true
+// while an incident is actively open (RESOLVED/REJECTED mean it's already
+// been dealt with one way or another; PENDING_REVIEW hasn't had a complaint
+// sent yet) — but every sent complaint still gets an entry regardless of
+// status, so the timeline stays visible on a report after it's resolved.
+const RESPONSE_THRESHOLD_DAYS = 30;
+const ACKNOWLEDGEMENT_THRESHOLD_DAYS = { tuath: 5, dcc: 3 };
 const OVERDUE_ELIGIBLE_STATUSES = ['NEW', 'IN_PROGRESS'];
 
-const computeOverdueComplaints = (incident) => {
-  if (!OVERDUE_ELIGIBLE_STATUSES.includes(incident.status)) return [];
-  return (incident.complaintsSent || [])
-    .map(c => ({ recipientType: c.recipientType, sentAt: c.sentAt, businessDaysElapsed: businessDaysSince(c.sentAt) }))
-    .filter(c => c.businessDaysElapsed >= OVERDUE_THRESHOLD_DAYS);
+const computeComplaintTimeline = (incident) => {
+  const eligible = OVERDUE_ELIGIBLE_STATUSES.includes(incident.status);
+  return (incident.complaintsSent || []).map(c => {
+    const businessDaysElapsed = businessDaysSince(c.sentAt);
+    const acknowledgementThresholdDays = ACKNOWLEDGEMENT_THRESHOLD_DAYS[c.recipientType];
+    return {
+      recipientType: c.recipientType,
+      sentAt: c.sentAt,
+      estimated: !!c.estimated,
+      businessDaysElapsed,
+      acknowledgementThresholdDays,
+      acknowledgementOverdue: eligible && businessDaysElapsed >= acknowledgementThresholdDays,
+      responseThresholdDays: RESPONSE_THRESHOLD_DAYS,
+      responseOverdue: eligible && businessDaysElapsed >= RESPONSE_THRESHOLD_DAYS,
+    };
+  });
 };
 
 // Looks an incident up by its human-friendly shortId first, falling back to
@@ -47,7 +63,7 @@ const compressImage = (buffer) => sharp(buffer)
 const createIncident = async (req, res) => {
   try {
 
-    const { incidentType, location, description, reporterEmail,
+    const { incidentType, title, location, description, reporterEmail,
             complainantName, complainantAddress } = req.body;
 
     // sendComplaintTo is a comma-separated string from the multipart form;
@@ -70,6 +86,12 @@ const createIncident = async (req, res) => {
     const VALID_TYPES = ['graffiti', 'antisocial', 'safetyhazard', 'maintenance'];
     if (!incidentType || !VALID_TYPES.includes(incidentType)) {
       return res.status(400).json({ error: 'incidentType must be one of: graffiti, antisocial, safetyhazard, maintenance' });
+    }
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'title is required' });
+    }
+    if (title.trim().length > 100) {
+      return res.status(400).json({ error: 'title must be 100 characters or fewer' });
     }
     if (!location || !location.trim()) {
       return res.status(400).json({ error: 'location is required' });
@@ -143,6 +165,7 @@ const createIncident = async (req, res) => {
     const incident = new Incident({
       shortId: generateShortId(),
       incidentType,
+      title: title.trim(),
       location,
       description,
       reporterEmail,
@@ -189,7 +212,7 @@ const getIncident = async (req, res) => {
       return res.status(404).json({ error: 'Incident not found' });
     }
 
-    const overdueComplaints = computeOverdueComplaints(incident);
+    const complaintTimeline = computeComplaintTimeline(incident);
 
     if (!isAdminRequest(req)) {
       const sanitized = incident.toObject();
@@ -197,13 +220,13 @@ const getIncident = async (req, res) => {
       delete sanitized.complainantName;
       delete sanitized.complainantAddress;
       sanitized.photos = sanitized.photos.filter(photo => photo.approved);
-      sanitized.overdueComplaints = overdueComplaints;
+      sanitized.complaintTimeline = complaintTimeline;
       return res.json(sanitized);
     }
 
-    const withOverdue = incident.toObject();
-    withOverdue.overdueComplaints = overdueComplaints;
-    res.json(withOverdue);
+    const withTimeline = incident.toObject();
+    withTimeline.complaintTimeline = complaintTimeline;
+    res.json(withTimeline);
   } catch (error) {
     console.error('Get incident error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -236,18 +259,18 @@ const getAllIncidents = async (req, res) => {
         delete obj.complainantName;
         delete obj.complainantAddress;
         obj.photos = obj.photos.filter(photo => photo.approved);
-        obj.overdueComplaints = computeOverdueComplaints(incident);
+        obj.complaintTimeline = computeComplaintTimeline(incident);
         return obj;
       });
       return res.json(sanitized);
     }
 
-    const withOverdue = incidents.map(incident => {
+    const withTimeline = incidents.map(incident => {
       const obj = incident.toObject();
-      obj.overdueComplaints = computeOverdueComplaints(incident);
+      obj.complaintTimeline = computeComplaintTimeline(incident);
       return obj;
     });
-    res.json(withOverdue);
+    res.json(withTimeline);
   } catch (error) {
     console.error('Get all incidents error:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -427,5 +450,5 @@ module.exports = {
   updateIncidentStatus,
   deleteIncident,
   addPhoto,
-  computeOverdueComplaints
+  computeComplaintTimeline
 };

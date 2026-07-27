@@ -8,6 +8,7 @@ const Incident = require('../../models/Incident');
 // so a report can still be submitted anonymously (no name/address, no complaint).
 const validFields = {
   incidentType: 'graffiti',
+  title: 'Graffiti on the south wall',
   location: 'Block A',
   description: 'Test',
   reporterEmail: 'jane@test.com',
@@ -39,6 +40,12 @@ describe('Incident model validation', () => {
     const doc = new Incident({ ...validFields, reporterEmail: undefined });
     const err = doc.validateSync();
     expect(err.errors.reporterEmail).toBeDefined();
+  });
+
+  test('UT-102: fails validation when title is missing', () => {
+    const doc = new Incident({ ...validFields, title: undefined });
+    const err = doc.validateSync();
+    expect(err.errors.title).toBeDefined();
   });
 
   test('UT-014-E: allows complainantName and complainantAddress to be omitted (anonymous report)', () => {

@@ -66,6 +66,9 @@ function fillCommonFields() {
   const selects = screen.getAllByTestId('select');
   fireEvent.change(selects[0], { target: { value: 'Graffiti' } });
 
+  fireEvent.change(screen.getByPlaceholderText(/e\.g\. Broken door lock/i), {
+    target: { value: 'Graffiti on the south wall' },
+  });
   fireEvent.change(screen.getByPlaceholderText(/e\.g\. Charlemont/i), {
     target: { value: 'Block A, Charlemont Street' },
   });
@@ -121,6 +124,7 @@ describe('ReportIncident — graffiti submission', () => {
 
     const call = mockAddIncident.mock.calls[0][0];
     expect(call.type).toBe('Graffiti');
+    expect(call.title).toBe('Graffiti on the south wall');
     expect(call.location).toBe('Block A, Charlemont Street');
     expect(call.description).toBe('Large graffiti tag on the south wall');
     expect(call.typeSpecificData.surfaceType).toBe('Wall');
