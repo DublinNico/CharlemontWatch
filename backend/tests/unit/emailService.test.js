@@ -107,6 +107,20 @@ describe('sendStatusUpdate', () => {
     const msg = mockSend.mock.calls[0][0];
     expect(msg.to).toContain('resident@test.com');
   });
+
+  test('UT-012-E: tracking link uses the shortId as a ?id= query param, not the raw ObjectId as a path segment', async () => {
+    await sendStatusUpdate(mockIncident, 'resident@test.com');
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.html).toContain(`/track?id=${mockIncident.shortId}`);
+    expect(msg.html).not.toContain(`/track/${mockIncident._id.toString()}`);
+  });
+
+  test('UT-012-F: subject and body show the human-readable shortId, not a raw ObjectId fragment', async () => {
+    await sendStatusUpdate(mockIncident, 'resident@test.com');
+    const msg = mockSend.mock.calls[0][0];
+    expect(msg.subject).toContain(mockIncident.shortId);
+    expect(msg.html).toContain(mockIncident.shortId);
+  });
 });
 
 // ─── sendAdminNotification ────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { ArrowLeft, Upload, X, AlertCircle, MapPin, FileText, Mail, ImageIcon, User, Send } from 'lucide-react';
+import { ArrowLeft, Upload, X, AlertCircle, MapPin, FileText, Mail, ImageIcon, User, Send, Tag } from 'lucide-react';
 
 import { useNavigate } from 'react-router';
 import { useApp, IncidentType, Photo, ComplaintData } from '../context/AppContext';
@@ -20,6 +20,7 @@ export function ReportIncident() {
 
   const [formData, setFormData] = useState({
     type: '' as IncidentType | '',
+    title: '',
     location: '',
     description: '',
     reporterEmail: '',
@@ -71,9 +72,15 @@ export function ReportIncident() {
     e.preventDefault();
     if (!formData.type) return;
 
+    const title = formData.title.trim();
     const reporterEmail = formData.reporterEmail.trim();
     const complainantName = complaint.name.trim();
     const complainantAddress = complaint.address.trim();
+
+    if (!title) {
+      setSubmitError('Please give the report a short title.');
+      return;
+    }
 
     if (!reporterEmail) {
       setSubmitError('Please provide your email to confirm you live in the complex.');
@@ -115,6 +122,7 @@ export function ReportIncident() {
     try {
       const incidentId = await addIncident({
         type: formData.type,
+        title,
         location: formData.location,
         description: formData.description,
         reporterEmail,
@@ -479,6 +487,24 @@ export function ReportIncident() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="title" className="flex items-center gap-2 mb-2">
+                  <Tag className="w-4 h-4" />
+                  Title <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="title"
+                  required
+                  maxLength={100}
+                  placeholder="e.g. Broken door lock"
+                  value={formData.title}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  A short summary shown above the location on the report
+                </p>
               </div>
 
               <div>

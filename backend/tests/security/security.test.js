@@ -87,6 +87,7 @@ describe('ST-004: XSS in incident description is stored as plain text', () => {
       .post('/api/incidents/report')
       .send({
         incidentType: 'graffiti',
+        title: 'Graffiti test',
         location: 'Block A',
         description: xssPayload,
         reporterEmail: 'jane@example.com',
@@ -144,6 +145,7 @@ describe('ST-006: resident JWT is forbidden from deleting incidents', () => {
     const incident = await Incident.create({
       shortId: 'CW-SEC001',
       incidentType: 'graffiti',
+      title: 'Graffiti test',
       location: 'Block A',
       description: 'Test',
       reporterEmail: 'jane@example.com',
