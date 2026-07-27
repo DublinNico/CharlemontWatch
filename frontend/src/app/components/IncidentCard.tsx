@@ -29,6 +29,60 @@ function latestIssuePerRecipient(issues: NonNullable<Incident['complaintDelivery
   return Array.from(latest.values());
 }
 
+const recipientBadgeStyles = {
+  pending: 'bg-slate-100 text-slate-600 border-slate-300',
+  onTrack: 'bg-emerald-100 text-emerald-700 border-emerald-300',
+  acknowledgementOverdue: 'bg-amber-100 text-amber-700 border-amber-300',
+  responseOverdue: 'bg-red-100 text-red-700 border-red-300',
+};
+
+// Compact per-recipient complaint status. Only rendered in the expanded
+// /track view (showFullDetails) — kept off the compact browse-feed cards so
+// the list view stays scannable and this detail only surfaces once someone
+// actually opens a report.
+function ComplaintStatusBadges({ incident }: { incident: Incident }) {
+  if (!incident.sendComplaintTo || incident.sendComplaintTo.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {incident.sendComplaintTo.map(recipient => {
+        const timeline = incident.complaintTimeline?.find(t => t.recipientType === recipient);
+        const name = recipientNames[recipient];
+
+        if (!timeline) {
+          return (
+            <Badge key={recipient} variant="outline" className={`${recipientBadgeStyles.pending} border text-xs font-normal`}>
+              {name}: complaint sent
+            </Badge>
+          );
+        }
+
+        const { businessDaysElapsed, acknowledgementThresholdDays, acknowledgementOverdue, responseOverdue, estimated } = timeline;
+        const estimatedSuffix = estimated ? ' (est.)' : '';
+        if (responseOverdue) {
+          return (
+            <Badge key={recipient} className={`${recipientBadgeStyles.responseOverdue} border text-xs font-normal`}>
+              {name}: 30-day response overdue{estimatedSuffix}
+            </Badge>
+          );
+        }
+        if (acknowledgementOverdue) {
+          return (
+            <Badge key={recipient} className={`${recipientBadgeStyles.acknowledgementOverdue} border text-xs font-normal`}>
+              {name}: acknowledgement overdue{estimatedSuffix}
+            </Badge>
+          );
+        }
+        return (
+          <Badge key={recipient} className={`${recipientBadgeStyles.onTrack} border text-xs font-normal`}>
+            {name}: Day {businessDaysElapsed}/{acknowledgementThresholdDays} to acknowledge{estimatedSuffix}
+          </Badge>
+        );
+      })}
+    </div>
+  );
+}
+
 interface IncidentCardProps {
   incident: Incident;
   onClick?: () => void;
@@ -82,6 +136,12 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
           <StatusBadge status={incident.status} />
         </div>
 
+        {showFullDetails && incident.sendComplaintTo && incident.sendComplaintTo.length > 0 && (
+          <div className="mt-3">
+            <ComplaintStatusBadges incident={incident} />
+          </div>
+        )}
+
         {showFullDetails && showTrackingBadge && (
           <div className="mt-3 flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Track Your Report:</span>
@@ -115,17 +175,34 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
           </div>
         )}
 
-        {showFullDetails && incident.overdueComplaints && incident.overdueComplaints.length > 0 && (
-          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-3 text-sm">
+        {showFullDetails && incident.complaintTimeline && incident.complaintTimeline.some(t => t.responseOverdue) && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm">
             <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
             <div>
-              {incident.overdueComplaints.map(overdue => (
-                <p key={overdue.recipientType}>
-                  Your formal complaint to <strong>{recipientNames[overdue.recipientType]}</strong> was sent {overdue.businessDaysElapsed} working days ago with no response logged — past the 30 working day threshold. You may want to escalate.
+              {incident.complaintTimeline.filter(t => t.responseOverdue).map(t => (
+                <p key={t.recipientType}>
+                  Your formal complaint to <strong>{recipientNames[t.recipientType]}</strong> was sent {t.businessDaysElapsed} working days ago with no response logged — past the {t.responseThresholdDays} working day threshold for a full written response. You may want to escalate.
                 </p>
               ))}
             </div>
           </div>
+        )}
+
+        {showFullDetails && incident.complaintTimeline && incident.complaintTimeline.some(t => t.acknowledgementOverdue && !t.responseOverdue) && (
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-3 text-sm">
+            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div>
+              {incident.complaintTimeline.filter(t => t.acknowledgementOverdue && !t.responseOverdue).map(t => (
+                <p key={t.recipientType}>
+                  Your formal complaint to <strong>{recipientNames[t.recipientType]}</strong> was sent {t.businessDaysElapsed} working days ago with no acknowledgement logged — past their {t.acknowledgementThresholdDays} working day acknowledgement window. You may want to follow up.
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {incident.title && (
+          <h3 className="font-semibold text-base leading-snug">{incident.title}</h3>
         )}
 
         <div className="flex items-start gap-2 text-sm">

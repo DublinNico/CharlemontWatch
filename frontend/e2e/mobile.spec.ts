@@ -18,6 +18,7 @@ test('ET-012: mobile — report form is usable at 375px', async ({ page }) => {
   await page.getByRole('combobox').first().click();
   await page.getByRole('option', { name: /Safety Hazard/i }).first().click();
 
+  await page.getByPlaceholder(/e\.g\. Broken door lock/i).fill('Broken glass near bins');
   await page.getByPlaceholder(/e\.g\. Charlemont/i).fill('Near the bin area');
   await page.getByPlaceholder(/Describe what you observed/i).fill('Broken glass on ground');
   await page.getByPlaceholder(/your\.email@example\.com/i).fill('mobile-tester@example.com');

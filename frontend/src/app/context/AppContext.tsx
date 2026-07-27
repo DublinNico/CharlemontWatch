@@ -32,6 +32,10 @@ export interface Photo {
 export interface Incident {
   id: string;
   type: IncidentType;
+  // Short headline (e.g. "Broken door lock"), shown above location on cards.
+  // Optional because legacy records predate this field being made mandatory
+  // on submission — new reports always have it, but old fetched rows may not.
+  title?: string;
   location: string;
   description: string;
   // Optional because legacy records predate this field being made mandatory
@@ -51,9 +55,23 @@ export interface Incident {
   // successfully — lets the admin dashboard confirm a send rather than
   // assuming the fire-and-forget send after approval worked
   complaintsSent?: { recipientType: 'tuath' | 'dcc'; sentAt: string }[];
-  // Server-computed: recipients whose complaint was sent 30+ working days ago
-  // with no response logged yet, while the incident is still NEW/IN_PROGRESS
-  overdueComplaints?: { recipientType: 'tuath' | 'dcc'; sentAt: string; businessDaysElapsed: number }[];
+  // Server-computed: one entry per sent complaint, tracking it against both
+  // Túath's/DCC's acknowledgement window (5/3 working days) and the 30
+  // working day formal written response — see About page for the source of
+  // those numbers. Overdue flags are only ever true while the incident is
+  // still NEW/IN_PROGRESS, but an entry stays present after resolution too.
+  complaintTimeline?: {
+    recipientType: 'tuath' | 'dcc';
+    sentAt: string;
+    // True when sentAt is a backfilled estimate (from reportedDate) rather
+    // than a confirmed send timestamp — see backend model comment.
+    estimated: boolean;
+    businessDaysElapsed: number;
+    acknowledgementThresholdDays: number;
+    acknowledgementOverdue: boolean;
+    responseThresholdDays: number;
+    responseOverdue: boolean;
+  }[];
 }
 
 export interface User {
@@ -133,6 +151,7 @@ function mapApiToIncident(api: any): Incident {
   return {
     id: api.shortId || api._id,
     type: typeFromApi[api.incidentType] || 'Maintenance Issue',
+    title: api.title,
     location: api.location,
     description: api.description,
     reporterEmail: api.reporterEmail,
@@ -143,7 +162,7 @@ function mapApiToIncident(api: any): Incident {
     sendComplaintTo: api.sendComplaintTo,
     complaintDeliveryIssues: api.complaintDeliveryIssues,
     complaintsSent: api.complaintsSent,
-    overdueComplaints: api.overdueComplaints,
+    complaintTimeline: api.complaintTimeline,
   };
 }
 
@@ -227,6 +246,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addIncident = async (incident: Omit<Incident, 'id' | 'date'>, complaint?: ComplaintData, turnstileToken?: string): Promise<string> => {
     const form = new FormData();
     form.append('incidentType', typeToApi[incident.type]);
+    form.append('title', incident.title ?? '');
     form.append('location', incident.location);
     form.append('description', incident.description);
     form.append('reporterEmail', incident.reporterEmail ?? '');

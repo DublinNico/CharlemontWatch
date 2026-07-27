@@ -51,6 +51,7 @@ const residentToken = jwt.sign(
 // are only needed when sendComplaintTo is set (see the reporter identity describe block below).
 const validBody = {
   incidentType: 'graffiti',
+  title: 'Graffiti on south wall',
   location: 'Block A, Charlemont Street',
   description: 'Graffiti on south wall',
   reporterEmail: 'jane@example.com',
@@ -100,6 +101,7 @@ describe('POST /api/incidents/report', () => {
     const res = await request(app)
       .post('/api/incidents/report')
       .field('incidentType', 'graffiti')
+      .field('title', 'Graffiti test')
       .field('location', 'Block A')
       .field('description', 'Test with photo')
       .field('reporterEmail', 'jane@example.com')
@@ -118,6 +120,7 @@ describe('POST /api/incidents/report', () => {
     const res = await request(app)
       .post('/api/incidents/report')
       .field('incidentType', 'graffiti')
+      .field('title', 'Graffiti test')
       .field('location', 'Block A')
       .field('description', 'Test with photo')
       .field('reporterEmail', 'jane@example.com')
@@ -134,6 +137,7 @@ describe('POST /api/incidents/report', () => {
     let req = request(app)
       .post('/api/incidents/report')
       .field('incidentType', 'graffiti')
+      .field('title', 'Graffiti test')
       .field('location', 'Block A')
       .field('description', 'Test')
       .field('reporterEmail', 'jane@example.com');
