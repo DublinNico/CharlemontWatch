@@ -1,4 +1,4 @@
-import { Shield, AlertTriangle, Camera, Users, FileText, Heart } from 'lucide-react';
+import { Shield, AlertTriangle, Camera, Users, FileText, Heart, Scale } from 'lucide-react';
 import { Header } from '../components/Header';
 import { useNavigate } from 'react-router';
 
@@ -192,6 +192,41 @@ export function About() {
                   <span>Requires an official written response within 30 working days</span>
                 </li>
               </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Escalating to the RTB */}
+        <div className="bg-white rounded shadow-sm p-6">
+          <div className="flex items-start gap-4">
+            <Scale className="w-10 h-10 text-[#1976d2] flex-shrink-0" />
+            <div>
+              <h2 className="text-[#333333] mb-3">Escalating a Dispute with the RTB</h2>
+              <p className="text-[#666666] mb-3">
+                Túath Housing is an Approved Housing Body, so your tenancy is covered by the same rules as a
+                private rental and registered with the <strong>Residential Tenancies Board (RTB)</strong>, the
+                statutory body that resolves disputes between tenants and landlords.
+              </p>
+              <p className="text-[#666666] mb-3">
+                If you've sent a formal complaint through CharlemontWatch and Túath hasn't responded within the
+                30 working day window, or hasn't resolved the issue, you don't have to leave it there. You can
+                open a dispute directly with the RTB, free mediation, adjudication, or a tribunal hearing, none
+                of which require a solicitor.
+              </p>
+              <p className="text-[#666666]">
+                Keep a record of when you first raised the issue and any responses (or lack of one), your
+                CharlemontWatch tracking ID and report history are useful evidence for this. Note the RTB
+                handles disputes with Túath as your landlord; issues that are purely Dublin City Council's
+                responsibility (bins, street cleaning, public areas) aren't part of its remit.
+              </p>
+              <a
+                href="https://rtb.ie/disputes/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 mt-2 text-[#1976d2] hover:underline"
+              >
+                Start a dispute at rtb.ie/disputes →
+              </a>
             </div>
           </div>
         </div>
