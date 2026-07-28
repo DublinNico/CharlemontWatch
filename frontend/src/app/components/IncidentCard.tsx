@@ -32,7 +32,6 @@ function latestIssuePerRecipient(issues: NonNullable<Incident['complaintDelivery
 const recipientBadgeStyles = {
   pending: 'bg-slate-100 text-slate-600 border-slate-300',
   onTrack: 'bg-emerald-100 text-emerald-700 border-emerald-300',
-  acknowledgementOverdue: 'bg-amber-100 text-amber-700 border-amber-300',
   responseOverdue: 'bg-red-100 text-red-700 border-red-300',
 };
 
@@ -57,7 +56,7 @@ function ComplaintStatusBadges({ incident }: { incident: Incident }) {
           );
         }
 
-        const { businessDaysElapsed, acknowledgementThresholdDays, acknowledgementOverdue, responseOverdue, estimated } = timeline;
+        const { businessDaysElapsed, responseThresholdDays, responseOverdue, estimated } = timeline;
         const estimatedSuffix = estimated ? ' (est.)' : '';
         if (responseOverdue) {
           return (
@@ -66,16 +65,9 @@ function ComplaintStatusBadges({ incident }: { incident: Incident }) {
             </Badge>
           );
         }
-        if (acknowledgementOverdue) {
-          return (
-            <Badge key={recipient} className={`${recipientBadgeStyles.acknowledgementOverdue} border text-xs font-normal`}>
-              {name}: acknowledgement overdue{estimatedSuffix}
-            </Badge>
-          );
-        }
         return (
           <Badge key={recipient} className={`${recipientBadgeStyles.onTrack} border text-xs font-normal`}>
-            {name}: Day {businessDaysElapsed}/{acknowledgementThresholdDays} to acknowledge{estimatedSuffix}
+            {name}: Day {businessDaysElapsed}/{responseThresholdDays}{estimatedSuffix}
           </Badge>
         );
       })}
@@ -182,19 +174,6 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
               {incident.complaintTimeline.filter(t => t.responseOverdue).map(t => (
                 <p key={t.recipientType}>
                   Your formal complaint to <strong>{recipientNames[t.recipientType]}</strong> was sent {t.businessDaysElapsed} working days ago with no response logged — past the {t.responseThresholdDays} working day threshold for a full written response. You may want to escalate.
-                </p>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showFullDetails && incident.complaintTimeline && incident.complaintTimeline.some(t => t.acknowledgementOverdue && !t.responseOverdue) && (
-          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-3 text-sm">
-            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <div>
-              {incident.complaintTimeline.filter(t => t.acknowledgementOverdue && !t.responseOverdue).map(t => (
-                <p key={t.recipientType}>
-                  Your formal complaint to <strong>{recipientNames[t.recipientType]}</strong> was sent {t.businessDaysElapsed} working days ago with no acknowledgement logged — past their {t.acknowledgementThresholdDays} working day acknowledgement window. You may want to follow up.
                 </p>
               ))}
             </div>

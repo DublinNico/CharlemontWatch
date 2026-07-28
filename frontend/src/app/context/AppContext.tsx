@@ -55,11 +55,11 @@ export interface Incident {
   // successfully — lets the admin dashboard confirm a send rather than
   // assuming the fire-and-forget send after approval worked
   complaintsSent?: { recipientType: 'tuath' | 'dcc'; sentAt: string }[];
-  // Server-computed: one entry per sent complaint, tracking it against both
-  // Túath's/DCC's acknowledgement window (5/3 working days) and the 30
-  // working day formal written response — see About page for the source of
-  // those numbers. Overdue flags are only ever true while the incident is
-  // still NEW/IN_PROGRESS, but an entry stays present after resolution too.
+  // Server-computed: one entry per sent complaint, tracking a plain
+  // days-elapsed timer against the 30 working day formal written response
+  // deadline — see About page for the source of that number. responseOverdue
+  // is only ever true while the incident is still NEW/IN_PROGRESS, but an
+  // entry stays present after resolution too.
   complaintTimeline?: {
     recipientType: 'tuath' | 'dcc';
     sentAt: string;
@@ -67,8 +67,6 @@ export interface Incident {
     // than a confirmed send timestamp — see backend model comment.
     estimated: boolean;
     businessDaysElapsed: number;
-    acknowledgementThresholdDays: number;
-    acknowledgementOverdue: boolean;
     responseThresholdDays: number;
     responseOverdue: boolean;
   }[];

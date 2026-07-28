@@ -12,29 +12,27 @@ const { businessDaysSince } = require('../utils/businessDays');
 const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
 
 // Per CharlemontWatch's About page: Túath's Complaints Policy and Dublin City
-// Council's customer complaints process both commit to acknowledging a
-// formal complaint within a few working days, and a full written response
-// within 30 working days. The "overdue" booleans below are only ever true
-// while an incident is actively open (RESOLVED/REJECTED mean it's already
-// been dealt with one way or another; PENDING_REVIEW hasn't had a complaint
-// sent yet) — but every sent complaint still gets an entry regardless of
-// status, so the timeline stays visible on a report after it's resolved.
+// Council's customer complaints process both commit to a full written
+// response within 30 working days of a formal complaint. "responseOverdue"
+// is only ever true while an incident is actively open (RESOLVED/REJECTED
+// mean it's already been dealt with one way or another; PENDING_REVIEW
+// hasn't had a complaint sent yet) — but every sent complaint still gets an
+// entry regardless of status, so the timeline stays visible on a report
+// after it's resolved. There's no reliable signal for an actual
+// acknowledgement reply (no inbound-email tracking), so this only tracks a
+// plain days-elapsed timer against the one deadline we can state as fact.
 const RESPONSE_THRESHOLD_DAYS = 30;
-const ACKNOWLEDGEMENT_THRESHOLD_DAYS = { tuath: 5, dcc: 3 };
 const OVERDUE_ELIGIBLE_STATUSES = ['NEW', 'IN_PROGRESS'];
 
 const computeComplaintTimeline = (incident) => {
   const eligible = OVERDUE_ELIGIBLE_STATUSES.includes(incident.status);
   return (incident.complaintsSent || []).map(c => {
     const businessDaysElapsed = businessDaysSince(c.sentAt);
-    const acknowledgementThresholdDays = ACKNOWLEDGEMENT_THRESHOLD_DAYS[c.recipientType];
     return {
       recipientType: c.recipientType,
       sentAt: c.sentAt,
       estimated: !!c.estimated,
       businessDaysElapsed,
-      acknowledgementThresholdDays,
-      acknowledgementOverdue: eligible && businessDaysElapsed >= acknowledgementThresholdDays,
       responseThresholdDays: RESPONSE_THRESHOLD_DAYS,
       responseOverdue: eligible && businessDaysElapsed >= RESPONSE_THRESHOLD_DAYS,
     };
