@@ -70,16 +70,12 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
                     colorClass = 'bg-red-700';
                     statusText = ` Response Overdue${estimatedSuffix}`;
                     title = `Complaint to ${label} sent ${timeline.businessDaysElapsed} working days ago — past the ${timeline.responseThresholdDays}-day response threshold${timeline.estimated ? ' (sentAt is an estimate from the report date, not a confirmed send)' : ''}`;
-                  } else if (timeline?.acknowledgementOverdue) {
-                    colorClass = 'bg-amber-600';
-                    statusText = ` Ack. Overdue${estimatedSuffix}`;
-                    title = `Complaint to ${label} sent ${timeline.businessDaysElapsed} working days ago — past their ${timeline.acknowledgementThresholdDays}-day acknowledgement window${timeline.estimated ? ' (sentAt is an estimate from the report date, not a confirmed send)' : ''}`;
                   } else if (sent) {
                     colorClass = 'bg-emerald-600';
-                    statusText = ` Sent${estimatedSuffix}`;
+                    statusText = ` Day ${timeline?.businessDaysElapsed ?? 0}/${timeline?.responseThresholdDays ?? 30}${estimatedSuffix}`;
                     title = timeline?.estimated
                       ? `Complaint to ${label} — sentAt is an estimate from the report date, not a confirmed send`
-                      : `Complaint confirmed sent to ${label}`;
+                      : `Complaint to ${label} sent ${timeline?.businessDaysElapsed} working days ago`;
                   }
 
                   return (
@@ -88,7 +84,7 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
                       className={`flex items-center gap-1 text-xs font-semibold text-white px-2 py-1 rounded ${colorClass}`}
                       title={title}
                     >
-                      {timeline?.responseOverdue || timeline?.acknowledgementOverdue ? <AlertTriangle className="w-3 h-3" /> : sent ? <CheckCircle className="w-3 h-3" /> : null}
+                      {timeline?.responseOverdue ? <AlertTriangle className="w-3 h-3" /> : sent ? <CheckCircle className="w-3 h-3" /> : null}
                       {label}{statusText}
                     </span>
                   );
