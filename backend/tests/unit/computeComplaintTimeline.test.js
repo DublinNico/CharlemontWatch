@@ -3,6 +3,8 @@ const { computeComplaintTimeline } = require('../../controllers/incidentControll
 // Thursday — matches the fixture used in businessDays.test.js
 const NOW = new Date('2026-01-15T12:00:00Z');
 const TWO_BUSINESS_DAYS_AGO = '2026-01-13T09:00:00Z';   // Tue
+const FOURTEEN_BUSINESS_DAYS_AGO = '2025-12-23T09:00:00Z'; // Tue
+const FIFTEEN_BUSINESS_DAYS_AGO = '2025-12-22T09:00:00Z';  // Mon
 const THIRTY_BUSINESS_DAYS_AGO = '2025-12-01T09:00:00Z';
 
 beforeEach(() => {
@@ -31,18 +33,32 @@ describe('computeComplaintTimeline', () => {
     }]);
   });
 
-  test('UT-095: response overdue at the 30 working day threshold', () => {
+  test('UT-095: Túath response overdue at the 30 working day threshold', () => {
     const incident = { status: 'NEW', complaintsSent: [{ recipientType: 'tuath', sentAt: THIRTY_BUSINESS_DAYS_AGO }] };
     const entry = computeComplaintTimeline(incident)[0];
+    expect(entry.responseThresholdDays).toBe(30);
     expect(entry.responseOverdue).toBe(true);
   });
 
-  test('UT-096: mixed recipients tracked independently', () => {
+  test('UT-095b: DCC response overdue at exactly its 15 working day threshold', () => {
+    const incident = { status: 'NEW', complaintsSent: [{ recipientType: 'dcc', sentAt: FIFTEEN_BUSINESS_DAYS_AGO }] };
+    const entry = computeComplaintTimeline(incident)[0];
+    expect(entry.responseThresholdDays).toBe(15);
+    expect(entry.responseOverdue).toBe(true);
+  });
+
+  test('UT-095c: DCC not yet response-overdue at 14 working days', () => {
+    const incident = { status: 'NEW', complaintsSent: [{ recipientType: 'dcc', sentAt: FOURTEEN_BUSINESS_DAYS_AGO }] };
+    const entry = computeComplaintTimeline(incident)[0];
+    expect(entry.responseOverdue).toBe(false);
+  });
+
+  test('UT-096: mixed recipients tracked independently against their own thresholds', () => {
     const incident = {
       status: 'NEW',
       complaintsSent: [
-        { recipientType: 'dcc', sentAt: THIRTY_BUSINESS_DAYS_AGO },  // overdue
-        { recipientType: 'tuath', sentAt: TWO_BUSINESS_DAYS_AGO },   // not overdue
+        { recipientType: 'dcc', sentAt: FIFTEEN_BUSINESS_DAYS_AGO },  // overdue at DCC's 15-day threshold
+        { recipientType: 'tuath', sentAt: FIFTEEN_BUSINESS_DAYS_AGO }, // not overdue at Túath's 30-day threshold
       ],
     };
     const [dcc, tuath] = computeComplaintTimeline(incident);

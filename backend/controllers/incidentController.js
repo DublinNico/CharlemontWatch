@@ -11,30 +11,32 @@ const { businessDaysSince } = require('../utils/businessDays');
 
 const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
 
-// Per CharlemontWatch's About page: Túath's Complaints Policy and Dublin City
-// Council's customer complaints process both commit to a full written
-// response within 30 working days of a formal complaint. "responseOverdue"
-// is only ever true while an incident is actively open (RESOLVED/REJECTED
-// mean it's already been dealt with one way or another; PENDING_REVIEW
-// hasn't had a complaint sent yet) — but every sent complaint still gets an
-// entry regardless of status, so the timeline stays visible on a report
-// after it's resolved. There's no reliable signal for an actual
-// acknowledgement reply (no inbound-email tracking), so this only tracks a
-// plain days-elapsed timer against the one deadline we can state as fact.
-const RESPONSE_THRESHOLD_DAYS = 30;
+// Per the complaint emails CharlemontWatch actually sends (see
+// emailService.js): Túath's Complaints Procedure commits to a full response
+// within 30 working days, while Dublin City Council's Customer Complaints
+// procedure commits to 15. "responseOverdue" is only ever true while an
+// incident is actively open (RESOLVED/REJECTED mean it's already been dealt
+// with one way or another; PENDING_REVIEW hasn't had a complaint sent yet)
+// — but every sent complaint still gets an entry regardless of status, so
+// the timeline stays visible on a report after it's resolved. There's no
+// reliable signal for an actual acknowledgement reply (no inbound-email
+// tracking), so this only tracks a plain days-elapsed timer against the
+// deadline we can state as fact for each recipient.
+const RESPONSE_THRESHOLD_DAYS = { tuath: 30, dcc: 15 };
 const OVERDUE_ELIGIBLE_STATUSES = ['NEW', 'IN_PROGRESS'];
 
 const computeComplaintTimeline = (incident) => {
   const eligible = OVERDUE_ELIGIBLE_STATUSES.includes(incident.status);
   return (incident.complaintsSent || []).map(c => {
     const businessDaysElapsed = businessDaysSince(c.sentAt);
+    const responseThresholdDays = RESPONSE_THRESHOLD_DAYS[c.recipientType] || 30;
     return {
       recipientType: c.recipientType,
       sentAt: c.sentAt,
       estimated: !!c.estimated,
       businessDaysElapsed,
-      responseThresholdDays: RESPONSE_THRESHOLD_DAYS,
-      responseOverdue: eligible && businessDaysElapsed >= RESPONSE_THRESHOLD_DAYS,
+      responseThresholdDays,
+      responseOverdue: eligible && businessDaysElapsed >= responseThresholdDays,
     };
   });
 };

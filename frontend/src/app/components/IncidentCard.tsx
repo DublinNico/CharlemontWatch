@@ -61,7 +61,7 @@ function ComplaintStatusBadges({ incident }: { incident: Incident }) {
         if (responseOverdue) {
           return (
             <Badge key={recipient} className={`${recipientBadgeStyles.responseOverdue} border text-xs font-normal`}>
-              {name}: 30-day response overdue{estimatedSuffix}
+              {name}: {responseThresholdDays}-day response overdue{estimatedSuffix}
             </Badge>
           );
         }

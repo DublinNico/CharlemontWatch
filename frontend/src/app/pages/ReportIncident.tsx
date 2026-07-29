@@ -664,7 +664,7 @@ export function ReportIncident() {
               </div>
 
               <p className="text-sm text-amber-900 font-semibold">
-                Formal complaints can't be ignored: they require an official written response within 30 working days. Untick only if you do not want to escalate.
+                Formal complaints can't be ignored: they require an official written response within 30 working days (Túath) or 15 working days (Dublin City Council). Untick only if you do not want to escalate.
               </p>
 
               {sendingComplaint && (
