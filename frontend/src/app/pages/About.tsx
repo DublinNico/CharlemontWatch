@@ -332,8 +332,8 @@ export function About() {
               <p className="text-[#666666] mb-3">
                 If you've sent a formal complaint through CharlemontWatch and Túath hasn't responded within the
                 30 working day window, or hasn't resolved the issue, you don't have to leave it there. You can
-                open a dispute directly with the RTB: mediation is free, while adjudication (from around €15
-                online) and a tribunal appeal (around €85) carry a small fee. None of the three require a
+                open a dispute directly with the RTB: mediation is free, adjudication costs €30, and a tribunal
+                appeal costs €30 (after mediation) or €85 (after adjudication). None of the three require a
                 solicitor.
               </p>
               <p className="text-[#666666]">
