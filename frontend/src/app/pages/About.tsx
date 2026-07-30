@@ -7,6 +7,8 @@ import { useNavigate } from 'react-router';
 // is overdue — kept as plain text (not JSX) so they paste cleanly into an email client.
 const TUATH_FOLLOWUP_TEMPLATE = `[Your Name]
 [Your Address]
+[Your Date of Birth]
+[Your Tenant/Account Number, if known]
 [Date]
 
 Túath Housing
@@ -16,7 +18,7 @@ Re: Formal Complaint Follow Up, CharlemontWatch Tracking ID [CW-XXXXXX]
 
 Dear Sir/Madam,
 
-I am writing to follow up on a formal complaint I submitted on [date original complaint was sent] regarding [brief description of issue] at [address/location].
+I am writing to follow up on a formal complaint I submitted on [date original complaint was sent] regarding [brief description of issue] at [address/location]. My date of birth and tenant/account number above are provided to help you verify my tenancy and locate my file.
 
 Under Túath Housing's Complaints Policy and Procedure (v6.0, October 2024), complaints are to be acknowledged within 5 working days of receipt. As of today, [number] working days have passed since my complaint was submitted, and I have not yet received an acknowledgement.
 
