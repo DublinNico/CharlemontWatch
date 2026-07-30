@@ -134,9 +134,9 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
           </div>
         )}
 
-        {showFullDetails && showTrackingBadge && (
+        {showTrackingBadge && (
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Track Your Report:</span>
+            <span className="text-xs text-muted-foreground">{showFullDetails ? 'Track Your Report:' : 'ID:'}</span>
             <Badge variant="secondary" className="text-xs font-mono">
               {incident.id}
             </Badge>
