@@ -426,11 +426,31 @@ const addPhoto = async (req, res) => {
   }
 };
 
-// Delete incident (admin only) — permanent, not a soft delete
+// Delete incident (admin only) — permanent, not a soft delete. Also removes
+// the incident's S3 photo objects so nothing is left orphaned in the bucket
+// (previously only the Mongo document was deleted, leaving photos behind).
 const deleteIncident = async (req, res) => {
   try {
     const incident = await findByAnyId(req.params.id);
     if (!incident) return res.status(404).json({ error: 'Incident not found' });
+
+    if (incident.photos && incident.photos.length > 0) {
+      const keys = incident.photos
+        .map(p => p.url.split('.amazonaws.com/')[1])
+        .filter(Boolean);
+      if (keys.length > 0) {
+        try {
+          await s3.deleteObjects({
+            Bucket: process.env.AWS_S3_BUCKET,
+            Delete: { Objects: keys.map(Key => ({ Key })) }
+          }).promise();
+        } catch (s3Error) {
+          // Logged, not fatal — the incident record itself should still be
+          // deletable even if the bucket is briefly unreachable
+          console.error('Failed to delete S3 photos for incident:', s3Error);
+        }
+      }
+    }
 
     await incident.deleteOne();
     res.json({ success: true });

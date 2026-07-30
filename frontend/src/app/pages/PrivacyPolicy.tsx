@@ -47,10 +47,10 @@ export function PrivacyPolicy() {
           <section className="space-y-4 mb-8">
             <h2 className="text-lg font-semibold text-gray-800">4. Data retention</h2>
             <ul className="list-disc pl-5 text-gray-600 space-y-2">
-              <li><strong>Incident reports:</strong> retained for 2 years from the date of submission, then permanently deleted.</li>
-              <li><strong>Reporter email addresses:</strong> deleted along with their associated incident at the 2-year mark.</li>
+              <li><strong>Incident reports:</strong> retained until an administrator deletes the report. We do not currently run an automatic time-based deletion, reports are kept as an ongoing public record and evidence base unless removed.</li>
+              <li><strong>Reporter email addresses:</strong> stored as part of the incident record; deleted along with it if the incident is deleted.</li>
               <li><strong>Photos:</strong> stored in AWS S3 and deleted when the associated incident is deleted.</li>
-              <li><strong>Server logs:</strong> retained for 90 days for security purposes, then automatically purged.</li>
+              <li><strong>Server logs:</strong> retained according to our hosting provider's (Render) standard log retention period for our plan, not independently extended or purged by us.</li>
             </ul>
           </section>
 
