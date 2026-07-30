@@ -242,7 +242,7 @@ const sendComplaintEmails = async (incident, complainant, recipients) => {
         ${photosBlock}
         <h3>Nature of Complaint</h3>
         <p>The complainant is reporting an unresolved issue within the Túath Housing managed estate at <strong>${escapeHtml(incident.location)}</strong>.
-        They are requesting that Túath Housing investigate and take appropriate action in line with the Túath Housing Complaints Policy & Procedure (v6.0, October 2024).</p>
+        They are requesting that Túath Housing investigate and take appropriate action in line with the Túath Housing Complaints Policy & Procedure (Version 4.0, 2022).</p>
         <h3>Desired Outcome</h3>
         <p>The complainant requests a written acknowledgement within 5 working days and resolution within 30 working days, as per the Túath Complaints Procedure.</p>
         <hr style="margin:24px 0;border:none;border-top:1px solid #eee;" />

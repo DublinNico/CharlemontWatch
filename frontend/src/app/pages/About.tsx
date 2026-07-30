@@ -20,7 +20,7 @@ Dear Sir/Madam,
 
 I am writing to follow up on a formal complaint I submitted on [date original complaint was sent] regarding [brief description of issue] at [address/location]. My date of birth and tenant/account number above are provided to help you verify my tenancy and locate my file.
 
-Under Túath Housing's Complaints Policy and Procedure (v6.0, October 2024), complaints are to be acknowledged within 5 working days of receipt. As of today, [number] working days have passed since my complaint was submitted, and I have not yet received an acknowledgement.
+Under Túath Housing's Complaints Policy and Procedure (Version 4.0, 2022), complaints are to be acknowledged within 5 working days of receipt. As of today, [number] working days have passed since my complaint was submitted, and I have not yet received an acknowledgement.
 
 I would be grateful if you could:
 1. Confirm receipt of my original complaint,
