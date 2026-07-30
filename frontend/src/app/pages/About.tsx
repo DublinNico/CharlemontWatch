@@ -1,11 +1,84 @@
-import { Shield, AlertTriangle, Camera, Users, FileText, Heart, Scale } from 'lucide-react';
+import { useState } from 'react';
+import { Shield, AlertTriangle, Camera, Users, FileText, Heart, Scale, Clock, Copy, Check } from 'lucide-react';
 import { Header } from '../components/Header';
 import { useNavigate } from 'react-router';
+
+// Copy-and-paste follow-up letters for residents whose complaint acknowledgement
+// is overdue — kept as plain text (not JSX) so they paste cleanly into an email client.
+const TUATH_FOLLOWUP_TEMPLATE = `[Your Name]
+[Your Address]
+[Date]
+
+Túath Housing
+[Complaints team email/address]
+
+Re: Formal Complaint Follow Up, CharlemontWatch Tracking ID [CW-XXXXXX]
+
+Dear Sir/Madam,
+
+I am writing to follow up on a formal complaint I submitted on [date original complaint was sent] regarding [brief description of issue] at [address/location].
+
+Under Túath Housing's Complaints Policy and Procedure (v6.0, October 2024), complaints are to be acknowledged within 5 working days of receipt. As of today, [number] working days have passed since my complaint was submitted, and I have not yet received an acknowledgement.
+
+I would be grateful if you could:
+1. Confirm receipt of my original complaint,
+2. Provide a complaint reference number, and
+3. Advise on the expected timeline for a full written response, which under the same policy should be provided within 30 working days of the original complaint.
+
+For reference, this complaint was submitted via CharlemontWatch and can be tracked using ID [CW-XXXXXX].
+
+I look forward to your response.
+
+Yours sincerely,
+[Your Name]
+[Your Email]
+[Your Phone Number, optional]`;
+
+const DCC_FOLLOWUP_TEMPLATE = `[Your Name]
+[Your Address]
+[Date]
+
+Dublin City Council
+[Complaints team email/address]
+
+Re: Formal Complaint Follow Up, CharlemontWatch Tracking ID [CW-XXXXXX]
+
+Dear Sir/Madam,
+
+I am writing to follow up on a formal complaint I submitted on [date original complaint was sent] regarding [brief description of issue] at [address/location].
+
+Under Dublin City Council's Customer Complaints procedure, complaints are to be acknowledged within 3 working days of receipt. As of today, [number] working days have passed since my complaint was submitted, and I have not yet received an acknowledgement.
+
+I would be grateful if you could:
+1. Confirm receipt of my original complaint,
+2. Provide a complaint reference number, and
+3. Advise on the expected timeline for a full written response, which should be provided within 15 working days of the original complaint.
+
+For reference, this complaint was submitted via CharlemontWatch and can be tracked using ID [CW-XXXXXX].
+
+I look forward to your response.
+
+Yours sincerely,
+[Your Name]
+[Your Email]
+[Your Phone Number, optional]`;
 
 // Static "About" page: mission, how it works, complaint vs. report-only
 // explainer, photo guidelines, safety/privacy rules, and the donate button
 export function About() {
   const navigate = useNavigate();
+  const [copiedTemplate, setCopiedTemplate] = useState<'tuath' | 'dcc' | null>(null);
+
+  // Copies the relevant follow-up letter template to the clipboard and flashes a checkmark
+  const handleCopyTemplate = (org: 'tuath' | 'dcc') => {
+    const text = org === 'tuath' ? TUATH_FOLLOWUP_TEMPLATE : DCC_FOLLOWUP_TEMPLATE;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedTemplate(org);
+      setTimeout(() => setCopiedTemplate(null), 2000);
+    }).catch(() => {
+      // clipboard write failed — silently ignore (permission denied, insecure context)
+    });
+  };
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
@@ -192,6 +265,53 @@ export function About() {
                   <span>Requires an official written response within 30 working days (Túath) or 15 working days (Dublin City Council)</span>
                 </li>
               </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Late Acknowledgement */}
+        <div className="bg-white rounded shadow-sm p-6">
+          <div className="flex items-start gap-4">
+            <Clock className="w-10 h-10 text-[#1976d2] flex-shrink-0" />
+            <div>
+              <h2 className="text-[#333333] mb-3">If Your Acknowledgement Is Late</h2>
+              <p className="text-[#666666] mb-3">
+                Túath should acknowledge a formal complaint within 5 working days, and Dublin City Council within
+                3 working days. If that window passes with no acknowledgement, it's too early to escalate to the
+                RTB or an Ombudsman, that only applies once the full response deadline (30 working days for
+                Túath, 15 for Dublin City Council) has also been missed.
+              </p>
+              <p className="text-[#666666] mb-4">
+                Instead, send a written follow-up (not a phone call) referencing your CharlemontWatch tracking ID
+                and the date the complaint was sent, and ask for a complaint reference number if you weren't given
+                one. Keep this follow-up in writing, it's useful evidence later if the full response deadline is
+                also missed.
+              </p>
+
+              <div className="space-y-4">
+                {([
+                  { key: 'tuath', label: 'Túath Housing follow-up letter', text: TUATH_FOLLOWUP_TEMPLATE },
+                  { key: 'dcc', label: 'Dublin City Council follow-up letter', text: DCC_FOLLOWUP_TEMPLATE },
+                ] as const).map(template => (
+                  <div key={template.key} className="border border-[#eeeeee] rounded overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2 bg-[#f5f5f5] border-b border-[#eeeeee]">
+                      <span className="text-sm text-[#333333]">{template.label}</span>
+                      <button
+                        onClick={() => handleCopyTemplate(template.key)}
+                        className="flex items-center gap-1 text-xs text-[#1976d2] hover:underline"
+                      >
+                        {copiedTemplate === template.key
+                          ? <Check className="w-3.5 h-3.5 text-[#388e3c]" />
+                          : <Copy className="w-3.5 h-3.5" />}
+                        {copiedTemplate === template.key ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
+                    <pre className="px-4 py-3 text-xs leading-relaxed text-[#666666] whitespace-pre-wrap max-h-64 overflow-y-auto">
+                      {template.text}
+                    </pre>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
