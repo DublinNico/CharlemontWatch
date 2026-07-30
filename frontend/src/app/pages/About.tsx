@@ -161,7 +161,7 @@ export function About() {
                 Reporting an issue on an app alone achieves nothing. Túath Housing and Dublin City Council are not obliged to act on community posts or photos.
               </p>
               <p className="text-[#666666] mb-3">
-                A <strong>formal complaint</strong> is different. Under Túath's Complaints Policy and Dublin City Council's customer complaints process, they are legally required to acknowledge your complaint within 5 working days (Túath) or 3 working days (Dublin City Council), and provide a written response within 30 working days (Túath) or 15 working days (Dublin City Council).
+                A <strong>formal complaint</strong> is different. Under Túath's own published Complaints Policy and Dublin City Council's own Customer Complaints Procedure, they are committed to acknowledging your complaint within 5 working days (Túath) or 3 working days (Dublin City Council), and providing a written response within 30 working days (Túath) or 15 working days (Dublin City Council).
               </p>
               <p className="text-[#666666]">
                 CharlemontWatch combines both: your report builds a public evidence record, and the formal complaint forces an official response. Together, they create accountability that neither can achieve alone.
@@ -332,8 +332,9 @@ export function About() {
               <p className="text-[#666666] mb-3">
                 If you've sent a formal complaint through CharlemontWatch and Túath hasn't responded within the
                 30 working day window, or hasn't resolved the issue, you don't have to leave it there. You can
-                open a dispute directly with the RTB, free mediation, adjudication, or a tribunal hearing, none
-                of which require a solicitor.
+                open a dispute directly with the RTB: mediation is free, while adjudication (from around €15
+                online) and a tribunal appeal (around €85) carry a small fee. None of the three require a
+                solicitor.
               </p>
               <p className="text-[#666666]">
                 Keep a record of when you first raised the issue and any responses (or lack of one), your
