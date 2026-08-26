@@ -8,9 +8,18 @@ name: Keep Render Instance Warm
 # independent second ping source — even if UptimeRobot skips a beat, this
 # runs on its own schedule so a single gap on one side doesn't leave the
 # instance unmonitored/asleep.
+#
+# 2026-08-26: pinging around the clock kept the instance awake 24/7, which
+# burned through Render's 750 free instance-hours/month almost by itself
+# (615/750 used by day 26). Ping is now paused 00:00-06:00 UTC so the
+# instance can actually sleep overnight and claw back headroom; the tradeoff
+# is a cold start on the first request during that window. If UptimeRobot
+# is still pinging every few minutes through the night, it will keep the
+# instance awake regardless — pause or widen its interval for the same
+# window to actually see the hour savings.
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/20 6-23 * * *'
   workflow_dispatch: {}
 
 jobs:
