@@ -12,6 +12,7 @@ export const config = {
 
 const API_BASE = process.env.VITE_API_URL || 'https://charlemontwatch.onrender.com/api';
 const API_TIMEOUT_MS = 8000;
+const TEMPLATE_TIMEOUT_MS = 3000;
 
 const PREVIEW_BOTS = /facebookexternalhit|facebot|twitterbot|whatsapp|slackbot|linkedinbot|discordbot|telegrambot|pinterest|redditbot|skypeuripreview|embedly|iframely|vkshare|applebot|googlebot|bingbot|mastodon|bluesky|snapchat|viber|outbrain|quora link preview/i;
 
@@ -33,28 +34,37 @@ const truncate = (text, max) =>
   text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
 
 // Replaces the content="" of an existing <meta> tag matched by its
-// property/name attribute, leaving the rest of index.html untouched
+// property/name attribute, leaving the rest of index.html untouched. Uses a
+// replacement callback so "$&"-style sequences in incident text stay literal.
 const setMeta = (html, attr, key, value) =>
   html.replace(
     new RegExp(`(<meta\\s+${attr}="${key}"\\s+content=")[^"]*(")`, 'i'),
-    `$1${escapeHtml(value)}$2`,
+    (_, open, close) => `${open}${escapeHtml(value)}${close}`,
   );
 
-const fetchIncident = async id => {
+// Fetches and parses a response within a time limit; resolves to null on
+// timeout, network error or non-2xx so the caller can fall back cleanly
+const fetchWithTimeout = async (resource, timeoutMs, parse) => {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${API_BASE}/incidents/${encodeURIComponent(id)}`, {
-      signal: controller.signal,
-    });
+    const res = await fetch(resource, { signal: controller.signal });
     if (!res.ok) return null;
-    const data = await res.json();
-    return data.incident || data;
+    return await parse(res);
   } catch {
     return null;
   } finally {
     clearTimeout(timer);
   }
+};
+
+const fetchIncident = async id => {
+  const data = await fetchWithTimeout(
+    `${API_BASE}/incidents/${encodeURIComponent(id)}`,
+    API_TIMEOUT_MS,
+    res => res.json(),
+  );
+  return data && (data.incident || data);
 };
 
 export default async function middleware(request) {
@@ -65,11 +75,11 @@ export default async function middleware(request) {
   // Returning nothing lets the request continue to the normal SPA rewrite
   if (!id || !PREVIEW_BOTS.test(userAgent)) return;
 
-  const [incident, indexRes] = await Promise.all([
+  const [incident, template] = await Promise.all([
     fetchIncident(id),
-    fetch(new URL('/index.html', url)),
+    fetchWithTimeout(new URL('/index.html', url), TEMPLATE_TIMEOUT_MS, res => res.text()),
   ]);
-  if (!incident || !indexRes.ok) return;
+  if (!incident || !template) return;
 
   const typeName = TYPE_NAMES[String(incident.incidentType).toLowerCase()] || 'Incident';
   const title = `${incident.title || typeName} – ${incident.location || 'Charlemont Street'} | CharlemontWatch`;
@@ -80,8 +90,7 @@ export default async function middleware(request) {
   const photo = (incident.photos || []).find(p => p && p.url && p.approved !== false);
   const shareUrl = `${url.origin}/track?id=${encodeURIComponent(incident.shortId || id)}`;
 
-  let html = await indexRes.text();
-  html = html.replace(/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`);
+  let html = template.replace(/<title>[^<]*<\/title>/i, () => `<title>${escapeHtml(title)}</title>`);
   html = setMeta(html, 'name', 'description', description);
   html = setMeta(html, 'property', 'og:type', 'article');
   html = setMeta(html, 'property', 'og:url', shareUrl);
