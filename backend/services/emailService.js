@@ -41,7 +41,7 @@ const send = async (msg) => {
 const sendResidentConfirmation = async (incident, residentEmail) => {
   if (!residentEmail) return;
 
-  const trackingLink = `${process.env.FRONTEND_URL}/track`;
+  const trackingLink = `${process.env.FRONTEND_URL}/track?id=${incident.shortId}`;
 
   try {
     await send({
@@ -62,7 +62,7 @@ const sendResidentConfirmation = async (incident, residentEmail) => {
         <p><strong>Type:</strong> ${escapeHtml(getIncidentTypeName(incident.incidentType))}</p>
         <p><strong>Status:</strong> ${escapeHtml(incident.status)}</p>
 
-        <p>To track your report, go to <a href="${trackingLink}">${trackingLink}</a> and enter your Incident ID.</p>
+        <p><a href="${trackingLink}">Track your report on CharlemontWatch</a></p>
         <p>We'll email you when the status changes.</p>
         <p>CharlemontWatch Team</p>
       `
