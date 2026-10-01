@@ -50,37 +50,50 @@ export interface TurnstileWidgetHandle {
 // back to the parent form. Renders nothing if VITE_TURNSTILE_SITE_KEY isn't
 // set, so the CAPTCHA step is opt-in until that's configured.
 //
-// Uses execution: 'execute' rather than the default auto-run — reports here
-// can take residents several minutes to fill out (writing a description,
-// taking/uploading several photos, often backgrounding the tab for the
-// camera), and Turnstile tokens expire after ~5 minutes with unreliable
-// auto-refresh on a backgrounded mobile tab. Generating the token on-demand
-// right before submit, via execute(), avoids submitting a stale token.
+// The widget runs as soon as the form loads so residents can see (and, if
+// Cloudflare asks, complete) the challenge before they press submit. Reports
+// can take several minutes to fill out and tokens expire after ~5 minutes,
+// so execute() hands back the current token only while it's still fresh;
+// otherwise it resets the widget to run a new challenge and waits for that.
+const TOKEN_MAX_AGE_MS = 4 * 60 * 1000;
+
 export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidgetProps>(
   function TurnstileWidget({ onVerify, onExpire, onError }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const widgetId = useRef<string | null>(null);
-    // execute() can be called before render() has finished (script still
-    // loading) — Cloudflare's execute() requires the widget to already be
-    // rendered on the container, so a call that arrives too early is queued
-    // here and flushed the moment render() completes, instead of silently
-    // doing nothing.
-    const pendingExecuteRef = useRef(false);
+    const tokenRef = useRef<{ value: string; issuedAt: number } | null>(null);
+    // Set while the parent is waiting on execute() — callbacks only reach the
+    // parent then, so an expiry while the resident is still typing doesn't
+    // surface as a form error.
+    const waitingRef = useRef(false);
     const id = useId();
     const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
+    // Keep the latest parent callbacks without re-rendering the widget
+    const callbacks = useRef({ onVerify, onExpire, onError });
+    callbacks.current = { onVerify, onExpire, onError };
+
+    const resetWidget = () => {
+      tokenRef.current = null;
+      if (widgetId.current && window.turnstile) {
+        window.turnstile.reset(widgetId.current);
+      }
+    };
+
     useImperativeHandle(ref, () => ({
-      reset: () => {
-        if (widgetId.current && window.turnstile) {
-          window.turnstile.reset(widgetId.current);
-        }
-      },
+      reset: resetWidget,
       execute: () => {
-        if (widgetId.current && containerRef.current && window.turnstile) {
-          window.turnstile.execute(containerRef.current);
-        } else {
-          pendingExecuteRef.current = true;
+        const token = tokenRef.current;
+        if (token && Date.now() - token.issuedAt < TOKEN_MAX_AGE_MS) {
+          // Tokens are single-use, so don't hand the same one out twice
+          tokenRef.current = null;
+          callbacks.current.onVerify(token.value);
+          return;
         }
+        waitingRef.current = true;
+        // No fresh token: run a new challenge (or, if the widget is still
+        // loading, its first challenge) and pass the result straight through
+        if (widgetId.current) resetWidget();
       },
     }), []);
 
@@ -92,18 +105,30 @@ export const TurnstileWidget = forwardRef<TurnstileWidgetHandle, TurnstileWidget
         if (cancelled || !containerRef.current || !window.turnstile) return;
         widgetId.current = window.turnstile.render(containerRef.current, {
           sitekey: siteKey,
-          execution: 'execute',
-          callback: onVerify,
-          'expired-callback': onExpire,
-          'error-callback': onError,
+          callback: (value: string) => {
+            if (waitingRef.current) {
+              waitingRef.current = false;
+              callbacks.current.onVerify(value);
+            } else {
+              tokenRef.current = { value, issuedAt: Date.now() };
+            }
+          },
+          'expired-callback': () => {
+            tokenRef.current = null;
+            if (waitingRef.current) {
+              waitingRef.current = false;
+              callbacks.current.onExpire?.();
+            }
+          },
+          'error-callback': () => {
+            tokenRef.current = null;
+            waitingRef.current = false;
+            callbacks.current.onError?.();
+          },
         });
-        if (pendingExecuteRef.current) {
-          pendingExecuteRef.current = false;
-          window.turnstile.execute(containerRef.current);
-        }
       }).catch(error => {
         console.error(error);
-        onError?.();
+        callbacks.current.onError?.();
       });
 
       return () => {
