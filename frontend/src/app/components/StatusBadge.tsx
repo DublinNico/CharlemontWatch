@@ -1,7 +1,7 @@
 import React from 'react';
 import { IncidentStatus } from '../context/AppContext';
 import { Badge } from './ui/badge';
-import { Clock, CheckCircle2, AlertCircle, Eye, XCircle } from 'lucide-react';
+import { Clock, CheckCircle2, Hourglass, AlertTriangle, Eye, XCircle } from 'lucide-react';
 
 interface StatusBadgeProps {
   status: IncidentStatus;
@@ -16,10 +16,15 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       className: 'bg-purple-100 text-purple-700 border-purple-300 hover:bg-purple-100',
       icon: Eye,
     },
-    NEW: {
-      label: 'New',
+    AWAITING_RESPONSE: {
+      label: 'Awaiting Response',
       className: 'bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-100',
-      icon: AlertCircle,
+      icon: Hourglass,
+    },
+    NO_RESPONSE: {
+      label: 'No Response',
+      className: 'bg-rose-100 text-rose-700 border-rose-300 hover:bg-rose-100',
+      icon: AlertTriangle,
     },
     IN_PROGRESS: {
       label: 'In Progress',
@@ -38,7 +43,9 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     },
   };
 
-  const config = configs[status];
+  // Falls back to Awaiting Response for any status this build doesn't know
+  // (e.g. a legacy NEW record not yet migrated) instead of crashing — see BUG-006
+  const config = configs[status] ?? configs.AWAITING_RESPONSE;
   const Icon = config.icon;
 
   return (

@@ -19,7 +19,7 @@ export interface SatisfactionSummary {
 }
 
 export type IncidentType = 'Graffiti' | 'Anti-Social Behaviour' | 'Safety Hazard' | 'Maintenance Issue';
-export type IncidentStatus = 'PENDING_REVIEW' | 'NEW' | 'IN_PROGRESS' | 'RESOLVED' | 'REJECTED';
+export type IncidentStatus = 'PENDING_REVIEW' | 'AWAITING_RESPONSE' | 'NO_RESPONSE' | 'IN_PROGRESS' | 'RESOLVED' | 'REJECTED';
 
 export interface Photo {
   id: string;
@@ -58,7 +58,7 @@ export interface Incident {
   // Server-computed: one entry per sent complaint, tracking a plain
   // days-elapsed timer against the 30 working day formal written response
   // deadline — see About page for the source of that number. responseOverdue
-  // is only ever true while the incident is still NEW/IN_PROGRESS, but an
+  // is only ever true while the incident is still open (not RESOLVED), but an
   // entry stays present after resolution too.
   complaintTimeline?: {
     recipientType: 'tuath' | 'dcc';
@@ -274,7 +274,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return response.data.incidentId;
   };
 
-  // Admin action: progress an incident's status (NEW -> IN_PROGRESS -> RESOLVED)
+  // Admin action: change an approved incident's status
   const updateIncidentStatus = async (id: string, status: IncidentStatus): Promise<void> => {
     await axios.patch(
       `${API_BASE}/incidents/admin/${id}/status`,

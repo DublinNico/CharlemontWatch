@@ -37,7 +37,7 @@ const mockIncident = {
   type: 'Graffiti' as const,
   location: 'Block A, Charlemont Street',
   description: 'Graffiti on the south wall',
-  status: 'NEW' as const,
+  status: 'AWAITING_RESPONSE' as const,
   date: '2026-05-31T10:00:00Z',
   photos: [],
 };
@@ -62,7 +62,7 @@ describe('TrackReport — successful search', () => {
         incidentType: 'graffiti',
         location: 'Block A, Charlemont Street',
         description: 'Graffiti on the south wall',
-        status: 'NEW',
+        status: 'AWAITING_RESPONSE',
         reportedDate: '2026-05-31T10:00:00Z',
         photos: [],
       },

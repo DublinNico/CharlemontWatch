@@ -126,7 +126,7 @@ export function ReportIncident() {
         location: formData.location,
         description: formData.description,
         reporterEmail,
-        status: 'NEW',
+        status: 'AWAITING_RESPONSE',
         photos,
         typeSpecificData,
       }, complaintData, turnstileToken);

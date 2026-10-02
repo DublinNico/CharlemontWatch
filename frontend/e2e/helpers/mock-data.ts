@@ -5,7 +5,7 @@ export const MOCK_INCIDENT = {
   title: 'Graffiti on the south wall',
   location: 'Block A, Charlemont Street',
   description: 'Large graffiti tag on the south wall',
-  status: 'NEW',
+  status: 'AWAITING_RESPONSE',
   reportedDate: '2026-05-31T10:00:00.000Z',
   createdAt: '2026-05-31T10:00:00.000Z',
   photos: [],

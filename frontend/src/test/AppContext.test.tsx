@@ -25,7 +25,7 @@ const mockApiIncident = {
   incidentType: 'graffiti',
   location: 'Block A',
   description: 'Test graffiti',
-  status: 'NEW',
+  status: 'AWAITING_RESPONSE',
   reportedDate: '2026-05-31T10:00:00Z',
   photos: [],
 };
@@ -51,7 +51,7 @@ describe('AppContext — refreshIncidents', () => {
     expect(incident.id).toBe('CW-ABC123');
     expect(incident.type).toBe('Graffiti');
     expect(incident.location).toBe('Block A');
-    expect(incident.status).toBe('NEW');
+    expect(incident.status).toBe('AWAITING_RESPONSE');
   });
 });
 
@@ -160,7 +160,7 @@ describe('AppContext — updateIncidentStatus', () => {
     const { result } = renderHook(() => useApp(), { wrapper });
 
     await waitFor(() => expect(result.current.incidents).toHaveLength(1));
-    expect(result.current.incidents[0].status).toBe('NEW');
+    expect(result.current.incidents[0].status).toBe('AWAITING_RESPONSE');
 
     await act(async () => {
       await result.current.updateIncidentStatus('CW-ABC123', 'IN_PROGRESS');

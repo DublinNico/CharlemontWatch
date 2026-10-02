@@ -40,7 +40,8 @@ export function AllIncidents() {
   // Header summary counts (unaffected by the active filters)
   const stats = [
     { label: 'Total', value: incidents.length, color: 'text-slate-600' },
-    { label: 'New', value: incidents.filter(i => i.status === 'NEW').length, color: 'text-blue-600' },
+    { label: 'Awaiting Response', value: incidents.filter(i => i.status === 'AWAITING_RESPONSE').length, color: 'text-blue-600' },
+    { label: 'No Response', value: incidents.filter(i => i.status === 'NO_RESPONSE').length, color: 'text-rose-600' },
     { label: 'In Progress', value: incidents.filter(i => i.status === 'IN_PROGRESS').length, color: 'text-amber-600' },
     { label: 'Resolved', value: incidents.filter(i => i.status === 'RESOLVED').length, color: 'text-emerald-600' },
   ];
@@ -112,7 +113,8 @@ export function AllIncidents() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="NEW">New</SelectItem>
+                    <SelectItem value="AWAITING_RESPONSE">Awaiting Response</SelectItem>
+                    <SelectItem value="NO_RESPONSE">No Response</SelectItem>
                     <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                     <SelectItem value="RESOLVED">Resolved</SelectItem>
                   </SelectContent>
