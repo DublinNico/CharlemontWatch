@@ -35,7 +35,7 @@ const mockIncident = {
   incidentType: 'graffiti',
   location: 'Block A, Charlemont Street',
   description: 'Graffiti found on the south wall',
-  status: 'NEW',
+  status: 'AWAITING_RESPONSE',
   reportedDate: new Date('2025-05-27T10:00:00Z'),
   photos: [],
   reporterEmail: 'jane@example.com',

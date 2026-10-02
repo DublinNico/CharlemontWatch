@@ -107,8 +107,15 @@ const sendStatusUpdate = async (incident, residentEmail) => {
   if (!residentEmail) return;
 
   const trackingLink = `${process.env.FRONTEND_URL}/track?id=${incident.shortId}`;
+  const statusLabels = {
+    AWAITING_RESPONSE: 'Awaiting Response',
+    NO_RESPONSE: 'No Response',
+    IN_PROGRESS: 'In Progress',
+    RESOLVED: 'Resolved'
+  };
   const statusMessages = {
-    NEW: 'Your report has been received and is waiting to be processed.',
+    AWAITING_RESPONSE: 'Your report has been sent on and we\'re waiting for a response.',
+    NO_RESPONSE: 'No response has been received within the required timeframe. We\'re following this up.',
     IN_PROGRESS: 'Work has started on your report. We\'re on it!',
     RESOLVED: 'Your report has been resolved. Thank you for helping keep Charlemont safe!'
   };
@@ -118,11 +125,11 @@ const sendStatusUpdate = async (incident, residentEmail) => {
       from: FROM,
       to: [residentEmail],
       replyTo: process.env.ADMIN_EMAIL,
-      subject: `Incident ${incident.shortId} - Status: ${incident.status}`,
+      subject: `Incident ${incident.shortId} - Status: ${statusLabels[incident.status] || incident.status}`,
       html: `
         <h2>Status Update</h2>
         <p>Your incident (ID: ${incident.shortId}) status has changed.</p>
-        <p><strong>New Status:</strong> ${incident.status}</p>
+        <p><strong>New Status:</strong> ${statusLabels[incident.status] || incident.status}</p>
         <p>${statusMessages[incident.status]}</p>
         <p><a href="${trackingLink}">View Full Report</a></p>
       `

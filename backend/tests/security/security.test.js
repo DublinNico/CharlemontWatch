@@ -149,7 +149,7 @@ describe('ST-006: resident JWT is forbidden from deleting incidents', () => {
       location: 'Block A',
       description: 'Test',
       reporterEmail: 'jane@example.com',
-      status: 'NEW',
+      status: 'AWAITING_RESPONSE',
     });
 
     const res = await request(app)

@@ -9,7 +9,7 @@ const baseIncident: Incident = {
   type: 'Graffiti',
   location: 'Block A, Charlemont Street',
   description: 'Graffiti on the south wall',
-  status: 'NEW',
+  status: 'AWAITING_RESPONSE',
   date: '2026-07-01T10:00:00Z',
   photos: [],
 };

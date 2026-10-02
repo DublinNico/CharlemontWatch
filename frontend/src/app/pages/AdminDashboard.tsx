@@ -225,9 +225,9 @@ export function AdminDashboard() {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('queue');
-  const [statusFilter, setStatusFilter] = useState<IncidentStatus>('NEW');
+  const [statusFilter, setStatusFilter] = useState<IncidentStatus>('AWAITING_RESPONSE');
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
-  const [newStatus, setNewStatus] = useState<IncidentStatus>('NEW');
+  const [newStatus, setNewStatus] = useState<IncidentStatus>('AWAITING_RESPONSE');
   const [isUpdating, setIsUpdating] = useState(false);
   const [actionError, setActionError] = useState('');
   const [reviewingId, setReviewingId] = useState<string | null>(null);
@@ -246,7 +246,8 @@ export function AdminDashboard() {
 
   // Tab-pill counts for the Manage Incidents view
   const statusCounts = {
-    NEW: incidents.filter(i => i.status === 'NEW').length,
+    AWAITING_RESPONSE: incidents.filter(i => i.status === 'AWAITING_RESPONSE').length,
+    NO_RESPONSE: incidents.filter(i => i.status === 'NO_RESPONSE').length,
     IN_PROGRESS: incidents.filter(i => i.status === 'IN_PROGRESS').length,
     RESOLVED: incidents.filter(i => i.status === 'RESOLVED').length,
   };
@@ -387,23 +388,22 @@ export function AdminDashboard() {
         {activeTab === 'manage' && (
           <>
             <div className="flex flex-wrap gap-3">
-              {(['NEW', 'IN_PROGRESS', 'RESOLVED'] as IncidentStatus[]).map(s => {
-                const colors: Record<string, string> = {
-                  NEW: '#1976d2', IN_PROGRESS: '#f57c00', RESOLVED: '#388e3c'
+              {(['AWAITING_RESPONSE', 'NO_RESPONSE', 'IN_PROGRESS', 'RESOLVED'] as IncidentStatus[]).map(s => {
+                // Full class strings (not interpolated) so Tailwind's scanner picks them up
+                const tabClasses: Record<string, { selected: string; unselected: string }> = {
+                  AWAITING_RESPONSE: { selected: 'bg-[#1976d2] text-white', unselected: 'border border-[#1976d2] text-[#1976d2]' },
+                  NO_RESPONSE: { selected: 'bg-[#d32f2f] text-white', unselected: 'border border-[#d32f2f] text-[#d32f2f]' },
+                  IN_PROGRESS: { selected: 'bg-[#f57c00] text-white', unselected: 'border border-[#f57c00] text-[#f57c00]' },
+                  RESOLVED: { selected: 'bg-[#388e3c] text-white', unselected: 'border border-[#388e3c] text-[#388e3c]' },
                 };
-                const color = colors[s];
+                const classes = tabClasses[s];
                 return (
                   <button
                     key={s}
                     onClick={() => setStatusFilter(s)}
-                    className="px-6 py-2 rounded-full transition-colors text-sm"
-                    style={
-                      statusFilter === s
-                        ? { backgroundColor: color, color: '#fff' }
-                        : { border: `1px solid ${color}`, color }
-                    }
+                    className={`px-6 py-2 rounded-full transition-colors text-sm ${statusFilter === s ? classes.selected : classes.unselected}`}
                   >
-                    {s.replace('_', ' ')} ({statusCounts[s as keyof typeof statusCounts]})
+                    {s.replace(/_/g, ' ')} ({statusCounts[s as keyof typeof statusCounts]})
                   </button>
                 );
               })}
@@ -411,7 +411,7 @@ export function AdminDashboard() {
 
             {filteredIncidents.length === 0 ? (
               <div className="bg-white rounded shadow-sm p-12 text-center">
-                <p className="text-[#666666]">No incidents with status {statusFilter}</p>
+                <p className="text-[#666666]">No incidents with status {statusFilter.replace(/_/g, ' ')}</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -447,7 +447,8 @@ export function AdminDashboard() {
                 value={newStatus}
                 onChange={e => setNewStatus(e.target.value as IncidentStatus)}
               >
-                <option value="NEW">NEW</option>
+                <option value="AWAITING_RESPONSE">AWAITING RESPONSE</option>
+                <option value="NO_RESPONSE">NO RESPONSE</option>
                 <option value="IN_PROGRESS">IN PROGRESS</option>
                 <option value="RESOLVED">RESOLVED</option>
               </select>

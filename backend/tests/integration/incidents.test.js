@@ -154,9 +154,9 @@ describe('POST /api/incidents/report', () => {
 describe('GET /api/incidents', () => {
   beforeEach(async () => {
     await Incident.create([
-      { ...validBody, shortId: 'CW-000001', status: 'NEW' },
+      { ...validBody, shortId: 'CW-000001', status: 'AWAITING_RESPONSE' },
       { ...validBody, shortId: 'CW-000002', status: 'IN_PROGRESS' },
-      { ...validBody, shortId: 'CW-000003', incidentType: 'antisocial', status: 'NEW' },
+      { ...validBody, shortId: 'CW-000003', incidentType: 'antisocial', status: 'AWAITING_RESPONSE' },
       { ...validBody, shortId: 'CW-000004', status: 'PENDING_REVIEW' },
       { ...validBody, shortId: 'CW-000005', status: 'REJECTED' },
     ]);
@@ -172,10 +172,10 @@ describe('GET /api/incidents', () => {
     expect(statuses).not.toContain('REJECTED');
   });
 
-  test('IT-007: ?status=NEW returns only NEW incidents', async () => {
-    const res = await request(app).get('/api/incidents?status=NEW');
+  test('IT-007: ?status=AWAITING_RESPONSE returns only AWAITING_RESPONSE incidents', async () => {
+    const res = await request(app).get('/api/incidents?status=AWAITING_RESPONSE');
     expect(res.status).toBe(200);
-    expect(res.body.every(i => i.status === 'NEW')).toBe(true);
+    expect(res.body.every(i => i.status === 'AWAITING_RESPONSE')).toBe(true);
     expect(res.body).toHaveLength(2);
   });
 
@@ -205,7 +205,7 @@ describe('GET /api/incidents', () => {
     await Incident.create({
       ...validBody,
       shortId: 'CW-PHOTOS',
-      status: 'NEW',
+      status: 'AWAITING_RESPONSE',
       photos: [
         { url: 'https://s3.example.com/approved.jpg', approved: true },
         { url: 'https://s3.example.com/unapproved.jpg', approved: false },
@@ -225,7 +225,7 @@ describe('GET /api/incidents/:id', () => {
   let incident;
 
   beforeEach(async () => {
-    incident = await Incident.create({ ...validBody, shortId: 'CW-ABCDEF', status: 'NEW' });
+    incident = await Incident.create({ ...validBody, shortId: 'CW-ABCDEF', status: 'AWAITING_RESPONSE' });
   });
 
   test('IT-009: valid shortId returns the incident', async () => {
@@ -249,7 +249,7 @@ describe('GET /api/incidents/:id', () => {
     await Incident.create({
       ...validBody,
       shortId: 'CW-ACTIVE',
-      status: 'NEW',
+      status: 'AWAITING_RESPONSE',
       complainantName: 'Jane Doe',
       complainantAddress: '1 Charlemont Street',
       photos: [
@@ -312,7 +312,7 @@ describe('PATCH /api/incidents/admin/:id/status', () => {
   let incident;
 
   beforeEach(async () => {
-    incident = await Incident.create({ ...validBody, shortId: 'CW-STATUS1', status: 'NEW' });
+    incident = await Incident.create({ ...validBody, shortId: 'CW-STATUS1', status: 'AWAITING_RESPONSE' });
   });
 
   test('IT-012: valid status + admin JWT returns 200 and updated incident', async () => {
@@ -354,7 +354,7 @@ describe('DELETE /api/incidents/admin/:id', () => {
   let incident;
 
   beforeEach(async () => {
-    incident = await Incident.create({ ...validBody, shortId: 'CW-DELETE1', status: 'NEW' });
+    incident = await Incident.create({ ...validBody, shortId: 'CW-DELETE1', status: 'AWAITING_RESPONSE' });
   });
 
   test('IT-016: admin JWT deletes the incident and returns 200', async () => {
@@ -383,13 +383,13 @@ describe('PATCH /api/incidents/admin/:id/review', () => {
     incident = await Incident.create({ ...validBody, shortId: 'CW-REVIEW1', status: 'PENDING_REVIEW' });
   });
 
-  test('IT-034: admin JWT approves a pending incident, moving it to NEW', async () => {
+  test('IT-034: admin JWT approves a pending incident, moving it to AWAITING_RESPONSE', async () => {
     const res = await request(app)
       .patch(`/api/incidents/admin/${incident.shortId}/review`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ action: 'approve' });
     expect(res.status).toBe(200);
-    expect(res.body.incident.status).toBe('NEW');
+    expect(res.body.incident.status).toBe('AWAITING_RESPONSE');
   });
 
   test('IT-034-A: approving marks all of the incident\'s photos approved', async () => {
@@ -447,7 +447,7 @@ describe('PATCH /api/incidents/admin/:id/review', () => {
   });
 
   test('IT-040: an already-reviewed incident returns 409', async () => {
-    incident.status = 'NEW';
+    incident.status = 'AWAITING_RESPONSE';
     await incident.save();
     const res = await request(app)
       .patch(`/api/incidents/admin/${incident.shortId}/review`)

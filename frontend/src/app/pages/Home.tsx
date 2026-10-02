@@ -1,4 +1,4 @@
-import { Shield, Search, List, ArrowRight, Bell, MapPin, Users, FileText, Eye, CheckCircle, Send } from 'lucide-react';
+import { Shield, Search, List, ArrowRight, Bell, MapPin, Users, FileText, Eye, CheckCircle, Send, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { SatisfactionWidget } from '../components/SatisfactionWidget';
@@ -14,7 +14,7 @@ export function Home() {
   const { isAuthenticated, incidents } = useApp();
 
   // Summary counts shown in the "Incident Types" section — mirrors the
-  // Total/New/In Progress/Resolved breakdown on the All Incidents page
+  // per-status breakdown on the All Incidents page
   const stats = [
     {
       label: 'Total',
@@ -23,10 +23,16 @@ export function Home() {
       color: 'text-slate-600',
     },
     {
-      label: 'New',
-      value: incidents.filter(i => i.status === 'NEW').length,
+      label: 'Awaiting Response',
+      value: incidents.filter(i => i.status === 'AWAITING_RESPONSE').length,
       icon: Send,
       color: 'text-blue-600',
+    },
+    {
+      label: 'No Response',
+      value: incidents.filter(i => i.status === 'NO_RESPONSE').length,
+      icon: AlertTriangle,
+      color: 'text-rose-600',
     },
     {
       label: 'In Progress',
@@ -182,7 +188,7 @@ export function Home() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mt-12">
             {stats.map((stat, index) => (
               <Card key={index} className="border-0 shadow-lg">
                 <CardContent className="p-6">

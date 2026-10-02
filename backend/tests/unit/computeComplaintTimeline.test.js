@@ -19,7 +19,7 @@ afterEach(() => {
 describe('computeComplaintTimeline', () => {
   test('UT-090: returns an entry for a sent complaint even when nothing is overdue yet', () => {
     const incident = {
-      status: 'NEW',
+      status: 'AWAITING_RESPONSE',
       complaintsSent: [{ recipientType: 'tuath', sentAt: TWO_BUSINESS_DAYS_AGO }],
     };
 
@@ -34,28 +34,28 @@ describe('computeComplaintTimeline', () => {
   });
 
   test('UT-095: Túath response overdue at the 30 working day threshold', () => {
-    const incident = { status: 'NEW', complaintsSent: [{ recipientType: 'tuath', sentAt: THIRTY_BUSINESS_DAYS_AGO }] };
+    const incident = { status: 'AWAITING_RESPONSE', complaintsSent: [{ recipientType: 'tuath', sentAt: THIRTY_BUSINESS_DAYS_AGO }] };
     const entry = computeComplaintTimeline(incident)[0];
     expect(entry.responseThresholdDays).toBe(30);
     expect(entry.responseOverdue).toBe(true);
   });
 
   test('UT-095b: DCC response overdue at exactly its 15 working day threshold', () => {
-    const incident = { status: 'NEW', complaintsSent: [{ recipientType: 'dcc', sentAt: FIFTEEN_BUSINESS_DAYS_AGO }] };
+    const incident = { status: 'AWAITING_RESPONSE', complaintsSent: [{ recipientType: 'dcc', sentAt: FIFTEEN_BUSINESS_DAYS_AGO }] };
     const entry = computeComplaintTimeline(incident)[0];
     expect(entry.responseThresholdDays).toBe(15);
     expect(entry.responseOverdue).toBe(true);
   });
 
   test('UT-095c: DCC not yet response-overdue at 14 working days', () => {
-    const incident = { status: 'NEW', complaintsSent: [{ recipientType: 'dcc', sentAt: FOURTEEN_BUSINESS_DAYS_AGO }] };
+    const incident = { status: 'AWAITING_RESPONSE', complaintsSent: [{ recipientType: 'dcc', sentAt: FOURTEEN_BUSINESS_DAYS_AGO }] };
     const entry = computeComplaintTimeline(incident)[0];
     expect(entry.responseOverdue).toBe(false);
   });
 
   test('UT-096: mixed recipients tracked independently against their own thresholds', () => {
     const incident = {
-      status: 'NEW',
+      status: 'AWAITING_RESPONSE',
       complaintsSent: [
         { recipientType: 'dcc', sentAt: FIFTEEN_BUSINESS_DAYS_AGO },  // overdue at DCC's 15-day threshold
         { recipientType: 'tuath', sentAt: FIFTEEN_BUSINESS_DAYS_AGO }, // not overdue at Túath's 30-day threshold
@@ -67,7 +67,7 @@ describe('computeComplaintTimeline', () => {
   });
 
   test('UT-097: returns an empty array when no complaint has been sent yet', () => {
-    expect(computeComplaintTimeline({ status: 'NEW', complaintsSent: [] })).toEqual([]);
+    expect(computeComplaintTimeline({ status: 'AWAITING_RESPONSE', complaintsSent: [] })).toEqual([]);
   });
 
   test('UT-098: still returns an entry for a RESOLVED incident, but responseOverdue is false regardless of elapsed time', () => {
@@ -84,12 +84,12 @@ describe('computeComplaintTimeline', () => {
   });
 
   test('UT-100: passes through the estimated flag for a backfilled sentAt', () => {
-    const incident = { status: 'NEW', complaintsSent: [{ recipientType: 'tuath', sentAt: TWO_BUSINESS_DAYS_AGO, estimated: true }] };
+    const incident = { status: 'AWAITING_RESPONSE', complaintsSent: [{ recipientType: 'tuath', sentAt: TWO_BUSINESS_DAYS_AGO, estimated: true }] };
     expect(computeComplaintTimeline(incident)[0].estimated).toBe(true);
   });
 
   test('UT-101: defaults estimated to false when the field is absent (real confirmed sends)', () => {
-    const incident = { status: 'NEW', complaintsSent: [{ recipientType: 'tuath', sentAt: TWO_BUSINESS_DAYS_AGO }] };
+    const incident = { status: 'AWAITING_RESPONSE', complaintsSent: [{ recipientType: 'tuath', sentAt: TWO_BUSINESS_DAYS_AGO }] };
     expect(computeComplaintTimeline(incident)[0].estimated).toBe(false);
   });
 });

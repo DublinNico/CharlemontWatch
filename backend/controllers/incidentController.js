@@ -9,7 +9,10 @@ const { sendResidentConfirmation, sendAdminNotification, sendStatusUpdate, sendC
 const { verifyTurnstile } = require('../utils/turnstile');
 const { businessDaysSince } = require('../utils/businessDays');
 
-const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
+// AWAITING_RESPONSE replaced the old NEW status — "new" stopped being
+// accurate once reports sat for weeks waiting on Túath/DCC. NO_RESPONSE is
+// set by an admin once a recipient has let its response deadline pass.
+const ACTIVE_STATUSES = ['AWAITING_RESPONSE', 'NO_RESPONSE', 'IN_PROGRESS', 'RESOLVED'];
 
 // Per the complaint emails CharlemontWatch actually sends (see
 // emailService.js): Túath's Complaints Procedure commits to a full response
@@ -23,7 +26,7 @@ const ACTIVE_STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED'];
 // tracking), so this only tracks a plain days-elapsed timer against the
 // deadline we can state as fact for each recipient.
 const RESPONSE_THRESHOLD_DAYS = { tuath: 30, dcc: 15 };
-const OVERDUE_ELIGIBLE_STATUSES = ['NEW', 'IN_PROGRESS'];
+const OVERDUE_ELIGIBLE_STATUSES = ['AWAITING_RESPONSE', 'NO_RESPONSE', 'IN_PROGRESS'];
 
 const computeComplaintTimeline = (incident) => {
   const eligible = OVERDUE_ELIGIBLE_STATUSES.includes(incident.status);
@@ -289,7 +292,7 @@ const getPendingIncidents = async (req, res) => {
 };
 
 // Approve or reject a pending incident (admin only). Approving publishes it
-// to the public feed (status NEW), marks all its photos approved, and — if
+// to the public feed (status AWAITING_RESPONSE), marks all its photos approved, and — if
 // the resident requested one — sends the formal complaint to Túath/DCC for
 // the first time. Rejecting hides it permanently and no complaint is ever sent.
 const reviewIncident = async (req, res) => {
@@ -307,7 +310,7 @@ const reviewIncident = async (req, res) => {
     }
 
     if (action === 'approve') {
-      incident.status = 'NEW';
+      incident.status = 'AWAITING_RESPONSE';
       incident.photos.forEach(photo => { photo.approved = true; });
     } else {
       incident.status = 'REJECTED';
@@ -359,7 +362,8 @@ const reviewPhoto = async (req, res) => {
 };
 
 // Update incident status (admin only — active statuses only).
-// Progresses an already-approved incident through NEW -> IN_PROGRESS -> RESOLVED
+// Moves an already-approved incident between AWAITING_RESPONSE, NO_RESPONSE,
+// IN_PROGRESS and RESOLVED
 // and emails the reporter about the change.
 const updateIncidentStatus = async (req, res) => {
   try {

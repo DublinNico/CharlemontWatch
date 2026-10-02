@@ -20,7 +20,7 @@ const mockIncident = {
   type: 'Graffiti' as const,
   location: 'Block A',
   description: 'Graffiti on south wall',
-  status: 'NEW' as const,
+  status: 'AWAITING_RESPONSE' as const,
   date: '2026-05-31T10:00:00Z',
   photos: [],
 };

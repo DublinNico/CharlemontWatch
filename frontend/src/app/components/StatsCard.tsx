@@ -1,26 +1,31 @@
 import { useApp } from '../context/AppContext';
 
-// Compact row of total/new/in-progress/resolved counts, shown at the top of
+// Compact row of total/per-status counts, shown at the top of
 // the Track Report page
 export function StatsCard() {
   const { incidents } = useApp();
 
   const stats = {
     total: incidents.length,
-    new: incidents.filter(i => i.status === 'NEW').length,
+    awaiting: incidents.filter(i => i.status === 'AWAITING_RESPONSE').length,
+    noResponse: incidents.filter(i => i.status === 'NO_RESPONSE').length,
     inProgress: incidents.filter(i => i.status === 'IN_PROGRESS').length,
     resolved: incidents.filter(i => i.status === 'RESOLVED').length,
   };
 
   return (
-    <div className="bg-white rounded shadow-sm p-4 md:p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="bg-white rounded shadow-sm p-4 md:p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
       <div className="text-center">
         <div className="text-3xl md:text-4xl text-[#1976d2]">{stats.total}</div>
         <div className="text-sm text-[#666666] mt-1">Total Reports</div>
       </div>
       <div className="text-center">
-        <div className="text-3xl md:text-4xl text-[#1976d2]">{stats.new}</div>
-        <div className="text-sm text-[#666666] mt-1">New</div>
+        <div className="text-3xl md:text-4xl text-[#1976d2]">{stats.awaiting}</div>
+        <div className="text-sm text-[#666666] mt-1">Awaiting Response</div>
+      </div>
+      <div className="text-center">
+        <div className="text-3xl md:text-4xl text-[#d32f2f]">{stats.noResponse}</div>
+        <div className="text-sm text-[#666666] mt-1">No Response</div>
       </div>
       <div className="text-center">
         <div className="text-3xl md:text-4xl text-[#f57c00]">{stats.inProgress}</div>
