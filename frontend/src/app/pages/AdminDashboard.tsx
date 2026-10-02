@@ -389,20 +389,19 @@ export function AdminDashboard() {
           <>
             <div className="flex flex-wrap gap-3">
               {(['AWAITING_RESPONSE', 'NO_RESPONSE', 'IN_PROGRESS', 'RESOLVED'] as IncidentStatus[]).map(s => {
-                const colors: Record<string, string> = {
-                  AWAITING_RESPONSE: '#1976d2', NO_RESPONSE: '#d32f2f', IN_PROGRESS: '#f57c00', RESOLVED: '#388e3c'
+                // Full class strings (not interpolated) so Tailwind's scanner picks them up
+                const tabClasses: Record<string, { selected: string; unselected: string }> = {
+                  AWAITING_RESPONSE: { selected: 'bg-[#1976d2] text-white', unselected: 'border border-[#1976d2] text-[#1976d2]' },
+                  NO_RESPONSE: { selected: 'bg-[#d32f2f] text-white', unselected: 'border border-[#d32f2f] text-[#d32f2f]' },
+                  IN_PROGRESS: { selected: 'bg-[#f57c00] text-white', unselected: 'border border-[#f57c00] text-[#f57c00]' },
+                  RESOLVED: { selected: 'bg-[#388e3c] text-white', unselected: 'border border-[#388e3c] text-[#388e3c]' },
                 };
-                const color = colors[s];
+                const classes = tabClasses[s];
                 return (
                   <button
                     key={s}
                     onClick={() => setStatusFilter(s)}
-                    className="px-6 py-2 rounded-full transition-colors text-sm"
-                    style={
-                      statusFilter === s
-                        ? { backgroundColor: color, color: '#fff' }
-                        : { border: `1px solid ${color}`, color }
-                    }
+                    className={`px-6 py-2 rounded-full transition-colors text-sm ${statusFilter === s ? classes.selected : classes.unselected}`}
                   >
                     {s.replace(/_/g, ' ')} ({statusCounts[s as keyof typeof statusCounts]})
                   </button>
