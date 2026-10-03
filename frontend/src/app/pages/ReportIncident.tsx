@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { ArrowLeft, Upload, X, AlertCircle, MapPin, FileText, Mail, ImageIcon, User, Send, Tag } from 'lucide-react';
+import { Upload, X, AlertCircle, MapPin, FileText, Mail, ImageIcon, User, Send, Tag, ClipboardList, Siren, EyeOff } from 'lucide-react';
+import { Header } from '../components/Header';
 
 import { useNavigate } from 'react-router';
 import { useApp, IncidentType, Photo, ComplaintData } from '../context/AppContext';
@@ -83,7 +84,7 @@ export function ReportIncident() {
     }
 
     if (!reporterEmail) {
-      setSubmitError('Please provide your email to confirm you live in the complex.');
+      setSubmitError('Please provide your email so we can send you status updates.');
       return;
     }
 
@@ -206,19 +207,19 @@ export function ReportIncident() {
     switch (formData.type) {
       case 'Graffiti':
         return (
-          <Card className="border-orange-100 bg-orange-50/50">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Graffiti Details</CardTitle>
+              <CardTitle className="text-xl font-semibold">Graffiti Details</CardTitle>
               <CardDescription>Additional information about the graffiti</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="surface-type">Surface Type</Label>
+                <Label htmlFor="surface-type" className="mb-2 block">Surface Type</Label>
                 <Select
                   value={typeSpecificData.surfaceType || ''}
                   onValueChange={v => updateSpecific('surfaceType', v)}
                 >
-                  <SelectTrigger id="surface-type" className="bg-white">
+                  <SelectTrigger id="surface-type">
                     <SelectValue placeholder="Select surface type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -229,13 +230,13 @@ export function ReportIncident() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="estimated-area">Estimated Area (m²)</Label>
+                <Label htmlFor="estimated-area" className="mb-2 block">Estimated Area (m²)</Label>
                 <Input
                   id="estimated-area"
                   type="number"
                   min="0"
                   placeholder="e.g. 2"
-                  className="bg-white"
+                 
                   value={typeSpecificData.estimatedArea || ''}
                   onChange={e => updateSpecific('estimatedArea', e.target.value)}
                 />
@@ -254,27 +255,27 @@ export function ReportIncident() {
 
       case 'Anti-Social Behaviour':
         return (
-          <Card className="border-red-100 bg-red-50/50">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Anti-Social Behaviour Details</CardTitle>
+              <CardTitle className="text-xl font-semibold">Anti-Social Behaviour Details</CardTitle>
               <CardDescription>Additional information about the incident</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-3 p-3 bg-white border border-red-200 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-900">
+              <div className="flex gap-3 p-4 bg-status-none-bg rounded-md">
+                <AlertCircle className="w-5 h-5 text-status-none flex-shrink-0 mt-px" />
+                <p className="text-sm text-foreground">
                   For a crime in progress, an emergency, or serious anti-social behaviour, contact An Garda
                   Síochána directly. This platform isn't monitored in real time, and reports submitted here are
                   not sent to An Garda Síochána.
                 </p>
               </div>
               <div>
-                <Label htmlFor="antisocial-type">Type of Behaviour</Label>
+                <Label htmlFor="antisocial-type" className="mb-2 block">Type of Behaviour</Label>
                 <Select
                   value={typeSpecificData.antisocialType || ''}
                   onValueChange={v => updateSpecific('antisocialType', v)}
                 >
-                  <SelectTrigger id="antisocial-type" className="bg-white">
+                  <SelectTrigger id="antisocial-type">
                     <SelectValue placeholder="Select behaviour type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -290,19 +291,19 @@ export function ReportIncident() {
 
       case 'Safety Hazard':
         return (
-          <Card className="border-amber-100 bg-amber-50/50">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Safety Hazard Details</CardTitle>
+              <CardTitle className="text-xl font-semibold">Safety Hazard Details</CardTitle>
               <CardDescription>Additional information about the hazard</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="hazard-type">Hazard Type</Label>
+                <Label htmlFor="hazard-type" className="mb-2 block">Hazard Type</Label>
                 <Select
                   value={typeSpecificData.hazardType || ''}
                   onValueChange={v => updateSpecific('hazardType', v)}
                 >
-                  <SelectTrigger id="hazard-type" className="bg-white">
+                  <SelectTrigger id="hazard-type">
                     <SelectValue placeholder="Select hazard type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -313,12 +314,12 @@ export function ReportIncident() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="risk-level">Risk Level</Label>
+                <Label htmlFor="risk-level" className="mb-2 block">Risk Level</Label>
                 <Select
                   value={typeSpecificData.riskLevel || ''}
                   onValueChange={v => updateSpecific('riskLevel', v)}
                 >
-                  <SelectTrigger id="risk-level" className="bg-white">
+                  <SelectTrigger id="risk-level">
                     <SelectValue placeholder="Select risk level" />
                   </SelectTrigger>
                   <SelectContent>
@@ -342,19 +343,19 @@ export function ReportIncident() {
 
       case 'Maintenance Issue':
         return (
-          <Card className="border-emerald-100 bg-emerald-50/50">
+          <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Maintenance Details</CardTitle>
+              <CardTitle className="text-xl font-semibold">Maintenance Details</CardTitle>
               <CardDescription>Additional information about the maintenance issue</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="issue-type">Issue Type</Label>
+                <Label htmlFor="issue-type" className="mb-2 block">Issue Type</Label>
                 <Select
                   value={typeSpecificData.issueType || ''}
                   onValueChange={v => updateSpecific('issueType', v)}
                 >
-                  <SelectTrigger id="issue-type" className="bg-white">
+                  <SelectTrigger id="issue-type">
                     <SelectValue placeholder="Select issue type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -366,12 +367,12 @@ export function ReportIncident() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="priority">Priority Level</Label>
+                <Label htmlFor="priority" className="mb-2 block">Priority Level</Label>
                 <Select
                   value={typeSpecificData.priority || ''}
                   onValueChange={v => updateSpecific('priority', v)}
                 >
-                  <SelectTrigger id="priority" className="bg-white">
+                  <SelectTrigger id="priority">
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -382,12 +383,12 @@ export function ReportIncident() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="work-category">Work Category</Label>
+                <Label htmlFor="work-category" className="mb-2 block">Work Category</Label>
                 <Select
                   value={typeSpecificData.workCategory || ''}
                   onValueChange={v => updateSpecific('workCategory', v)}
                 >
-                  <SelectTrigger id="work-category" className="bg-white">
+                  <SelectTrigger id="work-category">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -399,11 +400,11 @@ export function ReportIncident() {
               </div>
               {typeSpecificData.issueType === 'Other' && (
                 <div>
-                  <Label htmlFor="custom-description">Describe the Issue</Label>
+                  <Label htmlFor="custom-description" className="mb-2 block">Describe the Issue</Label>
                   <Textarea
                     id="custom-description"
                     rows={3}
-                    className="bg-white"
+                   
                     value={typeSpecificData.customIssueDescription || ''}
                     onChange={e => updateSpecific('customIssueDescription', e.target.value)}
                   />
@@ -419,43 +420,48 @@ export function ReportIncident() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg">
-        <div className="max-w-4xl mx-auto px-4 py-8">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="text-white hover:bg-white/20 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
-          </Button>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Report an Incident</h1>
-          <p className="text-indigo-100">Help keep our Charlemont Street community safe and well-maintained</p>
-        </div>
-      </div>
+    <div className="bg-background">
+      <Header />
 
-      <main className="max-w-3xl mx-auto px-4 py-8 md:py-12">
-        <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg flex gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-900">
-            <p className="font-medium mb-1">Your report helps everyone</p>
-            <p>All submissions are reviewed promptly. Include photos and detailed descriptions for faster resolution.</p>
+      <main className="page-container">
+        <div className="pt-10 md:pt-16 pb-8 md:pb-10">
+          <h1 className="text-[36px] md:text-[52px] 2xl:text-[60px] leading-[1.04] tracking-[-0.035em] font-bold">Report an Incident</h1>
+          <p className="mt-3.5 text-lg md:text-[19px] text-muted-foreground">Help keep our Charlemont Street community safe and well-maintained</p>
+        </div>
+
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_340px] gap-6 lg:gap-10 items-start">
+        <aside className="lg:sticky lg:top-[92px] lg:order-2 grid gap-4">
+          <div className="bg-card border border-border rounded-lg p-6">
+            <h2 className="text-[17px] font-semibold tracking-[-0.015em]">What happens next</h2>
+            <ul className="mt-3.5 grid gap-3.5 text-sm text-muted-foreground">
+              <li className="grid grid-cols-[22px_1fr] gap-2.5"><Mail className="size-[18px] text-primary" />You get a CW reference by email straight away.</li>
+              <li className="grid grid-cols-[22px_1fr] gap-2.5"><ClipboardList className="size-[18px] text-primary" />A volunteer admin reviews the report and photos.</li>
+              <li className="grid grid-cols-[22px_1fr] gap-2.5"><Send className="size-[18px] text-primary" />Once approved, your complaint is emailed to the recipients you chose.</li>
+            </ul>
           </div>
-        </div>
+          <div className="hidden lg:flex gap-3.5 p-[18px] rounded-lg border border-border bg-card text-sm text-muted-foreground">
+            <Siren className="size-5 text-destructive shrink-0" />
+            <p><strong className="text-foreground">Emergency? Call 999 or 112.</strong> This site isn't monitored in real time.</p>
+          </div>
+          <div className="hidden lg:flex gap-3.5 p-[18px] rounded-lg border border-border bg-card text-sm text-muted-foreground">
+            <EyeOff className="size-5 text-primary shrink-0" />
+            <p>Don't name individuals or photograph faces. Focus on the issue, not the people.</p>
+          </div>
+        </aside>
 
+        <div className="min-w-0 lg:order-1">
         {submitError && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-900">{submitError}</p>
+          <div className="mb-5 p-4 bg-status-none-bg rounded-lg flex gap-3" role="alert">
+            <AlertCircle className="w-5 h-5 text-status-none flex-shrink-0 mt-px" />
+            <p className="text-sm text-foreground font-medium">{submitError}</p>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-600" />
+              <CardTitle className="flex items-center gap-2.5 text-xl font-semibold">
+                <FileText className="w-5 h-5 text-primary" />
                 Incident Details
               </CardTitle>
               <CardDescription>Provide information about the incident you're reporting</CardDescription>
@@ -502,7 +508,7 @@ export function ReportIncident() {
                   value={formData.title}
                   onChange={e => setFormData({ ...formData, title: e.target.value })}
                 />
-                <p className="text-xs text-muted-foreground mt-1.5">
+                <p className="text-[13px] text-subtle-foreground mt-2">
                   A short summary shown above the location on the report
                 </p>
               </div>
@@ -519,7 +525,7 @@ export function ReportIncident() {
                   value={formData.location}
                   onChange={e => setFormData({ ...formData, location: e.target.value })}
                 />
-                <p className="text-xs text-muted-foreground mt-1.5">
+                <p className="text-[13px] text-subtle-foreground mt-2">
                   Be as specific as possible to help responders locate the issue
                 </p>
               </div>
@@ -551,8 +557,8 @@ export function ReportIncident() {
                   value={formData.reporterEmail}
                   onChange={e => setFormData({ ...formData, reporterEmail: e.target.value })}
                 />
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  Required to confirm you live in the complex. We'll also email you when the status of your report changes. You can still report anonymously: your name and address are never required unless you choose to send a formal complaint below.
+                <p className="text-[13px] text-subtle-foreground mt-2">
+                  We'll email you when the status of your report changes. You can still report anonymously: your name and address are never required unless you choose to send a formal complaint below.
                 </p>
               </div>
             </CardContent>
@@ -562,14 +568,14 @@ export function ReportIncident() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ImageIcon className="w-5 h-5 text-indigo-600" />
+              <CardTitle className="flex items-center gap-2.5 text-xl font-semibold">
+                <ImageIcon className="w-5 h-5 text-primary" />
                 Photo Evidence
               </CardTitle>
               <CardDescription>Upload up to 10 photos to support your report</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="border-2 border-dashed border-border rounded-xl p-12 text-center hover:border-indigo-300 hover:bg-indigo-50/30 transition-all cursor-pointer group">
+              <div className="border-[1.5px] border-dashed border-border bg-background rounded-lg p-8 md:p-10 text-center hover:border-primary hover:bg-primary-soft/40 transition-colors cursor-pointer group">
                 <input
                   type="file"
                   multiple
@@ -580,7 +586,7 @@ export function ReportIncident() {
                   disabled={photos.length >= 10}
                 />
                 <label htmlFor="photo-upload" className="cursor-pointer">
-                  <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4 group-hover:text-indigo-600 transition-colors" />
+                  <Upload className="w-8 h-8 text-primary mx-auto mb-3" />
                   <p className="font-medium mb-1">
                     {photos.length >= 10 ? 'Maximum photos reached' : 'Click to upload photos'}
                   </p>
@@ -591,20 +597,21 @@ export function ReportIncident() {
               </div>
 
               {photos.length > 0 && (
-                <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
                   {photos.map(photo => (
                     <div key={photo.id} className="relative group">
                       <img
                         src={photo.url}
                         alt="Upload preview"
-                        className="w-full aspect-square object-cover rounded-lg shadow-sm"
+                        className="w-full aspect-square object-cover rounded-md"
                       />
                       <button
                         type="button"
                         onClick={() => removePhoto(photo.id)}
-                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label="Remove photo"
+                        className="absolute top-1.5 right-1.5 bg-foreground/80 hover:bg-foreground text-background rounded-full p-1 transition-colors"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ))}
@@ -613,63 +620,63 @@ export function ReportIncident() {
             </CardContent>
           </Card>
 
-          <Card className="border-amber-200 bg-amber-50/40">
+          <Card className="border-primary ring-1 ring-primary">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-amber-900">
-                <Send className="w-5 h-5 text-amber-600" />
+              <CardTitle className="flex items-center gap-2.5 text-xl font-semibold">
+                <Send className="w-5 h-5 text-primary" />
                 Take Action: Send a Formal Complaint
               </CardTitle>
-              <CardDescription className="text-amber-800/70">
+              <CardDescription>
                 Without a formal complaint, nothing will happen. This report creates the evidence. The complaint forces Túath Housing or Dublin City Council to respond officially.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
+                <div className={`flex items-start gap-3.5 p-4 rounded-md border transition-colors ${complaint.sendToTuath ? 'border-primary bg-primary-soft' : 'border-border bg-background'}`}>
                   <Checkbox
                     id="send-tuath"
                     checked={complaint.sendToTuath}
                     onCheckedChange={v => setComplaint(c => ({ ...c, sendToTuath: !!v }))}
                   />
-                  <Label htmlFor="send-tuath" className="cursor-pointer font-medium">
+                  <Label htmlFor="send-tuath" className="cursor-pointer text-[15px] flex-col items-start gap-0.5 leading-snug">
                     Túath Housing
-                    <span className="block text-xs text-muted-foreground font-normal">
+                    <span className="block text-sm text-muted-foreground font-normal mt-0.5">
                       For issues in Túath managed properties or estates
                     </span>
                   </Label>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className={`flex items-start gap-3.5 p-4 rounded-md border transition-colors ${complaint.sendToDCC ? 'border-primary bg-primary-soft' : 'border-border bg-background'}`}>
                   <Checkbox
                     id="send-dcc"
                     checked={complaint.sendToDCC}
                     onCheckedChange={v => setComplaint(c => ({ ...c, sendToDCC: !!v }))}
                   />
-                  <Label htmlFor="send-dcc" className="cursor-pointer font-medium">
-                    <span className="whitespace-nowrap">Dublin City Council</span>
-                    <span className="block text-xs text-muted-foreground font-normal">
+                  <Label htmlFor="send-dcc" className="cursor-pointer text-[15px] flex-col items-start gap-0.5 leading-snug">
+                    <span>Dublin City Council</span>
+                    <span className="block text-sm text-muted-foreground font-normal mt-0.5">
                       For issues on public roads, footpaths, or council-managed areas. DCC directs these through their{' '}
                       <a
                         href="https://citizenhub.dublincity.ie/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="underline"
+                        className="underline text-primary font-medium"
                         onClick={e => e.stopPropagation()}
                       >
                         Citizen Hub
                       </a>{' '}
-                      portal — we still send this automatically as a courtesy, but for a guaranteed formal response you may also want to submit there directly.
+                      portal. We still send this automatically as a courtesy, but for a guaranteed formal response you may also want to submit there directly.
                     </span>
                   </Label>
                 </div>
               </div>
 
-              <p className="text-sm text-amber-900 font-semibold">
+              <p className="text-sm text-muted-foreground">
                 Formal complaints can't be ignored: they require an official written response within 30 working days (Túath) or 15 working days (Dublin City Council). Untick only if you do not want to escalate.
               </p>
 
               {sendingComplaint && (
-                <div className="space-y-4 pt-2 border-t border-amber-200">
-                  <p className="text-sm text-amber-900 font-medium">
+                <div className="space-y-4 pt-5 border-t border-border">
+                  <p className="text-sm font-medium">
                     Your contact details are required to submit a formal complaint:
                   </p>
                   <div>
@@ -682,7 +689,7 @@ export function ReportIncident() {
                       placeholder="Your full name"
                       value={complaint.name}
                       onChange={e => setComplaint(c => ({ ...c, name: e.target.value }))}
-                      className="bg-white"
+                     
                     />
                   </div>
                   <div>
@@ -695,10 +702,10 @@ export function ReportIncident() {
                       placeholder="e.g. Apt 12, Charlemont Street, Dublin 2"
                       value={complaint.address}
                       onChange={e => setComplaint(c => ({ ...c, address: e.target.value }))}
-                      className="bg-white"
+                     
                     />
                   </div>
-                  <p className="text-xs text-amber-800/70">
+                  <p className="text-[13px] text-subtle-foreground">
                     Your name, address, and email are shared only with {[
                       complaint.sendToTuath ? 'Túath Housing' : null,
                       complaint.sendToDCC ? 'Dublin City Council' : null,
@@ -730,13 +737,12 @@ export function ReportIncident() {
             }}
           />
 
-          <div className="flex gap-4">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 bg-card border border-border rounded-lg p-5 md:px-8">
             <Button
               type="button"
               variant="outline"
               size="lg"
               onClick={() => navigate('/')}
-              className="flex-1"
             >
               Cancel
             </Button>
@@ -744,12 +750,13 @@ export function ReportIncident() {
               type="submit"
               size="lg"
               disabled={isSubmitting || !formData.type}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-700"
             >
               {isSubmitting ? 'Submitting…' : sendingComplaint ? 'Submit Report & Complaint' : 'Submit Report'}
             </Button>
           </div>
         </form>
+        </div>
+        </div>
       </main>
     </div>
   );

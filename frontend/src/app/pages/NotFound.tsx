@@ -1,35 +1,29 @@
-import { Compass } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
+import { Button } from '../components/ui/button';
 
 // Catch-all 404 page for any unmatched route
 export function NotFound() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-muted">
+    <div className="bg-background">
       <Header />
-      <main className="flex items-center justify-center p-4" style={{ minHeight: 'calc(100vh - 64px)' }}>
-        <div className="bg-background rounded shadow-lg p-8 max-w-lg w-full text-center">
-          <Compass className="w-20 h-20 text-primary mx-auto mb-4" />
-          <h1 className="text-foreground mb-3">404 — Page Not Found</h1>
-          <p className="text-muted-foreground mb-6">
+      <main className="page-container pt-14 md:pt-28 pb-10 grid md:grid-cols-[auto_1fr] gap-4 md:gap-14 md:items-center">
+        <div
+          aria-hidden="true"
+          className="font-mono font-semibold text-[96px] md:text-[160px] leading-[0.85] tracking-[-0.06em] text-muted [-webkit-text-stroke:1px_var(--border)]"
+        >
+          404
+        </div>
+        <div>
+          <h1 className="text-[32px] md:text-[44px] leading-[1.05] tracking-[-0.035em] font-bold">Page Not Found</h1>
+          <p className="mt-3 text-lg text-muted-foreground">
             The page you're looking for doesn't exist or may have moved.
           </p>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={() => navigate('/')}
-              className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded transition-colors"
-            >
-              Back to Home
-            </button>
-            <button
-              onClick={() => navigate('/report')}
-              className="flex-1 px-4 py-2 border border-primary text-primary hover:bg-primary/10 rounded transition-colors"
-            >
-              Report an Incident
-            </button>
+          <div className="mt-7 flex flex-col sm:flex-row gap-3">
+            <Button size="lg" onClick={() => navigate('/')}>Back to Home</Button>
+            <Button size="lg" variant="outline" onClick={() => navigate('/report')}>Report an Incident</Button>
           </div>
         </div>
       </main>

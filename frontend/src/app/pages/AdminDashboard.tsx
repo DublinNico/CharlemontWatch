@@ -1,17 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Trash2, CheckCircle, XCircle, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Trash2, CheckCircle, XCircle, Eye, EyeOff, AlertTriangle, Check, MapPin, Calendar, Mail, Send, Inbox } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { StatusBadge } from '../components/StatusBadge';
-import { useApp, IncidentStatus, Incident, IncidentType } from '../context/AppContext';
-
-// Left-border accent color per incident type in the dashboard rows
-const typeColors: Record<IncidentType, string> = {
-  'Graffiti': '#f57c00',
-  'Anti-Social Behaviour': '#d32f2f',
-  'Safety Hazard': '#fbc02d',
-  'Maintenance Issue': '#388e3c',
-};
+import { useApp, IncidentStatus, Incident } from '../context/AppContext';
+import { Button } from '../components/ui/button';
 
 type ActiveTab = 'queue' | 'manage';
 
@@ -36,24 +29,22 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
   });
 
   return (
-    <div
-      className="bg-white rounded shadow-sm border-l-4 p-4"
-      style={{ borderLeftColor: typeColors[incident.type] }}
-    >
-      <div className="flex flex-col lg:flex-row justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-3 mb-3">
-            <h3 className="text-sm uppercase tracking-wide" style={{ color: typeColors[incident.type] }}>
+    <div className="bg-card border border-border rounded-lg overflow-hidden">
+      <div className="grid lg:grid-cols-[minmax(0,1fr)_260px]">
+        <div className="p-5 md:p-6 min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <h3 className="h-7 px-3 rounded-md bg-muted text-[13px] font-medium inline-flex items-center tracking-normal">
               {incident.type}
             </h3>
-            <span className="text-xs text-white bg-indigo-600 px-2 py-1 rounded">{incident.id}</span>
+            <span className="h-7 px-3 rounded-md bg-muted font-mono text-[13px] inline-flex items-center">{incident.id}</span>
             {!isQueue && <StatusBadge status={incident.status} />}
             {incident.sendComplaintTo && incident.sendComplaintTo.length > 0 && (
               isQueue ? (
                 <span
-                  className="text-xs font-semibold text-white bg-destructive px-2 py-1 rounded"
+                  className="h-7 px-3 rounded-md bg-status-await-bg text-status-await text-[13px] font-medium inline-flex items-center gap-1.5"
                   title="Approving this will email a formal complaint"
                 >
+                  <Send className="w-3.5 h-3.5" />
                   Complaint: {incident.sendComplaintTo.map(o => o === 'tuath' ? 'Túath' : 'DCC').join(', ')}
                 </span>
               ) : (
@@ -63,28 +54,28 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
                   const label = recipient === 'tuath' ? 'Túath' : 'DCC';
 
                   const estimatedSuffix = timeline?.estimated ? ' (est.)' : '';
-                  let colorClass = 'bg-destructive';
+                  let colorClass = 'bg-muted text-muted-foreground';
                   let statusText = '';
                   let title = `Complaint to ${label} has not been confirmed sent yet`;
                   if (timeline?.responseOverdue) {
-                    colorClass = 'bg-red-700';
+                    colorClass = 'bg-status-none-bg text-status-none';
                     statusText = ` Response Overdue${estimatedSuffix}`;
-                    title = `Complaint to ${label} sent ${timeline.businessDaysElapsed} working days ago — past the ${timeline.responseThresholdDays}-day response threshold${timeline.estimated ? ' (sentAt is an estimate from the report date, not a confirmed send)' : ''}`;
+                    title = `Complaint to ${label} sent ${timeline.businessDaysElapsed} working days ago, past the ${timeline.responseThresholdDays}-day response threshold${timeline.estimated ? ' (sentAt is an estimate from the report date, not a confirmed send)' : ''}`;
                   } else if (sent) {
-                    colorClass = 'bg-emerald-600';
+                    colorClass = 'bg-status-done-bg text-status-done';
                     statusText = ` Day ${timeline?.businessDaysElapsed ?? 0}/${timeline?.responseThresholdDays ?? 30}${estimatedSuffix}`;
                     title = timeline?.estimated
-                      ? `Complaint to ${label} — sentAt is an estimate from the report date, not a confirmed send`
+                      ? `Complaint to ${label}: sentAt is an estimate from the report date, not a confirmed send`
                       : `Complaint to ${label} sent ${timeline?.businessDaysElapsed} working days ago`;
                   }
 
                   return (
                     <span
                       key={recipient}
-                      className={`flex items-center gap-1 text-xs font-semibold text-white px-2 py-1 rounded ${colorClass}`}
+                      className={`h-7 px-3 rounded-md inline-flex items-center gap-1.5 text-[13px] font-medium ${colorClass}`}
                       title={title}
                     >
-                      {timeline?.responseOverdue ? <AlertTriangle className="w-3 h-3" /> : sent ? <CheckCircle className="w-3 h-3" /> : null}
+                      {timeline?.responseOverdue ? <AlertTriangle className="w-3.5 h-3.5" /> : sent ? <CheckCircle className="w-3.5 h-3.5" /> : null}
                       {label}{statusText}
                     </span>
                   );
@@ -94,22 +85,23 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
           </div>
 
           {incident.title && (
-            <h4 className="font-semibold text-gray-900 mb-1">{incident.title}</h4>
+            <h4 className="text-lg font-semibold tracking-[-0.015em] mb-1">{incident.title}</h4>
           )}
-          <p className="text-sm text-gray-800 mb-2">
-            <span className="font-medium">Location:</span> {incident.location}
+          <p className="text-sm text-muted-foreground mb-2 flex items-start gap-1.5">
+            <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
+            <span><span className="sr-only">Location:</span> {incident.location}</span>
           </p>
-          <p className="text-sm text-gray-500 mb-2">{incident.description}</p>
+          <p className="text-[15px] text-muted-foreground mb-3 max-w-[75ch]">{incident.description}</p>
 
-          <div className="flex flex-wrap gap-4 text-xs text-gray-500 mb-2">
-            <span>Reported: {formattedDate}</span>
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-subtle-foreground mb-3">
+            <span className="inline-flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" />Reported: {formattedDate}</span>
             {incident.reporterEmail
-              ? <span>Email: {incident.reporterEmail}</span>
+              ? <span className="inline-flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" />Email: {incident.reporterEmail}</span>
               : <span className="italic">Anonymous</span>}
           </div>
 
           {incident.typeSpecificData && Object.keys(incident.typeSpecificData).length > 0 && (
-            <div className="bg-gray-50 rounded p-2 text-xs text-gray-500 mb-3">
+            <div className="bg-background border border-border rounded-md px-3 py-2 text-[13px] text-muted-foreground mb-3">
               {Object.entries(incident.typeSpecificData).map(([key, value]) => (
                 <span key={key} className="mr-3">
                   <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span> {value as string}
@@ -120,35 +112,32 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
 
           {incident.photos.length > 0 && (
             <div className="mt-3">
-              <p className="text-xs font-medium text-gray-500 mb-2">
+              <p className="text-[13px] font-medium text-muted-foreground mb-2">
                 Photos ({incident.photos.length})
                 {isQueue && ': toggle to approve before publishing'}
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2.5">
                 {incident.photos.map(photo => (
                   <div key={photo.id} className="relative group">
                     <img
                       src={photo.url}
                       alt={photo.caption || 'Incident photo'}
-                      className={`w-20 h-20 object-cover rounded border-2 transition-all ${
-                        isQueue
-                          ? photo.approved
-                            ? 'border-green-500 opacity-100'
-                            : 'border-red-300 opacity-60'
-                          : 'border-border'
+                      className={`w-20 h-20 md:w-[92px] md:h-[92px] object-cover rounded-md transition-opacity ${
+                        isQueue && !photo.approved ? 'opacity-40' : 'opacity-100'
                       }`}
                     />
                     {isQueue && (
                       <button
                         onClick={() => onPhotoReview(incident.id, photo.id, !photo.approved)}
                         title={photo.approved ? 'Click to reject photo' : 'Click to approve photo'}
-                        className={`absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow text-white transition-colors ${
-                          photo.approved ? 'bg-green-500 hover:bg-red-500' : 'bg-red-400 hover:bg-green-500'
+                        aria-label={photo.approved ? 'Reject photo' : 'Approve photo'}
+                        className={`absolute right-1.5 bottom-1.5 w-6 h-6 rounded-full flex items-center justify-center text-white ring-2 ring-card transition-colors ${
+                          photo.approved ? 'bg-status-done hover:bg-status-none' : 'bg-status-none hover:bg-status-done'
                         }`}
                       >
                         {photo.approved
-                          ? <Eye className="w-3 h-3" />
-                          : <EyeOff className="w-3 h-3" />}
+                          ? <Eye className="w-3.5 h-3.5" />
+                          : <EyeOff className="w-3.5 h-3.5" />}
                       </button>
                     )}
                   </div>
@@ -158,48 +147,66 @@ function IncidentRow({ incident, isQueue = false, reviewingId, onReview, onPhoto
           )}
         </div>
 
-        <div className="flex flex-row lg:flex-col gap-2 shrink-0">
+        <div className="border-t lg:border-t-0 lg:border-l border-border bg-background p-5 md:p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-2.5 content-start">
+          <span className="hidden lg:block text-[13px] font-semibold text-muted-foreground">{isQueue ? 'Decision' : 'Actions'}</span>
           {isQueue ? (
             <>
-              <button
+              <Button
+                size="sm"
                 onClick={() => onReview(incident.id, 'approve')}
                 disabled={reviewingId === incident.id}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2 disabled:opacity-60"
+                className="w-full"
               >
-                <CheckCircle className="w-4 h-4" />
+                <Check className="w-4 h-4" />
                 Approve
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => onReview(incident.id, 'reject')}
                 disabled={reviewingId === incident.id}
-                className="px-4 py-2 border border-destructive text-destructive hover:bg-destructive/10 rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2 disabled:opacity-60"
+                className="w-full"
               >
                 <XCircle className="w-4 h-4" />
                 Reject
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => onDelete(incident.id)}
-                className="px-4 py-2 border border-gray-400 text-gray-500 hover:bg-gray-100 rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2"
+                className="w-full col-span-2 sm:col-span-1 text-destructive hover:text-destructive"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete
-              </button>
+              </Button>
+              {incident.sendComplaintTo && incident.sendComplaintTo.length > 0 ? (
+                <p className="col-span-full text-[13px] text-muted-foreground flex gap-2 mt-1">
+                  <Send className="w-4 h-4 shrink-0 text-primary" />
+                  Approving this will email a formal complaint to {incident.sendComplaintTo.map(o => o === 'tuath' ? 'Túath Housing' : 'Dublin City Council').join(' and ')}.
+                </p>
+              ) : (
+                <p className="col-span-full text-[13px] text-subtle-foreground mt-1">Report only. No complaint will be sent.</p>
+              )}
             </>
           ) : (
             <>
-              <button
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => onSelectIncident(incident)}
-                className="px-4 py-2 border border-indigo-600 text-indigo-600 hover:bg-indigo-50 rounded transition-colors text-sm whitespace-nowrap"
+                className="w-full"
               >
                 Update Status
-              </button>
-              <button
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
                 onClick={() => onDelete(incident.id)}
-                className="px-4 py-2 border border-destructive text-destructive hover:bg-destructive/10 rounded transition-colors text-sm whitespace-nowrap flex items-center gap-2"
+                className="w-full text-destructive hover:text-destructive"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -301,69 +308,75 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
+    <div className="bg-background">
       <Header />
 
-      <div className="bg-white shadow-sm border-b border-[#eeeeee]">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <h1 className="text-[#333333]">Admin Dashboard</h1>
-          <button
-            onClick={() => navigate('/')}
-            className="px-4 py-2 border border-[#1976d2] text-[#1976d2] hover:bg-[#e3f2fd] rounded transition-colors text-sm flex items-center gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </button>
-        </div>
-      </div>
+      <main className="page-container pb-10 space-y-6">
+        <div className="pt-10 md:pt-12 flex flex-col md:flex-row md:items-end md:justify-between gap-5">
+          <div>
+            <h1 className="text-[34px] md:text-[40px] leading-[1.05] tracking-[-0.035em] font-bold">Admin Dashboard</h1>
+            <button
+              onClick={() => navigate('/')}
+              className="mt-2 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Home
+            </button>
+          </div>
 
-      <main className="max-w-7xl mx-auto px-4 py-6 md:py-8 space-y-6">
+          {/* Top-level tabs */}
+          <div className="inline-flex self-start md:self-auto p-1 rounded-md bg-muted gap-1" role="tablist">
+            <button
+              role="tab"
+              aria-selected={activeTab === 'queue'}
+              onClick={() => setActiveTab('queue')}
+              className={`h-[38px] px-[18px] rounded-md transition-colors text-sm font-semibold flex items-center gap-2 ${
+                activeTab === 'queue'
+                  ? 'bg-card text-foreground shadow-[0_1px_2px_rgb(0_0_0/.08)]'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Review Queue
+              {pendingIncidents.length > 0 && (
+                <span className="bg-primary text-primary-foreground font-mono text-xs rounded-full min-w-5 h-5 px-1.5 flex items-center justify-center">
+                  {pendingIncidents.length}
+                </span>
+              )}
+            </button>
+            <button
+              role="tab"
+              aria-selected={activeTab === 'manage'}
+              onClick={() => setActiveTab('manage')}
+              className={`h-[38px] px-[18px] rounded-md transition-colors text-sm font-semibold ${
+                activeTab === 'manage'
+                  ? 'bg-card text-foreground shadow-[0_1px_2px_rgb(0_0_0/.08)]'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Manage Incidents
+            </button>
+          </div>
+        </div>
+
         {actionError && (
-          <div className="bg-[#ffebee] border border-[#d32f2f] text-[#d32f2f] rounded px-4 py-3 text-sm">
+          <div className="bg-status-none-bg text-status-none font-medium rounded-md px-4 py-3 text-sm" role="alert">
             {actionError}
           </div>
         )}
-
-        {/* Top-level tabs */}
-        <div className="flex gap-3 border-b border-[#eeeeee] pb-0">
-          <button
-            onClick={() => setActiveTab('queue')}
-            className={`px-5 py-2 rounded-t transition-colors text-sm font-medium flex items-center gap-2 ${
-              activeTab === 'queue'
-                ? 'bg-white border border-b-white border-[#eeeeee] -mb-px text-[#1976d2]'
-                : 'text-[#666666] hover:text-[#333333]'
-            }`}
-          >
-            Review Queue
-            {pendingIncidents.length > 0 && (
-              <span className="bg-[#d32f2f] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {pendingIncidents.length}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab('manage')}
-            className={`px-5 py-2 rounded-t transition-colors text-sm font-medium ${
-              activeTab === 'manage'
-                ? 'bg-white border border-b-white border-[#eeeeee] -mb-px text-[#1976d2]'
-                : 'text-[#666666] hover:text-[#333333]'
-            }`}
-          >
-            Manage Incidents
-          </button>
-        </div>
 
         {/* ── Review Queue ── */}
         {activeTab === 'queue' && (
           <>
             {pendingIncidents.length === 0 ? (
-              <div className="bg-white rounded shadow-sm p-12 text-center">
-                <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-3" />
-                <p className="text-[#666666]">No incidents awaiting review</p>
+              <div className="rounded-lg border border-dashed border-border bg-card p-12 text-center">
+                <div className="size-14 rounded-full bg-status-done-bg text-status-done grid place-items-center mx-auto mb-4">
+                  <CheckCircle className="w-7 h-7" />
+                </div>
+                <p className="text-muted-foreground">No incidents awaiting review</p>
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-sm text-[#666666]">
+                <p className="text-sm text-muted-foreground">
                   {pendingIncidents.length} incident{pendingIncidents.length !== 1 ? 's' : ''} awaiting review.
                   Toggle individual photos before approving, or approve all at once.
                 </p>
@@ -391,27 +404,31 @@ export function AdminDashboard() {
               {(['AWAITING_RESPONSE', 'NO_RESPONSE', 'IN_PROGRESS', 'RESOLVED'] as IncidentStatus[]).map(s => {
                 // Full class strings (not interpolated) so Tailwind's scanner picks them up
                 const tabClasses: Record<string, { selected: string; unselected: string }> = {
-                  AWAITING_RESPONSE: { selected: 'bg-[#1976d2] text-white', unselected: 'border border-[#1976d2] text-[#1976d2]' },
-                  NO_RESPONSE: { selected: 'bg-[#d32f2f] text-white', unselected: 'border border-[#d32f2f] text-[#d32f2f]' },
-                  IN_PROGRESS: { selected: 'bg-[#f57c00] text-white', unselected: 'border border-[#f57c00] text-[#f57c00]' },
-                  RESOLVED: { selected: 'bg-[#388e3c] text-white', unselected: 'border border-[#388e3c] text-[#388e3c]' },
+                  AWAITING_RESPONSE: { selected: 'bg-status-await text-white', unselected: 'bg-status-await-bg text-status-await' },
+                  NO_RESPONSE: { selected: 'bg-status-none text-white', unselected: 'bg-status-none-bg text-status-none' },
+                  IN_PROGRESS: { selected: 'bg-status-progress text-white', unselected: 'bg-status-progress-bg text-status-progress' },
+                  RESOLVED: { selected: 'bg-status-done text-white', unselected: 'bg-status-done-bg text-status-done' },
                 };
                 const classes = tabClasses[s];
                 return (
                   <button
                     key={s}
                     onClick={() => setStatusFilter(s)}
-                    className={`px-6 py-2 rounded-full transition-colors text-sm ${statusFilter === s ? classes.selected : classes.unselected}`}
+                    aria-pressed={statusFilter === s}
+                    className={`h-10 px-5 rounded-md transition-colors text-sm font-semibold capitalize ${statusFilter === s ? classes.selected : classes.unselected}`}
                   >
-                    {s.replace(/_/g, ' ')} ({statusCounts[s as keyof typeof statusCounts]})
+                    {s.replace(/_/g, ' ').toLowerCase()} <span className="font-mono">({statusCounts[s as keyof typeof statusCounts]})</span>
                   </button>
                 );
               })}
             </div>
 
             {filteredIncidents.length === 0 ? (
-              <div className="bg-white rounded shadow-sm p-12 text-center">
-                <p className="text-[#666666]">No incidents with status {statusFilter.replace(/_/g, ' ')}</p>
+              <div className="rounded-lg border border-dashed border-border bg-card p-12 text-center">
+                <div className="size-14 rounded-full bg-muted grid place-items-center mx-auto mb-4">
+                  <Inbox className="w-6 h-6 text-subtle-foreground" />
+                </div>
+                <p className="text-muted-foreground">No incidents with status {statusFilter.replace(/_/g, ' ')}</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -434,16 +451,17 @@ export function AdminDashboard() {
 
       {/* Status Update Modal */}
       {selectedIncident && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full">
-            <h2 className="text-[#333333] mb-4">Update Status</h2>
-            <p className="text-sm text-[#666666] mb-4">
-              Incident ID: <span className="font-mono text-[#1976d2]">{selectedIncident.id}</span>
+        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="update-status-title">
+          <div className="bg-card rounded-lg border border-border shadow-[0_24px_64px_-16px_rgb(22_24_26/.35)] p-6 md:p-8 max-w-md w-full">
+            <h2 id="update-status-title" className="text-2xl mb-2">Update Status</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Incident ID: <span className="font-mono text-foreground">{selectedIncident.id}</span>
             </p>
-            <div className="mb-6">
-              <label className="block text-sm text-[#333333] mb-2">Select Status</label>
+            <div className="mb-7">
+              <label htmlFor="new-status" className="block mb-2">Select Status</label>
               <select
-                className="w-full px-3 py-2 border border-[#eeeeee] rounded focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+                id="new-status"
+                className="w-full h-12 px-3.5 border border-border bg-input-background rounded-md text-[15px] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring"
                 value={newStatus}
                 onChange={e => setNewStatus(e.target.value as IncidentStatus)}
               >
@@ -454,20 +472,23 @@ export function AdminDashboard() {
               </select>
             </div>
             <div className="flex gap-3">
-              <button
+              <Button
+                size="lg"
                 onClick={handleUpdateStatus}
                 disabled={isUpdating}
-                className="flex-1 px-4 py-2 bg-[#1976d2] hover:bg-[#1565c0] text-white rounded transition-colors disabled:opacity-60"
+                className="flex-1"
               >
                 {isUpdating ? 'Updating…' : 'Update Status'}
-              </button>
-              <button
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
                 onClick={() => setSelectedIncident(null)}
                 disabled={isUpdating}
-                className="flex-1 px-4 py-2 border border-[#666666] text-[#666666] hover:bg-[#f5f5f5] rounded transition-colors disabled:opacity-60"
+                className="flex-1"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -1,77 +1,111 @@
-import { Shield, LogOut, Info, Mail } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Shield, LogOut, Menu, X } from 'lucide-react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import { useApp } from '../context/AppContext';
-import { useNavigate } from 'react-router';
 import { Button } from './ui/button';
 
-// Site-wide top nav: logo/home link, About Us, and (when logged in) the
-// admin Dashboard/Sign Out controls
+const NAV_LINKS = [
+  { label: 'All incidents', to: '/incidents' },
+  { label: 'Track a report', to: '/track' },
+  { label: 'About', to: '/about' },
+  { label: 'Contact', to: '/contact' },
+];
+
+// Site-wide top nav: logo/home link, page links, the Report CTA, and (when
+// logged in) the admin Dashboard/Sign Out controls. Below md the page links
+// move into a toggleable menu panel.
 export function Header() {
   const { isAuthenticated, logout, user } = useApp();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close the mobile menu whenever the route changes
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  return (
-    <header className="w-full bg-white border-b border-border sticky top-0 z-50 backdrop-blur-sm bg-white/95">
-      <div className="max-w-7xl mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          <div
-            className="flex items-center gap-3 cursor-pointer group"
-            onClick={() => navigate('/')}
-          >
-            <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 group-hover:from-indigo-600 group-hover:to-purple-700 transition-all shadow-lg shadow-indigo-200/50">
-              <Shield className="w-6 h-6 md:w-7 md:h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg md:text-xl font-bold text-foreground">CharlemontWatch</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Community Safety Platform</p>
-            </div>
-          </div>
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    isActive ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground transition-colors';
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/about')}
-              className="gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <Info className="w-4 h-4" />
-              <span className="hidden sm:inline">About Us</span>
+  return (
+    <header className="w-full bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
+      <div className="page-container h-[68px] flex items-center justify-between gap-6">
+        <Link to="/" className="flex items-center gap-2.5 shrink-0" aria-label="CharlemontWatch home">
+          <span className="size-[34px] rounded-md bg-foreground text-background grid place-items-center">
+            <Shield className="size-[19px]" strokeWidth={2.25} />
+          </span>
+          <h1 className="text-base md:text-lg font-bold tracking-[-0.02em] leading-none">CharlemontWatch</h1>
+        </Link>
+
+        <nav className="flex items-center gap-2 md:gap-7 text-[15px]" aria-label="Main">
+          {NAV_LINKS.map(link => (
+            <NavLink key={link.to} to={link.to} className={state => `hidden md:inline ${linkClass(state)}`}>
+              {link.label}
+            </NavLink>
+          ))}
+
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground hidden lg:inline">{user?.name}</span>
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin')} aria-label="Dashboard">
+                <Shield className="size-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="text-destructive hover:text-destructive"
+                aria-label="Sign Out"
+              >
+                <LogOut className="size-4" />
+                <span className="hidden sm:inline">Sign Out</span>
+              </Button>
+            </div>
+          ) : (
+            <Button size="sm" onClick={() => navigate('/report')}>
+              <span className="sm:hidden">Report</span>
+              <span className="hidden sm:inline">Report an incident</span>
             </Button>
-            <Button
-              variant="ghost"
-              onClick={() => navigate('/contact')}
-              className="gap-2 text-muted-foreground hover:text-foreground"
-            >
-              <Mail className="w-4 h-4" />
-              <span className="hidden sm:inline">Contact</span>
-            </Button>
-            {isAuthenticated ? (
-              <>
-                <span className="text-sm text-muted-foreground hidden sm:inline">{user?.name}</span>
-                <Button
-                  variant="outline"
-                  onClick={() => navigate('/admin')}
-                  className="gap-2 text-indigo-600 border-indigo-600 hover:bg-indigo-50"
-                >
-                  <Shield className="w-4 h-4" />
-                  <span className="hidden sm:inline">Dashboard</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleLogout}
-                  className="gap-2 text-destructive border-destructive hover:bg-destructive/10"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Sign Out</span>
-                </Button>
-              </>
-            ) : null}
-          </div>
-        </div>
+          )}
+
+          <Button
+            variant="outline"
+            size="icon"
+            className="md:hidden size-9"
+            onClick={() => setMenuOpen(open => !open)}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          >
+            {menuOpen ? <X className="size-[18px]" /> : <Menu className="size-[18px]" />}
+          </Button>
+        </nav>
       </div>
+
+      {menuOpen && (
+        <div id="mobile-menu" className="md:hidden border-t border-border bg-background">
+          <nav className="px-4 py-3 grid" aria-label="Mobile">
+            {NAV_LINKS.map(link => (
+              <NavLink
+                key={link.to}
+                to={link.to}
+                className={({ isActive }) =>
+                  `py-3 text-base border-b border-border last:border-0 ${isActive ? 'font-semibold text-foreground' : 'text-muted-foreground'}`
+                }
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

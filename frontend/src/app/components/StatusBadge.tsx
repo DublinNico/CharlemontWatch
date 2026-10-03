@@ -13,32 +13,32 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   const configs: Record<IncidentStatus, { label: string; className: string; icon: React.ElementType }> = {
     PENDING_REVIEW: {
       label: 'Pending Review',
-      className: 'bg-purple-100 text-purple-700 border-purple-300 hover:bg-purple-100',
+      className: 'bg-status-review-bg text-status-review',
       icon: Eye,
     },
     AWAITING_RESPONSE: {
       label: 'Awaiting Response',
-      className: 'bg-blue-100 text-blue-700 border-blue-300 hover:bg-blue-100',
+      className: 'bg-status-await-bg text-status-await',
       icon: Hourglass,
     },
     NO_RESPONSE: {
       label: 'No Response',
-      className: 'bg-rose-100 text-rose-700 border-rose-300 hover:bg-rose-100',
+      className: 'bg-status-none-bg text-status-none',
       icon: AlertTriangle,
     },
     IN_PROGRESS: {
       label: 'In Progress',
-      className: 'bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-100',
+      className: 'bg-status-progress-bg text-status-progress',
       icon: Clock,
     },
     RESOLVED: {
       label: 'Resolved',
-      className: 'bg-emerald-100 text-emerald-700 border-emerald-300 hover:bg-emerald-100',
+      className: 'bg-status-done-bg text-status-done',
       icon: CheckCircle2,
     },
     REJECTED: {
       label: 'Rejected',
-      className: 'bg-red-100 text-red-700 border-red-300 hover:bg-red-100',
+      className: 'bg-muted text-muted-foreground',
       icon: XCircle,
     },
   };
@@ -49,8 +49,8 @@ export function StatusBadge({ status }: StatusBadgeProps) {
   const Icon = config.icon;
 
   return (
-    <Badge variant="outline" className={`${config.className} border gap-1.5`}>
-      <Icon className="w-3 h-3" />
+    <Badge variant="outline" className={`${config.className} border-transparent gap-1.5`}>
+      <Icon className="size-3.5" />
       {config.label}
     </Badge>
   );
