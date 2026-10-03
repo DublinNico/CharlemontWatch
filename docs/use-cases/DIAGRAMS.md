@@ -64,12 +64,14 @@ stateDiagram-v2
     direction LR
     [*] --> PENDING_REVIEW : Resident submits report
 
-    PENDING_REVIEW --> NEW : Admin approves
+    PENDING_REVIEW --> AWAITING_RESPONSE : Admin approves
     PENDING_REVIEW --> REJECTED : Admin rejects
 
-    NEW --> IN_PROGRESS : Admin updates status
+    AWAITING_RESPONSE --> NO_RESPONSE : Admin updates status
+    AWAITING_RESPONSE --> IN_PROGRESS : Admin updates status
+    NO_RESPONSE --> IN_PROGRESS : Admin updates status
     IN_PROGRESS --> RESOLVED : Admin updates status
-    IN_PROGRESS --> NEW : Admin rolls back
+    IN_PROGRESS --> AWAITING_RESPONSE : Admin rolls back
     RESOLVED --> IN_PROGRESS : Admin re-opens
 
     REJECTED --> [*]
@@ -160,7 +162,7 @@ sequenceDiagram
     alt Approve
         Admin->>Frontend: Click Approve
         Frontend->>Backend: PATCH /api/incidents/admin/:id/review { action: "approve" }
-        Backend->>MongoDB: status = NEW, all photos approved = true
+        Backend->>MongoDB: status = AWAITING_RESPONSE, all photos approved = true
         MongoDB-->>Backend: Saved
         Backend-->>Frontend: Success
         Frontend->>Frontend: Remove from queue, refresh public feed
@@ -225,7 +227,7 @@ sequenceDiagram
     participant SendGrid
 
     Admin->>Frontend: Open Manage Incidents tab
-    Admin->>Frontend: Select status filter (NEW / IN_PROGRESS / RESOLVED)
+    Admin->>Frontend: Select status filter (AWAITING_RESPONSE / NO_RESPONSE / IN_PROGRESS / RESOLVED)
     Frontend->>Admin: Display filtered incidents
 
     Admin->>Frontend: Click "Update Status" on an incident

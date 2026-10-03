@@ -45,14 +45,14 @@ The system boundary includes:
 |---|---|---|---|
 | UC-01 | Report an Incident | Resident | Submit a new incident report with type, location, description, required email, optional photos, and an optional formal complaint escalation |
 | UC-02 | Track a Report | Resident | Look up a specific incident by its shortId (e.g. `CW-A1B2C3`) or MongoDB ObjectId |
-| UC-03 | View All Public Incidents | Resident | Browse the public feed of all approved (NEW, IN_PROGRESS, RESOLVED) incidents |
+| UC-03 | View All Public Incidents | Resident | Browse the public feed of all approved (AWAITING_RESPONSE, NO_RESPONSE, IN_PROGRESS, RESOLVED) incidents |
 | UC-04 | View Incident Details | Resident | View full details of a single incident including photos and status |
 | UC-05 | Admin Login | Admin | Authenticate using email and password to access the admin dashboard |
 | UC-06 | Review Pending Queue | Admin | View all incidents with status `PENDING_REVIEW` awaiting moderation |
-| UC-07 | Approve Incident | Admin | Approve a pending incident, moving it to `NEW` and publishing it publicly |
+| UC-07 | Approve Incident | Admin | Approve a pending incident, moving it to `AWAITING_RESPONSE` and publishing it publicly |
 | UC-08 | Reject Incident | Admin | Reject a pending incident, setting status to `REJECTED` and hiding it from the public feed |
 | UC-09 | Toggle Photo Approval | Admin | Individually approve or reject specific photos on a pending incident before approving the report |
-| UC-10 | Update Incident Status | Admin | Change an approved incident's status between `NEW`, `IN_PROGRESS`, and `RESOLVED` |
+| UC-10 | Update Incident Status | Admin | Change an approved incident's status between `AWAITING_RESPONSE`, `NO_RESPONSE`, `IN_PROGRESS`, and `RESOLVED` |
 | UC-11 | Delete Incident | Admin | Permanently delete an incident from the system |
 | UC-12 | Admin Logout | Admin | End the authenticated admin session and clear the JWT token |
 | UC-13 | Receive Submission Confirmation | Resident | Receive an automated email confirming their report was received |
@@ -195,11 +195,11 @@ The system boundary includes:
 5. Admin clicks Approve on an incident
 6. System sends `PATCH /api/incidents/admin/:id/review` with `{ action: "approve" }`
 7. Backend resolves the incident by shortId using `findByAnyId`
-8. Backend sets `incident.status = 'NEW'` and marks all photos as `approved: true`
+8. Backend sets `incident.status = 'AWAITING_RESPONSE'` and marks all photos as `approved: true`
 9. Backend saves the updated incident
 10. Frontend removes the incident from the pending queue
 11. Frontend refreshes the public incidents list
-12. Incident is now visible on the public feed with status `NEW`
+12. Incident is now visible on the public feed with status `AWAITING_RESPONSE`
 
 **Alternative Flows:**
 
@@ -213,7 +213,7 @@ The system boundary includes:
 - Incident is permanently hidden from the public feed
 
 **Postconditions:**
-- Incident status is `NEW` in MongoDB
+- Incident status is `AWAITING_RESPONSE` in MongoDB
 - Incident appears on the public feed at `/incidents`
 - Incident no longer appears in the admin Review Queue
 - All photos are marked `approved: true`
@@ -251,7 +251,7 @@ The system boundary includes:
 
 *A1 — Incident is still PENDING_REVIEW:*
 - Backend returns the incident (public route allows reporters to track their own pending submission)
-- Frontend displays status as "Pending Review" with the purple badge
+- Frontend displays status as "Pending Review" with the violet status badge
 
 *A2 — Incident not found:*
 - Backend returns 404
@@ -277,15 +277,15 @@ The system boundary includes:
 ### UC-10 — Update Incident Status
 
 **Actor:** Admin
-**Goal:** Progress an approved incident through its lifecycle (NEW → IN_PROGRESS → RESOLVED)
+**Goal:** Progress an approved incident through its lifecycle (AWAITING_RESPONSE → NO_RESPONSE / IN_PROGRESS → RESOLVED)
 
 **Preconditions:**
 - Admin is authenticated
-- The incident has been approved and has a status of `NEW`, `IN_PROGRESS`, or `RESOLVED`
+- The incident has been approved and has a status of `AWAITING_RESPONSE`, `NO_RESPONSE`, `IN_PROGRESS`, or `RESOLVED`
 - Admin is on the Manage Incidents tab of `/admin`
 
 **Main Flow:**
-1. Admin selects a status filter tab (NEW, IN_PROGRESS, or RESOLVED)
+1. Admin selects a status filter (Awaiting Response, No Response, In Progress, or Resolved)
 2. System displays all incidents matching that status
 3. Admin clicks "Update Status" on a specific incident
 4. System opens a modal displaying the incident ID and a status dropdown
