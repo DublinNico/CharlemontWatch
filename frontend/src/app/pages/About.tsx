@@ -95,7 +95,7 @@ export function About() {
 
   const steps = [
     { title: 'Report an Issue', description: 'Residents document incidents with photos and detailed descriptions.' },
-    { title: 'Escalate Formally', description: 'Optionally send a formal complaint directly to Túath Housing, Dublin City Council, or both, on your behalf, automatically.' },
+    { title: 'Escalate Formally', description: 'Optionally request a formal complaint to Túath Housing, Dublin City Council, or both. It is emailed on your behalf once an administrator approves your report.' },
     { title: 'Receive an ID', description: "Get a unique tracking ID to monitor your report's progress." },
     { title: 'Admin Reviews', description: 'Volunteer administrators review submissions and update status.' },
     { title: 'Track Resolution', description: 'Follow the incident from submission to resolution.' },
@@ -221,14 +221,14 @@ export function About() {
             <section id="late" className={sectionClass}>
               <h2 className={h2Class}>If your acknowledgement is late</h2>
               <p className={pClass}>
-                Túath should acknowledge a formal complaint within 5 working days, and Dublin City Council within 3 working days. If that
-                window passes with no acknowledgement, it's too early to escalate to the RTB or an Ombudsman. That only applies once the
-                full response deadline (30 working days for Túath, 15 for Dublin City Council) has also been missed.
+                Túath should acknowledge a formal complaint within 5 working days, and Dublin City Council within 3 working days. A full
+                written response is due within 30 working days (Túath) or 15 working days (Dublin City Council). If the acknowledgement
+                window passes, a written follow-up is a useful next step.
               </p>
               <p className={pClass}>
-                Instead, send a written follow-up (not a phone call) referencing your CharlemontWatch tracking ID and the date the
-                complaint was sent, and ask for a complaint reference number if you weren't given one. Keep this follow-up in writing:
-                it's useful evidence later if the full response deadline is also missed.
+                Send it in writing (not a phone call), reference your CharlemontWatch tracking ID and the date the complaint was sent,
+                and ask for a complaint reference number if you weren't given one. A written follow-up also gives you a clear record if
+                you later take the matter to the RTB or an Ombudsman.
               </p>
               <div className="mt-7 grid md:grid-cols-2 gap-4">
                 {([

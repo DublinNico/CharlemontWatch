@@ -12,14 +12,22 @@ export function ReportSuccess() {
   const [searchParams] = useSearchParams();
   const sentComplaint = searchParams.get('complaint') === 'true';
   const [copied, setCopied] = useState(false);
+  const [copyFailed, setCopyFailed] = useState(false);
 
+  // Copies the ID; if the clipboard API is missing (insecure context, old
+  // browser) or the write is refused, tell the resident to copy it by hand
   const handleCopy = () => {
     if (!id) return;
+    setCopyFailed(false);
+    if (!navigator.clipboard?.writeText) {
+      setCopyFailed(true);
+      return;
+    }
     navigator.clipboard.writeText(id).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }).catch(() => {
-      // clipboard write failed (permission denied, insecure context): the ID is still visible to copy by hand
+      setCopyFailed(true);
     });
   };
 
@@ -46,6 +54,11 @@ export function ReportSuccess() {
               {copied ? 'Copied' : 'Copy ID'}
             </Button>
           </div>
+          {copyFailed && (
+            <p className="mt-2 text-sm font-medium text-destructive" role="alert">
+              Couldn't copy automatically. Please select the ID above and copy it manually.
+            </p>
+          )}
 
           {!sentComplaint && (
             <div className="mt-5 flex gap-3.5 p-5 rounded-lg bg-status-progress-bg">

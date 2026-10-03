@@ -5,6 +5,7 @@ import { Header } from '../components/Header';
 import { StatusBadge } from '../components/StatusBadge';
 import { useApp, IncidentStatus, Incident } from '../context/AppContext';
 import { Button } from '../components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../components/ui/dialog';
 
 type ActiveTab = 'queue' | 'manage';
 
@@ -325,10 +326,9 @@ export function AdminDashboard() {
           </div>
 
           {/* Top-level tabs */}
-          <div className="inline-flex self-start md:self-auto p-1 rounded-md bg-muted gap-1" role="tablist">
+          <div className="inline-flex self-start md:self-auto p-1 rounded-md bg-muted gap-1" role="group" aria-label="Dashboard view">
             <button
-              role="tab"
-              aria-selected={activeTab === 'queue'}
+              aria-pressed={activeTab === 'queue'}
               onClick={() => setActiveTab('queue')}
               className={`h-[38px] px-[18px] rounded-md transition-colors text-sm font-semibold flex items-center gap-2 ${
                 activeTab === 'queue'
@@ -344,8 +344,7 @@ export function AdminDashboard() {
               )}
             </button>
             <button
-              role="tab"
-              aria-selected={activeTab === 'manage'}
+              aria-pressed={activeTab === 'manage'}
               onClick={() => setActiveTab('manage')}
               className={`h-[38px] px-[18px] rounded-md transition-colors text-sm font-semibold ${
                 activeTab === 'manage'
@@ -450,18 +449,23 @@ export function AdminDashboard() {
       </main>
 
       {/* Status Update Modal */}
-      {selectedIncident && (
-        <div className="fixed inset-0 bg-foreground/50 flex items-center justify-center p-4 z-50" role="dialog" aria-modal="true" aria-labelledby="update-status-title">
-          <div className="bg-card rounded-lg border border-border shadow-[0_24px_64px_-16px_rgb(22_24_26/.35)] p-6 md:p-8 max-w-md w-full">
-            <h2 id="update-status-title" className="text-2xl mb-2">Update Status</h2>
-            <p className="text-sm text-muted-foreground mb-6">
+      {/* Radix Dialog handles initial focus, focus trapping, Escape, and focus restoration */}
+      <Dialog
+        open={selectedIncident !== null}
+        onOpenChange={open => { if (!open && !isUpdating) setSelectedIncident(null); }}
+      >
+        <DialogContent className="bg-card rounded-lg border border-border p-6 md:p-8 sm:max-w-md">
+          {selectedIncident && (
+          <>
+            <DialogTitle className="text-2xl">Update Status</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mb-4">
               Incident ID: <span className="font-mono text-foreground">{selectedIncident.id}</span>
-            </p>
+            </DialogDescription>
             <div className="mb-7">
               <label htmlFor="new-status" className="block mb-2">Select Status</label>
               <select
                 id="new-status"
-                className="w-full h-12 px-3.5 border border-border bg-input-background rounded-md text-[15px] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring"
+                className="w-full h-12 px-3.5 border border-border bg-input-background rounded-md text-base md:text-[15px] outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring"
                 value={newStatus}
                 onChange={e => setNewStatus(e.target.value as IncidentStatus)}
               >
@@ -490,9 +494,10 @@ export function AdminDashboard() {
                 Cancel
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

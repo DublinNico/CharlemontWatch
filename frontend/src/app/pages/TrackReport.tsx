@@ -73,6 +73,9 @@ export function TrackReport() {
   const [isSearching, setIsSearching] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [searchError, setSearchError] = useState(false);
+  // The normalized ID of the last completed lookup, so the not-found message
+  // doesn't change as the resident edits the input afterwards
+  const [lastSearchedId, setLastSearchedId] = useState('');
 
   // Auto-search if the page was loaded with a ?id= query param (e.g. from
   // the "Track This Report" link on the success page)
@@ -92,6 +95,7 @@ export function TrackReport() {
     // Only uppercase CW- shortIds; MongoDB ObjectIds (24 hex chars) must stay as-is
     const normalized = /^[0-9a-fA-F]{24}$/.test(trimmed) ? trimmed : trimmed.toUpperCase();
 
+    setLastSearchedId(normalized);
     setIsSearching(true);
     setNotFound(false);
     setSearchError(false);
@@ -161,7 +165,7 @@ export function TrackReport() {
           {notFound && (
             <div className="flex items-start gap-3 rounded-lg bg-status-none-bg p-5 max-w-3xl">
               <SearchX className="size-5 text-status-none shrink-0 mt-px" />
-              <p>No incident found with ID: <strong className="font-mono">{searchId.toUpperCase()}</strong>. Check the reference in your confirmation email and try again.</p>
+              <p>No incident found with ID: <strong className="font-mono">{lastSearchedId}</strong>. Check the reference in your confirmation email and try again.</p>
             </div>
           )}
 

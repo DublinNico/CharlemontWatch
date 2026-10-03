@@ -436,7 +436,9 @@ export function ReportIncident() {
             <ul className="mt-3.5 grid gap-3.5 text-sm text-muted-foreground">
               <li className="grid grid-cols-[22px_1fr] gap-2.5"><Mail className="size-[18px] text-primary" />You get a CW reference by email straight away.</li>
               <li className="grid grid-cols-[22px_1fr] gap-2.5"><ClipboardList className="size-[18px] text-primary" />A volunteer admin reviews the report and photos.</li>
-              <li className="grid grid-cols-[22px_1fr] gap-2.5"><Send className="size-[18px] text-primary" />Once approved, your complaint is emailed to the recipients you chose.</li>
+              {sendingComplaint && (
+                <li className="grid grid-cols-[22px_1fr] gap-2.5"><Send className="size-[18px] text-primary" />Once approved, your complaint is emailed to the recipients you chose.</li>
+              )}
             </ul>
           </div>
           <div className="hidden lg:flex gap-3.5 p-[18px] rounded-lg border border-border bg-card text-sm text-muted-foreground">

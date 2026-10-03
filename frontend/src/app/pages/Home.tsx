@@ -95,7 +95,7 @@ export function Home() {
                   onChange={e => setTrackId(e.target.value)}
                   placeholder="CW-XXXXXX"
                   aria-describedby="hero-track-help"
-                  className="h-10 rounded-md font-mono text-sm"
+                  className="h-10 rounded-md font-mono text-base md:text-sm"
                 />
                 <Button type="submit" variant="outline" size="sm" className="h-10">Track</Button>
               </div>
@@ -156,7 +156,7 @@ export function Home() {
           <div className="mt-10 md:mt-14 grid gap-4 lg:grid-cols-[1.3fr_1fr_1fr] lg:grid-rows-[240px_240px]">
             <Link
               to="/report"
-              className="group relative overflow-hidden rounded-lg min-h-[320px] lg:min-h-0 lg:row-span-2 p-7 flex flex-col justify-end text-[#f3f4f2]"
+              className="group relative overflow-hidden rounded-lg min-h-[320px] lg:min-h-0 lg:row-span-2 p-7 flex flex-col justify-end text-background"
             >
               <img
                 src="/images/ffrench-mullen-house.jpg"
@@ -164,10 +164,10 @@ export function Home() {
                 loading="lazy"
                 className="absolute inset-0 size-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[rgb(14_16_18/.82)] to-transparent to-60%" />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent to-60%" />
               <SprayCan className="absolute top-6 left-7 size-7" />
               <h3 className="relative text-[22px] font-semibold tracking-[-0.02em]">Graffiti</h3>
-              <p className="relative mt-1.5 text-[15px] text-[#f3f4f2]/85 max-w-[32ch]">Tags and vandalism on walls, doors and shared spaces.</p>
+              <p className="relative mt-1.5 text-[15px] text-background/85 max-w-[32ch]">Tags and vandalism on walls, doors and shared spaces.</p>
             </Link>
 
             <Link to="/report" className="relative rounded-lg min-h-[200px] p-7 flex flex-col justify-end bg-primary text-primary-foreground hover:brightness-110 transition">
