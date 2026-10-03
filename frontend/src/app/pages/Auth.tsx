@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { Shield } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useApp } from '../context/AppContext';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 
 const ADMIN_KEY = import.meta.env.VITE_ADMIN_KEY;
 
@@ -48,48 +51,46 @@ export function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-sky-400 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
-        <div className="text-center mb-6">
-          <Shield className="w-16 h-16 text-indigo-600 mx-auto mb-4" />
-          <h1 className="text-gray-800 mb-2">Admin Login</h1>
-          <p className="text-sm text-gray-500">Manage incident reports</p>
+    <div className="bg-background grid place-items-center px-4 py-16 md:py-24">
+      <div className="bg-card border border-border rounded-lg p-8 md:p-10 max-w-[420px] w-full">
+        <div className="size-12 rounded-md bg-foreground text-background grid place-items-center">
+          <Shield className="size-6" strokeWidth={2.25} />
         </div>
+        <h1 className="mt-5 text-[30px] leading-tight tracking-[-0.03em] font-bold">Admin Login</h1>
+        <p className="mt-1 mb-7 text-muted-foreground">Manage incident reports</p>
 
         {error && (
-          <div className="bg-red-50 border border-red-600 text-red-600 rounded px-4 py-3 mb-4 text-sm">
+          <div className="bg-status-none-bg text-status-none font-medium rounded-md px-4 py-3 mb-5 text-sm" role="alert">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm text-gray-800 mb-1">Email</label>
-            <input
+            <Label htmlFor="admin-email" className="mb-2 block">Email</Label>
+            <Input
+              id="admin-email"
               type="email"
-              className="w-full px-4 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              autoComplete="username"
               value={formData.email}
               onChange={e => setFormData({ ...formData, email: e.target.value })}
             />
           </div>
 
           <div>
-            <label className="block text-sm text-gray-800 mb-1">Password</label>
-            <input
+            <Label htmlFor="admin-password" className="mb-2 block">Password</Label>
+            <Input
+              id="admin-password"
               type="password"
-              className="w-full px-4 py-2 border border-border rounded focus:outline-none focus:ring-2 focus:ring-indigo-600"
+              autoComplete="current-password"
               value={formData.password}
               onChange={e => setFormData({ ...formData, password: e.target.value })}
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded transition-colors disabled:opacity-60"
-          >
+          <Button type="submit" size="lg" disabled={isSubmitting} className="w-full !mt-7">
             {isSubmitting ? 'Please wait…' : 'Login'}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

@@ -28,14 +28,14 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-          <div className="bg-white rounded shadow-sm p-8 max-w-md w-full text-center">
-            <h2 className="text-gray-800 text-xl font-semibold mb-3">Something went wrong</h2>
-            <p className="text-gray-500 mb-6">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-lg p-8 max-w-md w-full text-center">
+            <h2 className="text-2xl font-bold mb-3">Something went wrong</h2>
+            <p className="text-muted-foreground mb-6">
               The app couldn't load. Please check your connection and try again.
             </p>
             <button
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+              className="h-10 px-5 bg-primary hover:bg-primary/90 text-primary-foreground rounded-md font-semibold transition-colors"
               onClick={() => window.location.reload()}
             >
               Reload page

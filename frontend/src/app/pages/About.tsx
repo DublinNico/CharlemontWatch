@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Shield, AlertTriangle, Camera, Users, FileText, Heart, Scale, Clock, Copy, Check } from 'lucide-react';
+import { Shield, FileText, Heart, Scale, Clock, Copy, Check, X, Send, UserX, CameraOff, Sun, Frame, Siren, ArrowUpRight } from 'lucide-react';
+import { Button } from '../components/ui/button';
 import { Header } from '../components/Header';
 import { useNavigate } from 'react-router';
 
@@ -82,314 +83,225 @@ export function About() {
     });
   };
 
+  const sections = [
+    { id: 'why', label: 'Why formal complaints' },
+    { id: 'choose', label: 'Report or complaint' },
+    { id: 'how', label: 'How it works' },
+    { id: 'rules', label: 'Photos, safety and privacy' },
+    { id: 'late', label: 'If a reply is late' },
+    { id: 'rtb', label: 'Escalating to the RTB' },
+    { id: 'support', label: 'Support the site' },
+  ];
+
+  const steps = [
+    { title: 'Report an Issue', description: 'Residents document incidents with photos and detailed descriptions.' },
+    { title: 'Escalate Formally', description: 'Optionally request a formal complaint to Túath Housing, Dublin City Council, or both. It is emailed on your behalf once an administrator approves your report.' },
+    { title: 'Receive an ID', description: "Get a unique tracking ID to monitor your report's progress." },
+    { title: 'Admin Reviews', description: 'Volunteer administrators review submissions and update status.' },
+    { title: 'Track Resolution', description: 'Follow the incident from submission to resolution.' },
+  ];
+
+  const sectionClass = 'scroll-mt-24 py-12 md:py-14 border-t border-border first:border-t-0 first:pt-0';
+  const h2Class = 'text-[26px] md:text-[30px] leading-[1.1] tracking-[-0.03em] font-bold max-w-[24ch]';
+  const pClass = 'mt-3.5 text-[16.5px] text-muted-foreground max-w-[66ch]';
+
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
+    <div className="bg-background">
       <Header />
-      
-      <main className="max-w-5xl mx-auto px-4 py-6 md:py-8 space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-[#333333] mb-2">About CharlemontWatch</h1>
-          <p className="text-[#666666]">Community-led. Transparent. Accountable.</p>
-        </div>
 
-        {/* Mission Statement */}
-        <div className="bg-white rounded shadow-sm p-6">
-          <div className="flex items-start gap-4">
-            <Shield className="w-12 h-12 text-[#1976d2] flex-shrink-0" />
-            <div>
-              <h2 className="text-[#333333] mb-3">Our Mission</h2>
-              <p className="text-[#666666]">
-                CharlemontWatch is a community-led incident reporting and tracking platform for residents 
-                of Charlemont Street, Dublin. We empower residents to document safety, maintenance, and 
-                quality-of-life issues, creating a transparent evidence base that holds Túath Housing and 
-                Dublin City Council accountable for maintaining our neighbourhood.
-              </p>
-            </div>
+      <main className="page-container">
+        <div className="grid lg:grid-cols-[1.1fr_1fr] gap-5 lg:gap-16 lg:items-end pt-10 md:pt-16 pb-10 md:pb-14 border-b border-border">
+          <div>
+            <p className="text-sm font-semibold text-primary mb-3">About CharlemontWatch</p>
+            <h1 className="text-[38px] md:text-[56px] 2xl:text-[64px] leading-[1.03] tracking-[-0.035em] font-bold">Community-led. Transparent. Accountable.</h1>
           </div>
+          <p className="text-lg text-muted-foreground">
+            CharlemontWatch is a community-led incident reporting and tracking platform for residents of Charlemont Street, Dublin.
+            We help residents document safety, maintenance, and quality-of-life issues, creating a transparent evidence base
+            that holds Túath Housing and Dublin City Council accountable for maintaining our neighbourhood.
+          </p>
         </div>
 
-        {/* How It Works */}
-        <div className="bg-white rounded shadow-sm p-6">
-          <h2 className="text-[#333333] mb-6">How It Works</h2>
-          <div className="space-y-4">
-            {[
-              { number: 1, title: 'Report an Issue', description: 'Residents document incidents with photos and detailed descriptions' },
-              { number: 2, title: 'Escalate Formally', description: 'Optionally send a formal complaint directly to Túath Housing, Dublin City Council, or both, on your behalf, automatically' },
-              { number: 3, title: 'Receive an ID', description: 'Get a unique tracking ID to monitor your report\'s progress' },
-              { number: 4, title: 'Admin Reviews', description: 'Housing administrators review submissions and update status' },
-              { number: 5, title: 'Track Resolution', description: 'Follow the incident from submission to resolution' },
-            ].map(step => (
-              <div key={step.number} className="flex gap-4">
-                <div className="w-10 h-10 bg-[#1976d2] text-white rounded-full flex items-center justify-center flex-shrink-0">
-                  {step.number}
+        <div className="grid lg:grid-cols-[220px_minmax(0,1fr)] gap-16 pt-12 md:pt-14">
+          <nav className="hidden lg:grid sticky top-[100px] self-start gap-2.5 text-sm" aria-label="On this page">
+            {sections.map(section => (
+              <a key={section.id} href={`#${section.id}`} className="text-subtle-foreground hover:text-foreground transition-colors">
+                {section.label}
+              </a>
+            ))}
+          </nav>
+
+          <div>
+            <section id="why" className={sectionClass}>
+              <h2 className={h2Class}>A report alone achieves nothing. A formal complaint has deadlines.</h2>
+              <p className={pClass}>
+                Túath Housing and Dublin City Council are not obliged to act on community posts or photos. A{' '}
+                <strong className="text-foreground">formal complaint</strong> is different. Under Túath's own published Complaints Policy
+                and Dublin City Council's own Customer Complaints Procedure, they are committed to acknowledging your complaint and
+                providing a written response within set deadlines.
+              </p>
+              <div className="mt-7 grid md:grid-cols-2 gap-4">
+                {[
+                  { name: 'Túath Housing', remit: 'The housing association, responsible for building maintenance, repairs, and resident safety.', ack: 5, respond: 30 },
+                  { name: 'Dublin City Council (DCC)', remit: 'The local authority overseeing public safety, street cleaning, and community services.', ack: 3, respond: 15 },
+                ].map(org => (
+                  <div key={org.name} className="bg-card border border-border rounded-lg p-6">
+                    <h3 className="text-[17px] font-semibold">{org.name}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{org.remit}</p>
+                    <div className="mt-4 flex gap-8">
+                      <div><div className="font-mono text-[36px] leading-none font-semibold tracking-[-0.04em]">{org.ack}</div><div className="mt-1.5 text-[13px] text-subtle-foreground">days to acknowledge</div></div>
+                      <div><div className="font-mono text-[36px] leading-none font-semibold tracking-[-0.04em]">{org.respond}</div><div className="mt-1.5 text-[13px] text-subtle-foreground">days to respond</div></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-[13px] text-subtle-foreground">All figures are working days.</p>
+              <p className={pClass}>
+                CharlemontWatch combines both: your report builds a public evidence record, and the formal complaint forces an official
+                response. Together, they create accountability that neither can achieve alone.
+              </p>
+            </section>
+
+            <section id="choose" className={sectionClass}>
+              <h2 className={h2Class}>Report only, or formal complaint?</h2>
+              <div className="mt-7 grid md:grid-cols-2 gap-4">
+                <div className="bg-card border border-border rounded-lg p-6">
+                  <h3 className="text-lg font-semibold flex items-center gap-2.5"><FileText className="size-5" />Report Only</h3>
+                  <ul className="mt-3.5 grid gap-2.5 text-[15px] text-muted-foreground">
+                    <li className="grid grid-cols-[22px_1fr] gap-2"><Check className="size-4 mt-1 text-status-done" />Just your email, so we can send you status updates</li>
+                    <li className="grid grid-cols-[22px_1fr] gap-2"><Check className="size-4 mt-1 text-status-done" />Name and address are never required</li>
+                    <li className="grid grid-cols-[22px_1fr] gap-2"><X className="size-4 mt-1 text-status-none" />Not forwarded to Túath Housing or Dublin City Council</li>
+                  </ul>
                 </div>
-                <div>
-                  <h3 className="text-[#333333] mb-1">{step.title}</h3>
-                  <p className="text-sm text-[#666666]">{step.description}</p>
+                <div className="bg-card border border-primary ring-1 ring-primary rounded-lg p-6">
+                  <h3 className="text-lg font-semibold flex items-center gap-2.5"><Send className="size-5 text-primary" />Formal Complaint</h3>
+                  <ul className="mt-3.5 grid gap-2.5 text-[15px] text-muted-foreground">
+                    <li className="grid grid-cols-[22px_1fr] gap-2"><Check className="size-4 mt-1 text-status-done" />Also includes your name and address</li>
+                    <li className="grid grid-cols-[22px_1fr] gap-2"><Check className="size-4 mt-1 text-status-done" />Forwarded directly to Túath Housing and/or Dublin City Council</li>
+                    <li className="grid grid-cols-[22px_1fr] gap-2"><Check className="size-4 mt-1 text-status-done" />Requires an official written response within 30 working days (Túath) or 15 working days (Dublin City Council)</li>
+                  </ul>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+            </section>
 
-        {/* Who We Pressure */}
-        <div className="bg-white rounded shadow-sm p-6">
-          <h2 className="text-[#333333] mb-4">Who We Pressure</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="border border-[#eeeeee] rounded p-4">
-              <h3 className="text-[#1976d2] mb-2">Túath Housing</h3>
-              <p className="text-sm text-[#666666]">
-                The housing association, responsible for building maintenance, repairs, and resident safety.
-              </p>
-            </div>
-            <div className="border border-[#eeeeee] rounded p-4">
-              <h3 className="text-[#1976d2] mb-2">Dublin City Council (DCC)</h3>
-              <p className="text-sm text-[#666666]">
-                The local government authority overseeing public safety, street cleaning, and community services.
-              </p>
-            </div>
-          </div>
-        </div>
+            <section id="how" className={sectionClass}>
+              <h2 className={h2Class}>How it works</h2>
+              <ol className="mt-7 grid gap-4">
+                {steps.map((step, index) => (
+                  <li key={step.title} className="grid grid-cols-[36px_1fr] gap-4">
+                    <span className="size-9 rounded-full bg-muted grid place-items-center font-mono text-sm font-semibold">{index + 1}</span>
+                    <div>
+                      <h3 className="text-[17px] font-semibold">{step.title}</h3>
+                      <p className="mt-0.5 text-[15px] text-muted-foreground">{step.description}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </section>
 
-        {/* Why This Matters */}
-        <div className="bg-white rounded shadow-sm p-6">
-          <div className="flex items-start gap-4">
-            <Users className="w-10 h-10 text-[#1976d2] flex-shrink-0" />
-            <div>
-              <h2 className="text-[#333333] mb-3">Why This Matters</h2>
-              <p className="text-[#666666] mb-3">
-                Reporting an issue on an app alone achieves nothing. Túath Housing and Dublin City Council are not obliged to act on community posts or photos.
-              </p>
-              <p className="text-[#666666] mb-3">
-                A <strong>formal complaint</strong> is different. Under Túath's own published Complaints Policy and Dublin City Council's own Customer Complaints Procedure, they are committed to acknowledging your complaint within 5 working days (Túath) or 3 working days (Dublin City Council), and providing a written response within 30 working days (Túath) or 15 working days (Dublin City Council).
-              </p>
-              <p className="text-[#666666]">
-                CharlemontWatch combines both: your report builds a public evidence record, and the formal complaint forces an official response. Together, they create accountability that neither can achieve alone.
-              </p>
-            </div>
-          </div>
-        </div>
+            <section id="rules" className={sectionClass}>
+              <h2 className={h2Class}>Photos, safety and privacy</h2>
+              <div className="mt-6 grid md:grid-cols-2 gap-x-8 gap-y-3.5 text-[15px] text-muted-foreground">
+                <div className="grid grid-cols-[26px_1fr] gap-2.5"><UserX className="size-5 text-status-none" /><span><strong className="text-foreground">Do NOT name individuals</strong> in reports or photos.</span></div>
+                <div className="grid grid-cols-[26px_1fr] gap-2.5"><CameraOff className="size-5 text-status-none" /><span><strong className="text-foreground">Do NOT photograph faces</strong> without consent.</span></div>
+                <div className="grid grid-cols-[26px_1fr] gap-2.5"><Sun className="size-5 text-primary" /><span>Take clear, well-lit photos showing the full extent of the issue.</span></div>
+                <div className="grid grid-cols-[26px_1fr] gap-2.5"><Frame className="size-5 text-primary" /><span>Include context shots of the location, and multiple angles if relevant.</span></div>
+                <div className="grid grid-cols-[26px_1fr] gap-2.5"><Clock className="size-5 text-primary" /><span>Capture date/time stamps if your device supports it.</span></div>
+                <div className="grid grid-cols-[26px_1fr] gap-2.5"><Shield className="size-5 text-primary" /><span>Focus on documenting the issue, not identifying people.</span></div>
+              </div>
+              <div className="mt-6 flex gap-3.5 p-[18px] rounded-lg border border-border bg-card text-[15px] text-muted-foreground">
+                <Siren className="size-[22px] text-destructive shrink-0" />
+                <p>
+                  <strong className="text-foreground">For a crime in progress, an emergency, or serious anti-social behaviour, contact An Garda Síochána directly.</strong>{' '}
+                  Call 999 or 112. This platform isn't monitored in real time.
+                </p>
+              </div>
+            </section>
 
-        {/* Uploading Photos */}
-        <div className="bg-white rounded shadow-sm p-6">
-          <div className="flex items-start gap-4">
-            <Camera className="w-10 h-10 text-[#1976d2] flex-shrink-0" />
-            <div>
-              <h2 className="text-[#333333] mb-3">Uploading Photos</h2>
-              <ul className="space-y-2 text-sm text-[#666666]">
-                <li className="flex gap-2">
-                  <span className="text-[#1976d2]">•</span>
-                  <span>Take clear, well-lit photos showing the full extent of the issue</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#1976d2]">•</span>
-                  <span>Include context shots showing location and surroundings</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#1976d2]">•</span>
-                  <span>Capture date/time stamps if your device supports it</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#1976d2]">•</span>
-                  <span>Upload multiple angles if relevant to the incident</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Safety & Privacy */}
-        <div className="bg-[#fff3e0] border-l-4 border-[#f57c00] rounded shadow-sm p-6">
-          <div className="flex items-start gap-4">
-            <AlertTriangle className="w-10 h-10 text-[#f57c00] flex-shrink-0" />
-            <div>
-              <h2 className="text-[#f57c00] mb-3">Safety & Privacy Rules</h2>
-              <ul className="space-y-2 text-sm text-[#666666]">
-                <li className="flex gap-2">
-                  <span className="text-[#f57c00]">•</span>
-                  <span><strong>Do NOT name individuals</strong> in reports or photos</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#f57c00]">•</span>
-                  <span><strong>Do NOT photograph faces</strong> without consent</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#f57c00]">•</span>
-                  <span>Focus on documenting the issue, not identifying people</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#f57c00]">•</span>
-                  <span>Respect privacy while maintaining accountability</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#f57c00]">•</span>
-                  <span>For a crime in progress, an emergency, or serious anti-social behaviour, contact An Garda Síochána directly — this platform isn't monitored in real time</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Report Only or Formal Complaint */}
-        <div className="bg-white rounded shadow-sm p-6">
-          <h2 className="text-[#333333] mb-4">Report Only or Formal Complaint?</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-[#1976d2] mb-2">Report Only</h3>
-              <ul className="space-y-2 text-sm text-[#666666]">
-                <li className="flex gap-2">
-                  <span className="text-[#388e3c]">✓</span>
-                  <span>Just your email: confirms you live in the complex and lets us send status updates</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#388e3c]">✓</span>
-                  <span>Name and address are never required</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#d32f2f]">✗</span>
-                  <span>Not forwarded to Túath Housing or Dublin City Council</span>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-[#1976d2] mb-2">Formal Complaint</h3>
-              <ul className="space-y-2 text-sm text-[#666666]">
-                <li className="flex gap-2">
-                  <span className="text-[#388e3c]">✓</span>
-                  <span>Also includes your name and address</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#388e3c]">✓</span>
-                  <span>Forwarded directly to Túath Housing and/or Dublin City Council</span>
-                </li>
-                <li className="flex gap-2">
-                  <span className="text-[#388e3c]">✓</span>
-                  <span>Requires an official written response within 30 working days (Túath) or 15 working days (Dublin City Council)</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Late Acknowledgement */}
-        <div className="bg-white rounded shadow-sm p-6">
-          <div className="flex items-start gap-4">
-            <Clock className="w-10 h-10 text-[#1976d2] flex-shrink-0" />
-            <div>
-              <h2 className="text-[#333333] mb-3">If Your Acknowledgement Is Late</h2>
-              <p className="text-[#666666] mb-3">
-                Túath should acknowledge a formal complaint within 5 working days, and Dublin City Council within
-                3 working days. If that window passes with no acknowledgement, it's too early to escalate to the
-                RTB or an Ombudsman, that only applies once the full response deadline (30 working days for
-                Túath, 15 for Dublin City Council) has also been missed.
+            <section id="late" className={sectionClass}>
+              <h2 className={h2Class}>If your acknowledgement is late</h2>
+              <p className={pClass}>
+                Túath should acknowledge a formal complaint within 5 working days, and Dublin City Council within 3 working days. A full
+                written response is due within 30 working days (Túath) or 15 working days (Dublin City Council). If the acknowledgement
+                window passes, a written follow-up is a useful next step.
               </p>
-              <p className="text-[#666666] mb-4">
-                Instead, send a written follow-up (not a phone call) referencing your CharlemontWatch tracking ID
-                and the date the complaint was sent, and ask for a complaint reference number if you weren't given
-                one. Keep this follow-up in writing, it's useful evidence later if the full response deadline is
-                also missed.
+              <p className={pClass}>
+                Send it in writing (not a phone call), reference your CharlemontWatch tracking ID and the date the complaint was sent,
+                and ask for a complaint reference number if you weren't given one. A written follow-up also gives you a clear record if
+                you later take the matter to the RTB or an Ombudsman.
               </p>
-
-              <div className="space-y-4">
+              <div className="mt-7 grid md:grid-cols-2 gap-4">
                 {([
                   { key: 'tuath', label: 'Túath Housing follow-up letter', text: TUATH_FOLLOWUP_TEMPLATE },
                   { key: 'dcc', label: 'Dublin City Council follow-up letter', text: DCC_FOLLOWUP_TEMPLATE },
                 ] as const).map(template => (
-                  <div key={template.key} className="border border-[#eeeeee] rounded overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-2 bg-[#f5f5f5] border-b border-[#eeeeee]">
-                      <span className="text-sm text-[#333333]">{template.label}</span>
-                      <button
-                        onClick={() => handleCopyTemplate(template.key)}
-                        className="flex items-center gap-1 text-xs text-[#1976d2] hover:underline"
-                      >
-                        {copiedTemplate === template.key
-                          ? <Check className="w-3.5 h-3.5 text-[#388e3c]" />
-                          : <Copy className="w-3.5 h-3.5" />}
+                  <div key={template.key} className="bg-card border border-border rounded-lg overflow-hidden min-w-0">
+                    <div className="flex items-center justify-between gap-3 px-[18px] py-3 border-b border-border">
+                      <span className="text-sm font-semibold">{template.label}</span>
+                      <Button variant="outline" size="sm" className="h-8 px-3 text-[13px]" onClick={() => handleCopyTemplate(template.key)}>
+                        {copiedTemplate === template.key ? <Check className="size-3.5 text-status-done" /> : <Copy className="size-3.5" />}
                         {copiedTemplate === template.key ? 'Copied' : 'Copy'}
-                      </button>
+                      </Button>
                     </div>
-                    <pre className="px-4 py-3 text-xs leading-relaxed text-[#666666] whitespace-pre-wrap max-h-64 overflow-y-auto">
+                    <pre className="p-[18px] font-mono text-[12.5px] leading-relaxed text-muted-foreground whitespace-pre-wrap max-h-[260px] overflow-y-auto">
                       {template.text}
                     </pre>
                   </div>
                 ))}
               </div>
-            </div>
-          </div>
-        </div>
+            </section>
 
-        {/* Escalating to the RTB */}
-        <div className="bg-white rounded shadow-sm p-6">
-          <div className="flex items-start gap-4">
-            <Scale className="w-10 h-10 text-[#1976d2] flex-shrink-0" />
-            <div>
-              <h2 className="text-[#333333] mb-3">Escalating a Dispute with the RTB</h2>
-              <p className="text-[#666666] mb-3">
-                Túath Housing is an Approved Housing Body, so your tenancy is covered by the same rules as a
-                private rental and registered with the <strong>Residential Tenancies Board (RTB)</strong>, the
-                statutory body that resolves disputes between tenants and landlords.
+            <section id="rtb" className={sectionClass}>
+              <h2 className={h2Class}>Escalating a dispute with the RTB</h2>
+              <p className={pClass}>
+                Túath Housing is an Approved Housing Body, so your tenancy is covered by the same rules as a private rental and
+                registered with the <strong className="text-foreground">Residential Tenancies Board (RTB)</strong>, the statutory body
+                that resolves disputes between tenants and landlords.
               </p>
-              <p className="text-[#666666] mb-3">
-                If you've sent a formal complaint through CharlemontWatch and Túath hasn't responded within the
-                30 working day window, or hasn't resolved the issue, you don't have to leave it there. You can
-                open a dispute directly with the RTB: mediation is free, adjudication costs €30, and a tribunal
-                appeal costs €30 (after mediation) or €85 (after adjudication). None of the three require a
-                solicitor.
+              <p className={pClass}>
+                If you've sent a formal complaint through CharlemontWatch and Túath hasn't responded within the 30 working day window,
+                or hasn't resolved the issue, you can open a dispute directly with the RTB. Mediation is free, adjudication costs €30,
+                and a tribunal appeal costs €30 (after mediation) or €85 (after adjudication). None of the three require a solicitor.
               </p>
-              <p className="text-[#666666]">
-                Keep a record of when you first raised the issue and any responses (or lack of one), your
-                CharlemontWatch tracking ID and report history are useful evidence for this. Note the RTB
-                handles disputes with Túath as your landlord; issues that are purely Dublin City Council's
-                responsibility (bins, street cleaning, public areas) aren't part of its remit.
+              <p className={pClass}>
+                Keep a record of when you first raised the issue and any responses (or lack of one). Your CharlemontWatch tracking ID and
+                report history are useful evidence. The RTB handles disputes with Túath as your landlord; issues that are purely Dublin
+                City Council's responsibility (bins, street cleaning, public areas) aren't part of its remit.
               </p>
               <a
                 href="https://rtb.ie/disputes/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 mt-2 text-[#1976d2] hover:underline"
+                className="mt-4 inline-flex items-center gap-1.5 font-semibold text-primary hover:underline"
               >
-                Start a dispute at rtb.ie/disputes →
+                <Scale className="size-4" />
+                Start a dispute at rtb.ie/disputes
+                <ArrowUpRight className="size-4" />
               </a>
-            </div>
-          </div>
-        </div>
+            </section>
 
-        {/* CTA */}
-        <div className="bg-white rounded shadow-sm p-8 text-center">
-          <FileText className="w-12 h-12 text-[#1976d2] mx-auto mb-4" />
-          <h2 className="text-[#333333] mb-6">Ready to make a difference?</h2>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={() => navigate('/report')}
-              className="px-6 py-2 bg-[#1976d2] hover:bg-[#1565c0] text-white rounded transition-colors"
-            >
-              Report an Incident
-            </button>
-            <button
-              onClick={() => navigate('/incidents')}
-              className="px-6 py-2 border border-[#1976d2] text-[#1976d2] hover:bg-[#e3f2fd] rounded transition-colors"
-            >
-              View All Incidents
-            </button>
+            <section id="support" className={sectionClass}>
+              <div className="bg-card border border-border rounded-lg p-6 md:p-9 grid md:grid-cols-[1fr_auto] gap-6 md:gap-8 items-center">
+                <div>
+                  <h2 className="text-2xl font-bold tracking-[-0.03em]">Support CharlemontWatch</h2>
+                  <p className="mt-2 text-muted-foreground max-w-[60ch]">
+                    CharlemontWatch is run and paid for out of pocket. Hosting, storage, and email all cost money every month.
+                    If this site has been useful to you, a small donation helps keep it running.
+                  </p>
+                </div>
+                <Button size="lg" asChild>
+                  <a href="https://ko-fi.com/charlemontwatch" target="_blank" rel="noopener noreferrer">
+                    <Heart className="size-4" />
+                    Donate via Ko-fi
+                  </a>
+                </Button>
+              </div>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <Button size="lg" onClick={() => navigate('/report')}>Report an Incident</Button>
+                <Button size="lg" variant="outline" onClick={() => navigate('/incidents')}>View All Incidents</Button>
+              </div>
+            </section>
           </div>
-        </div>
-
-        {/* Donate */}
-        <div className="bg-white rounded shadow-sm p-6 text-center">
-          <Heart className="w-10 h-10 text-[#d32f2f] mx-auto mb-3" />
-          <h2 className="text-[#333333] mb-2">Support CharlemontWatch</h2>
-          <p className="text-sm text-[#666666] mb-4 max-w-md mx-auto">
-            CharlemontWatch is run and paid for out of pocket, hosting, storage, and email all cost money every month. If this site has been useful to you, a small donation helps keep it running.
-          </p>
-          <a
-            href="https://ko-fi.com/charlemontwatch"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-2 bg-[#d32f2f] hover:bg-[#b71c1c] text-white rounded transition-colors"
-          >
-            <Heart className="w-4 h-4" />
-            Donate via Ko-fi
-          </a>
         </div>
       </main>
     </div>

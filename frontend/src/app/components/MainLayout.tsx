@@ -11,9 +11,13 @@ export function MainLayout() {
     window.scrollTo(0, 0);
   }, [pathname]);
   return (
-    <>
-      <Outlet />
+    // Column layout so short pages (Contact, 404, login) push the footer to
+    // the bottom of the viewport without padding the page itself
+    <div className="min-h-screen flex flex-col bg-background">
+      <div className="flex-1">
+        <Outlet />
+      </div>
       <Footer />
-    </>
+    </div>
   );
 }

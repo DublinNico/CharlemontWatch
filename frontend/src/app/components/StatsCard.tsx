@@ -1,40 +1,29 @@
 import { useApp } from '../context/AppContext';
 
-// Compact row of total/per-status counts, shown at the top of
-// the Track Report page
+// Compact row of total/per-status counts. Numbers are set in mono so the
+// columns line up; each status keeps its semantic colour.
 export function StatsCard() {
   const { incidents } = useApp();
 
-  const stats = {
-    total: incidents.length,
-    awaiting: incidents.filter(i => i.status === 'AWAITING_RESPONSE').length,
-    noResponse: incidents.filter(i => i.status === 'NO_RESPONSE').length,
-    inProgress: incidents.filter(i => i.status === 'IN_PROGRESS').length,
-    resolved: incidents.filter(i => i.status === 'RESOLVED').length,
-  };
+  const stats = [
+    { label: 'Total Reports', value: incidents.length, color: 'text-foreground' },
+    { label: 'Awaiting Response', value: incidents.filter(i => i.status === 'AWAITING_RESPONSE').length, color: 'text-status-await' },
+    { label: 'No Response', value: incidents.filter(i => i.status === 'NO_RESPONSE').length, color: 'text-status-none' },
+    { label: 'In Progress', value: incidents.filter(i => i.status === 'IN_PROGRESS').length, color: 'text-status-progress' },
+    { label: 'Resolved', value: incidents.filter(i => i.status === 'RESOLVED').length, color: 'text-status-done' },
+  ];
 
   return (
-    <div className="bg-white rounded shadow-sm p-4 md:p-6 grid grid-cols-2 md:grid-cols-5 gap-4">
-      <div className="text-center">
-        <div className="text-3xl md:text-4xl text-[#1976d2]">{stats.total}</div>
-        <div className="text-sm text-[#666666] mt-1">Total Reports</div>
-      </div>
-      <div className="text-center">
-        <div className="text-3xl md:text-4xl text-[#1976d2]">{stats.awaiting}</div>
-        <div className="text-sm text-[#666666] mt-1">Awaiting Response</div>
-      </div>
-      <div className="text-center">
-        <div className="text-3xl md:text-4xl text-[#d32f2f]">{stats.noResponse}</div>
-        <div className="text-sm text-[#666666] mt-1">No Response</div>
-      </div>
-      <div className="text-center">
-        <div className="text-3xl md:text-4xl text-[#f57c00]">{stats.inProgress}</div>
-        <div className="text-sm text-[#666666] mt-1">In Progress</div>
-      </div>
-      <div className="text-center">
-        <div className="text-3xl md:text-4xl text-[#388e3c]">{stats.resolved}</div>
-        <div className="text-sm text-[#666666] mt-1">Resolved</div>
-      </div>
+    <div className="bg-card border border-border rounded-lg grid grid-cols-2 md:grid-cols-5 overflow-hidden">
+      {stats.map((stat, index) => (
+        <div
+          key={stat.label}
+          className={`px-5 py-5 md:px-6 md:py-6 border-border ${index === 0 ? 'col-span-2 md:col-span-1' : ''} ${index > 0 ? 'border-t md:border-t-0 md:border-l' : ''} ${index % 2 === 0 && index > 0 ? 'border-l md:border-l' : ''}`}
+        >
+          <div className={`font-mono text-3xl md:text-[34px] leading-none font-semibold tracking-[-0.04em] ${stat.color}`}>{stat.value}</div>
+          <div className="text-sm text-muted-foreground mt-2.5">{stat.label}</div>
+        </div>
+      ))}
     </div>
   );
 }

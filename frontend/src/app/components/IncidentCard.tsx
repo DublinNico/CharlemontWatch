@@ -3,7 +3,7 @@ import { Incident, IncidentType } from '../context/AppContext';
 import { StatusBadge } from './StatusBadge';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Badge } from './ui/badge';
-import { MapPin, Calendar, Image as ImageIcon, X, ChevronLeft, ChevronRight, Copy, Check, AlertTriangle } from 'lucide-react';
+import { MapPin, Calendar, Image as ImageIcon, X, ChevronLeft, ChevronRight, Copy, Check, AlertTriangle, SprayCan, Megaphone, TriangleAlert, Hammer } from 'lucide-react';
 
 const recipientNames: Record<'tuath' | 'dcc', string> = {
   tuath: 'Túath Housing',
@@ -30,9 +30,9 @@ function latestIssuePerRecipient(issues: NonNullable<Incident['complaintDelivery
 }
 
 const recipientBadgeStyles = {
-  pending: 'bg-slate-100 text-slate-600 border-slate-300',
-  onTrack: 'bg-emerald-100 text-emerald-700 border-emerald-300',
-  responseOverdue: 'bg-red-100 text-red-700 border-red-300',
+  pending: 'bg-muted text-muted-foreground border-transparent',
+  onTrack: 'bg-status-done-bg text-status-done border-transparent',
+  responseOverdue: 'bg-status-none-bg text-status-none border-transparent',
 };
 
 // Compact per-recipient complaint status. Only rendered in the expanded
@@ -82,12 +82,12 @@ interface IncidentCardProps {
   showTrackingBadge?: boolean;
 }
 
-// Badge color and left-border accent per incident type
-const typeStyles: Record<IncidentType, { badge: string; accent: string }> = {
-  'Graffiti': { badge: 'bg-orange-100 text-orange-700 border-orange-300', accent: 'border-l-orange-500' },
-  'Anti-Social Behaviour': { badge: 'bg-red-100 text-red-700 border-red-300', accent: 'border-l-red-500' },
-  'Safety Hazard': { badge: 'bg-amber-100 text-amber-700 border-amber-300', accent: 'border-l-amber-500' },
-  'Maintenance Issue': { badge: 'bg-emerald-100 text-emerald-700 border-emerald-300', accent: 'border-l-emerald-500' },
+// Icon per incident type, shown in the neutral type pill
+const typeIcons: Record<IncidentType, typeof MapPin> = {
+  'Graffiti': SprayCan,
+  'Anti-Social Behaviour': Megaphone,
+  'Safety Hazard': TriangleAlert,
+  'Maintenance Issue': Hammer,
 };
 
 // Displays a single incident. In compact mode (default) it's a summary card
@@ -107,7 +107,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
       // clipboard write failed — silently ignore (permission denied, insecure context)
     });
   };
-  const styles = typeStyles[incident.type];
+  const TypeIcon = typeIcons[incident.type] ?? MapPin;
   const formattedDate = new Date(incident.date).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
@@ -117,12 +117,13 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
   return (
     <>
     <Card
-      className={`border-l-4 ${styles.accent} transition-all hover:shadow-lg ${onClick ? 'cursor-pointer' : ''}`}
+      className={`gap-4 transition-colors ${onClick ? 'cursor-pointer hover:border-subtle-foreground' : ''}`}
       onClick={onClick}
     >
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start gap-4">
-          <Badge variant="outline" className={`${styles.badge} border font-medium`}>
+      <CardHeader className="pb-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className="bg-muted text-foreground border-transparent gap-1.5">
+            <TypeIcon className="size-3.5" />
             {incident.type}
           </Badge>
           <StatusBadge status={incident.status} />
@@ -136,8 +137,8 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
 
         {showTrackingBadge && (
           <div className="mt-3 flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">{showFullDetails ? 'Track Your Report:' : 'ID:'}</span>
-            <Badge variant="secondary" className="text-xs font-mono">
+            <span className="text-xs text-subtle-foreground">{showFullDetails ? 'Track Your Report:' : 'ID:'}</span>
+            <Badge variant="secondary" className="font-mono text-[13px] h-7">
               {incident.id}
             </Badge>
             <button
@@ -146,16 +147,16 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
               aria-label="Copy ID"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <Check className="w-3.5 h-3.5 text-status-done" /> : <Copy className="w-3.5 h-3.5" />}
             </button>
           </div>
         )}
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3">
         {showFullDetails && incident.complaintDeliveryIssues && incident.complaintDeliveryIssues.length > 0 && (
-          <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm">
-            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <div className="flex items-start gap-3 bg-status-none-bg text-foreground rounded-lg p-4 text-sm">
+            <AlertTriangle className="w-5 h-5 mt-px flex-shrink-0 text-status-none" />
             <div>
               {latestIssuePerRecipient(incident.complaintDeliveryIssues).map(issue => (
                 <p key={issue.recipientType}>
@@ -168,12 +169,12 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
         )}
 
         {showFullDetails && incident.complaintTimeline && incident.complaintTimeline.some(t => t.responseOverdue) && (
-          <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-800 rounded-lg p-3 text-sm">
-            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <div className="flex items-start gap-3 bg-status-progress-bg text-foreground rounded-lg p-4 text-sm">
+            <AlertTriangle className="w-5 h-5 mt-px flex-shrink-0 text-status-progress" />
             <div>
               {incident.complaintTimeline.filter(t => t.responseOverdue).map(t => (
                 <p key={t.recipientType}>
-                  Your formal complaint to <strong>{recipientNames[t.recipientType]}</strong> was sent {t.businessDaysElapsed} working days ago with no response logged — past the {t.responseThresholdDays} working day threshold for a full written response. You may want to escalate.
+                  Your formal complaint to <strong>{recipientNames[t.recipientType]}</strong> was sent {t.businessDaysElapsed} working days ago with no response logged. That's past the {t.responseThresholdDays} working day threshold for a full written response. You may want to escalate.
                 </p>
               ))}
             </div>
@@ -181,15 +182,15 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
         )}
 
         {incident.title && (
-          <h3 className="font-semibold text-base leading-snug">{incident.title}</h3>
+          <h3 className={`font-semibold leading-snug tracking-[-0.015em] ${showFullDetails ? 'text-2xl' : 'text-lg'}`}>{incident.title}</h3>
         )}
 
-        <div className="flex items-start gap-2 text-sm">
-          <MapPin className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
-          <span className="font-medium">{incident.location}</span>
+        <div className="flex items-start gap-1.5 text-sm text-muted-foreground">
+          <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
+          <span>{incident.location}</span>
         </div>
 
-        <p className={`text-sm text-muted-foreground leading-relaxed ${showFullDetails ? '' : 'line-clamp-2'}`}>
+        <p className={`text-[15px] text-muted-foreground leading-relaxed max-w-[70ch] ${showFullDetails ? '' : 'line-clamp-2'}`}>
           {incident.description}
         </p>
 
@@ -198,7 +199,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
             {incident.photos.slice(0, 3).map((photo, index) => {
               const isLast = index === 2 && incident.photos.length > 3;
               return (
-                <div key={photo.id} className="relative w-20 h-20 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
+                <div key={photo.id} className="relative w-16 h-16 rounded-sm overflow-hidden bg-muted flex-shrink-0">
                   <img
                     src={photo.url}
                     alt={photo.caption || 'Incident photo'}
@@ -215,7 +216,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
           </div>
         )}
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
+        <div className="flex items-center justify-between text-xs text-subtle-foreground pt-3 border-t border-border">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
             <span>{formattedDate}</span>
@@ -229,7 +230,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
         </div>
 
         {showFullDetails && incident.typeSpecificData && Object.keys(incident.typeSpecificData).length > 0 && (
-          <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+          <div className="mt-4 p-4 bg-background rounded-md border border-border">
             <h4 className="font-semibold text-sm mb-3">Additional Details</h4>
             <dl className="space-y-2 text-sm">
               {Object.entries(incident.typeSpecificData).map(([key, value]) => (
@@ -249,7 +250,7 @@ export function IncidentCard({ incident, onClick, showFullDetails = false, showT
             {incident.photos.map((photo, index) => (
               <div
                 key={photo.id}
-                className="relative aspect-square rounded-lg overflow-hidden bg-slate-100 cursor-zoom-in"
+                className="relative aspect-square rounded-md overflow-hidden bg-muted cursor-zoom-in"
                 onClick={e => { e.stopPropagation(); setLightboxIndex(index); }}
               >
                 <img

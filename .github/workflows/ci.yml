@@ -25,12 +25,14 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      # Fails the build on high/critical vulnerabilities only — moderate ones
-      # (currently just the legacy aws-sdk v2 client, pending a v3 migration)
-      # don't block CI, but nothing worse is allowed to land unnoticed
+      # Fails the build on high/critical vulnerabilities in production
+      # dependencies only — moderate ones (currently just the legacy aws-sdk v2
+      # client, pending a v3 migration) don't block CI. Dev-only tooling (jest,
+      # nodemon, artillery) is excluded: it never ships, and the braces
+      # advisory (GHSA-vfj7-8cjw-p6xm) covers every version with no fix yet.
       - name: Audit dependencies
         working-directory: backend
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
 
       - name: Run tests with coverage
         working-directory: backend

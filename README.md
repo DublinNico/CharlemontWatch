@@ -19,12 +19,13 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 - **Formal complaints** — optionally escalate a report directly to Túath Housing and/or Dublin City Council, with a formatted complaint email sent on the resident's behalf
 - **Complaint-sent confirmation** — the admin dashboard shows a live "Sent" badge per recipient once Resend confirms a complaint email actually delivered, rather than assuming the fire-and-forget send after approval worked
 - **Bot protection** — Cloudflare Turnstile CAPTCHA (verified server-side) plus per-IP rate limiting on report submissions, with the token generated on demand at submit time so a long-filled-out report doesn't submit a stale token
-- **Track by ID** — every report gets a unique `CW-XXXXXX` reference for status lookups, no account required
+- **Track by ID** — every report gets a unique `CW-XXXXXX` reference for status lookups, no account required; the tracking view shows how many working days each formal complaint has been waiting and flags overdue responses
 - **Satisfaction voting** — residents can publicly rate their satisfaction with Túath Housing (low/medium/high), one vote per email, changeable at any time
-- **Admin dashboard** — JWT-authenticated review queue, photo moderation, and status updates (New → In Progress → Resolved)
+- **Admin dashboard** — JWT-authenticated review queue, photo moderation, and status updates (Awaiting Response, No Response, In Progress, Resolved)
 - **Contact Us** — spam-protected general enquiry form for questions, feedback, or press, separate from the incident-report flow
 - **Safety guidance** — clear notices pointing residents to An Garda Síochána directly for emergencies or serious anti-social behaviour, since this platform isn't monitored in real time
 - **Privacy by design** — GDPR-compliant privacy policy, no analytics or third-party tracking, defined data retention periods
+- **Responsive design** — works from phones up to large monitors, with a mobile menu and a page width that grows on wide screens
 
 ## Screenshots
 
@@ -38,7 +39,7 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 
 ## Tech Stack
 
-- **Frontend** — React + Vite + TypeScript, React Router, Tailwind CSS, shadcn/ui (Radix UI primitives), Axios, Lucide icons, Leaflet + OpenStreetMap (site footer location map)
+- **Frontend** — React + Vite + TypeScript, React Router, Tailwind CSS v4 (theme tokens in `frontend/src/styles/theme.css`), shadcn/ui (Radix UI primitives), self-hosted Geist and Geist Mono fonts, Axios, Lucide icons, Leaflet + OpenStreetMap (site footer location map)
 
 - **Backend** — Node.js + Express, MongoDB + Mongoose, JWT auth (bcryptjs), Multer + Sharp (photo upload + compression), AWS S3 (photo storage), Resend (email), Sentry (error monitoring), Helmet + express-rate-limit + express-mongo-sanitize + Cloudflare Turnstile (security hardening)
 
@@ -46,7 +47,7 @@ CharlemontWatch lets residents document safety, maintenance, and quality-of-life
 
 - **Testing** — Jest + Supertest (backend), Vitest + React Testing Library (frontend), Playwright (E2E), Artillery (load testing) — 277 automated tests (218 backend + 44 frontend + 15 E2E) across unit, integration, security, and E2E suites
 
-- **CI/CD** — GitHub Actions runs the full backend and frontend suites, a frontend type check, Playwright E2E, and an `npm audit` dependency check on every push to `dev` and PR to `main`, plus a daily encrypted `mongodump` backup workflow (GPG-encrypted before upload since the repo is public)
+- **CI/CD** — GitHub Actions runs the full backend and frontend suites, a frontend type check, Playwright E2E, and `npm audit` dependency checks (backend production dependencies at high severity, frontend at critical) on every push to `dev` and PR to `main`, plus a daily encrypted `mongodump` backup workflow (GPG-encrypted before upload since the repo is public)
 
 ## Getting Started
 
@@ -99,6 +100,7 @@ cd backend && npm test
 cd frontend && npm test
 
 # Frontend — end-to-end tests (Playwright)
+# The admin login specs expect VITE_ADMIN_KEY=charlemont2026, as set in CI
 cd frontend && npm run test:e2e
 ```
 

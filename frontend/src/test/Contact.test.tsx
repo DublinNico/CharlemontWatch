@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
+import { MemoryRouter } from 'react-router';
 
 vi.mock('axios', () => ({
   default: {
@@ -38,7 +39,7 @@ describe('Contact — submitting a message', () => {
   test('FT-017-A: calls POST /contact with name, email, message, and empty honeypot field', async () => {
     ax.post.mockResolvedValueOnce({ data: { success: true } });
 
-    render(<Contact />);
+    render(<MemoryRouter><Contact /></MemoryRouter>);
     fillForm();
     submitForm();
 
@@ -53,7 +54,7 @@ describe('Contact — submitting a message', () => {
   test('FT-017-B: shows a "Message Sent" confirmation after a successful submit', async () => {
     ax.post.mockResolvedValueOnce({ data: { success: true } });
 
-    render(<Contact />);
+    render(<MemoryRouter><Contact /></MemoryRouter>);
     fillForm();
     submitForm();
 
@@ -65,7 +66,7 @@ describe('Contact — submitting a message', () => {
   test('FT-017-C: shows the server-provided error message when the request is rejected', async () => {
     ax.post.mockRejectedValueOnce({ response: { data: { error: 'a valid email is required' } } });
 
-    render(<Contact />);
+    render(<MemoryRouter><Contact /></MemoryRouter>);
     fillForm();
     submitForm();
 
@@ -77,7 +78,7 @@ describe('Contact — submitting a message', () => {
   test('FT-017-D: shows a generic error message on network failure', async () => {
     ax.post.mockRejectedValueOnce(new Error('Network Error'));
 
-    render(<Contact />);
+    render(<MemoryRouter><Contact /></MemoryRouter>);
     fillForm();
     submitForm();
 
@@ -90,7 +91,7 @@ describe('Contact — submitting a message', () => {
     let resolvePost: (value: unknown) => void;
     ax.post.mockReturnValueOnce(new Promise((resolve) => { resolvePost = resolve; }));
 
-    render(<Contact />);
+    render(<MemoryRouter><Contact /></MemoryRouter>);
     fillForm();
     submitForm();
 

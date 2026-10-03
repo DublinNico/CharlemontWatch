@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { Search, SearchX, WifiOff } from 'lucide-react';
+import { Button } from '../components/ui/button';
 import axios from 'axios';
 import { Header } from '../components/Header';
 import { StatsCard } from '../components/StatsCard';
@@ -72,6 +73,9 @@ export function TrackReport() {
   const [isSearching, setIsSearching] = useState(false);
   const [notFound, setNotFound] = useState(false);
   const [searchError, setSearchError] = useState(false);
+  // The normalized ID of the last completed lookup, so the not-found message
+  // doesn't change as the resident edits the input afterwards
+  const [lastSearchedId, setLastSearchedId] = useState('');
 
   // Auto-search if the page was loaded with a ?id= query param (e.g. from
   // the "Track This Report" link on the success page)
@@ -91,6 +95,7 @@ export function TrackReport() {
     // Only uppercase CW- shortIds; MongoDB ObjectIds (24 hex chars) must stay as-is
     const normalized = /^[0-9a-fA-F]{24}$/.test(trimmed) ? trimmed : trimmed.toUpperCase();
 
+    setLastSearchedId(normalized);
     setIsSearching(true);
     setNotFound(false);
     setSearchError(false);
@@ -128,60 +133,73 @@ export function TrackReport() {
   const fromList = searchParams.get('source') === 'list';
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
+    <div className="bg-background">
       <Header />
 
-      <main className="max-w-7xl mx-auto px-4 py-6 md:py-8 space-y-6">
-        <StatsCard />
-
+      <main className="page-container">
         {!fromList && (
-          <div className="bg-white rounded shadow-sm p-6">
-            <h2 className="text-gray-800 mb-2">Track Your Report</h2>
-            <p className="text-sm text-gray-500 mb-4">
+          <div className="pt-10 md:pt-16 pb-8">
+            <h1 className="text-[36px] md:text-[52px] 2xl:text-[60px] leading-[1.04] tracking-[-0.035em] font-bold">Track Your Report</h1>
+            <p className="mt-3.5 text-lg md:text-[19px] text-muted-foreground max-w-[56ch]">
               Enter the Incident ID you received in your confirmation email when you submitted the report.
             </p>
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+            <form onSubmit={handleSubmit} className="mt-7 flex flex-col sm:flex-row gap-2.5 max-w-[560px]">
+              <label htmlFor="track-search-id" className="sr-only">Incident ID</label>
               <input
+                id="track-search-id"
                 type="text"
-                className="flex-1 px-4 py-2 border border-[#eeeeee] rounded focus:outline-none focus:ring-2 focus:ring-[#1976d2]"
+                className="flex-1 h-14 px-[22px] rounded-md border border-border bg-card font-mono text-[17px] tracking-[0.02em] placeholder:font-sans placeholder:tracking-normal placeholder:text-subtle-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:border-ring"
                 placeholder="Enter Incident ID (e.g. CW-A3F9B2)"
                 value={searchId}
                 onChange={e => setSearchId(e.target.value)}
               />
-              <button
-                type="submit"
-                disabled={isSearching}
-                className="px-6 py-2 bg-[#1976d2] hover:bg-[#1565c0] text-white rounded transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
-              >
-                <Search className="w-4 h-4" />
+              <Button type="submit" size="lg" disabled={isSearching} className="h-14 px-7">
+                <Search className="size-4" />
                 {isSearching ? 'Searching…' : 'Search'}
-              </button>
+              </Button>
             </form>
           </div>
         )}
 
-        {notFound && (
-          <div className="bg-white rounded shadow-sm p-6 text-center">
-            <p className="text-[#d32f2f]">No incident found with ID: <strong>{searchId.toUpperCase()}</strong></p>
-          </div>
-        )}
+        <div className={fromList ? 'pt-10 md:pt-16 space-y-6' : 'space-y-6'}>
+          {notFound && (
+            <div className="flex items-start gap-3 rounded-lg bg-status-none-bg p-5 max-w-3xl">
+              <SearchX className="size-5 text-status-none shrink-0 mt-px" />
+              <p>No incident found with ID: <strong className="font-mono">{lastSearchedId}</strong>. Check the reference in your confirmation email and try again.</p>
+            </div>
+          )}
 
-        {searchError && (
-          <div className="bg-white rounded shadow-sm p-6 text-center">
-            <p className="text-[#d32f2f]">Something went wrong. Please check your connection and try again.</p>
-          </div>
-        )}
+          {searchError && (
+            <div className="flex items-start gap-3 rounded-lg bg-status-progress-bg p-5 max-w-3xl">
+              <WifiOff className="size-5 text-status-progress shrink-0 mt-px" />
+              <p>Something went wrong. Please check your connection and try again.</p>
+            </div>
+          )}
 
-        {searchedIncident && (
-          <div className="max-w-3xl mx-auto">
-            <IncidentCard
-              incident={searchedIncident}
-              showFullDetails={true}
-              showTrackingBadge={!fromList}
-            />
-          </div>
-        )}
+          {isSearching && !searchedIncident && (
+            <div className="max-w-3xl rounded-lg border border-border bg-card p-6 space-y-4 animate-pulse" aria-hidden="true">
+              <div className="flex gap-2"><div className="h-7 w-36 rounded-md bg-muted" /><div className="h-7 w-28 rounded-full bg-muted" /></div>
+              <div className="h-7 w-2/3 rounded-md bg-muted" />
+              <div className="h-4 w-1/3 rounded-md bg-muted" />
+              <div className="h-16 w-full rounded-md bg-muted" />
+            </div>
+          )}
 
+          {searchedIncident && (
+            <div className="max-w-3xl">
+              <IncidentCard
+                incident={searchedIncident}
+                showFullDetails={true}
+                showTrackingBadge={!fromList}
+              />
+            </div>
+          )}
+
+          <div className="pt-6">
+            <h2 className="text-xl font-semibold tracking-[-0.02em] mb-4">Where reports stand</h2>
+            <StatsCard />
+          </div>
+        </div>
       </main>
     </div>
   );
