@@ -15,7 +15,10 @@ jest.mock('sharp', () => jest.fn(() => ({
   rotate: jest.fn().mockReturnThis(),
   resize: jest.fn().mockReturnThis(),
   jpeg: jest.fn().mockReturnThis(),
-  toBuffer: jest.fn().mockResolvedValue(Buffer.from('compressed-jpeg-bytes')),
+  toBuffer: jest.fn().mockResolvedValue({
+    data: Buffer.from('compressed-jpeg-bytes'),
+    info: { width: 1600, height: 1200 },
+  }),
 })));
 
 process.env.JWT_SECRET = 'charlemont-test-secret-key';
@@ -111,6 +114,8 @@ describe('POST /api/incidents/report', () => {
     const incident = await Incident.findOne({ shortId: res.body.incidentId });
     expect(incident.photos).toHaveLength(1);
     expect(incident.photos[0].url).toContain('amazonaws.com');
+    expect(incident.photos[0].width).toBe(1600);
+    expect(incident.photos[0].height).toBe(1200);
   });
 
   test('IT-032: uploaded photos are compressed to JPEG before being stored', async () => {

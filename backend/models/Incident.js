@@ -4,6 +4,10 @@ const mongoose = require('mongoose');
 // only shown publicly once an admin approves it (or the whole incident).
 const photoSchema = new mongoose.Schema({
   url: String,
+  // Pixel size of the stored (compressed) image — lets link previews declare
+  // og:image:width/height so Facebook shows the photo on the very first share
+  width: Number,
+  height: Number,
   uploadedAt: { type: Date, default: Date.now },
   caption: String,
   approved: { type: Boolean, default: false }

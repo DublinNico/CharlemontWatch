@@ -54,11 +54,12 @@ const findByAnyId = async (id) => {
 
 // Downscale and re-encode as JPEG before upload — caps storage/bandwidth cost
 // for full-resolution phone photos while keeping evidence clearly legible.
+// Resolves to { data, info } so callers can record the final width/height.
 const compressImage = (buffer) => sharp(buffer)
   .rotate()
   .resize({ width: 1920, height: 1920, fit: 'inside', withoutEnlargement: true })
   .jpeg({ quality: 80 })
-  .toBuffer();
+  .toBuffer({ resolveWithObject: true });
 
 // Create incident (report) — public endpoint, no login required.
 // Validates the submission, uploads any photos, saves the incident as
@@ -148,12 +149,14 @@ const createIncident = async (req, res) => {
           const params = {
             Bucket: process.env.AWS_S3_BUCKET,
             Key: key,
-            Body: compressed,
+            Body: compressed.data,
             ContentType: 'image/jpeg'
           };
           await s3.upload(params).promise();
           photos.push({
             url: `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+            width: compressed.info.width,
+            height: compressed.info.height,
             uploadedAt: new Date(),
             approved: false
           });
@@ -409,7 +412,7 @@ const addPhoto = async (req, res) => {
     const params = {
       Bucket: process.env.AWS_S3_BUCKET,
       Key: key,
-      Body: compressed,
+      Body: compressed.data,
       ContentType: 'image/jpeg'
     };
 
@@ -417,6 +420,8 @@ const addPhoto = async (req, res) => {
 
     incident.photos.push({
       url: `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
+      width: compressed.info.width,
+      height: compressed.info.height,
       uploadedAt: new Date(),
       caption: req.body.caption || '',
       approved: false
