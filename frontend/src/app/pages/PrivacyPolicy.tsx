@@ -25,6 +25,8 @@ export function PrivacyPolicy() {
               <li><strong className="text-foreground">Reporter email address:</strong> required for every incident report, used to send you status updates.</li>
               <li><strong className="text-foreground">Satisfaction votes:</strong> your email address and your rating (Low, Medium or High). Your email is used only to make sure each resident has one vote, and is never published.</li>
               <li><strong className="text-foreground">Vote comments:</strong> your email address, your comment, and optionally a name to show with it. Your email is never published.</li>
+              <li><strong className="text-foreground">Formal complaint details:</strong> if you choose to send a formal complaint, your name and postal address, in addition to your email address.</li>
+              <li><strong className="text-foreground">Contact form messages:</strong> your name, email address, and message.</li>
               <li><strong className="text-foreground">IP address:</strong> logged automatically by our server for security and abuse prevention.</li>
             </ul>
             <p className="text-muted-foreground">We do not use cookies, analytics scripts, or any third-party tracking.</p>
@@ -39,6 +41,8 @@ export function PrivacyPolicy() {
               <li>To count satisfaction votes and show the overall results publicly. Only the totals are shown, never who voted or how.</li>
               <li>To review comments before they appear. Once approved, your comment and the name you chose (or "A resident" if you left it blank) are shown publicly with the date. Your email address is never shown.</li>
               <li>To email you, when you post a comment, a private link you can use to delete it.</li>
+              <li>If you request a formal complaint, to send your report, photos, name, address and email address to Túath Housing and/or Dublin City Council on your behalf. You are copied on that email, and replies from those organisations go directly to you. Your name, address and email are never shown on the public site.</li>
+              <li>To read and reply to messages sent through the contact form.</li>
             </ul>
             <p className="text-muted-foreground">We do not sell your data or use it for advertising. To operate the service, we use the following third-party processors, each acting only on our instructions and only for the purpose stated:</p>
             <ul className="list-disc pl-5 text-muted-foreground space-y-2">
@@ -46,6 +50,7 @@ export function PrivacyPolicy() {
               <li><strong className="text-foreground">Amazon Web Services (S3):</strong> stores photos submitted with incident reports.</li>
               <li><strong className="text-foreground">MongoDB Atlas:</strong> hosts our database (incident reports, email addresses, and related data).</li>
               <li><strong className="text-foreground">Sentry:</strong> error monitoring, used only if enabled. We take care to avoid including personal data such as email addresses in error reports sent here.</li>
+              <li><strong className="text-foreground">Cloudflare Turnstile:</strong> checks that report submissions come from a person rather than a bot. It processes your IP address and basic browser information for this purpose only.</li>
             </ul>
           </section>
 
@@ -57,6 +62,8 @@ export function PrivacyPolicy() {
               <li><strong className="text-foreground">Photos:</strong> stored in AWS S3 and deleted when the associated incident is deleted.</li>
               <li><strong className="text-foreground">Satisfaction votes:</strong> kept until the vote is withdrawn. To withdraw your vote, contact us using the email address you voted with.</li>
               <li><strong className="text-foreground">Vote comments:</strong> kept until deleted by you (using the link in your email) or by an administrator. Comments that aren't approved may be deleted.</li>
+              <li><strong className="text-foreground">Formal complaint details (name and address):</strong> stored as part of the incident record and deleted along with it. Copies already sent to Túath Housing or Dublin City Council are held by those organisations under their own privacy policies.</li>
+              <li><strong className="text-foreground">Contact form messages:</strong> not stored on our database. They are delivered by email to our administrator and kept in that mailbox only as long as needed to deal with your message.</li>
               <li><strong className="text-foreground">Server logs:</strong> retained according to our hosting provider's (Render) standard log retention period for our plan, not independently extended or purged by us.</li>
             </ul>
           </section>
