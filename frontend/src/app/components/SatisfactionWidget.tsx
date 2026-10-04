@@ -133,26 +133,26 @@ export function SatisfactionWidget() {
             </p>
           </div>
 
-          {/* After submitting, the share prompt moves into the thank-you message instead */}
-          {!result && (
-            <div className="mt-7">
+          {/* Share buttons, or after submitting, the thank-you message with the
+              share prompt — in the left column so the form doesn't jump down */}
+          <div className="mt-7">
+            {result ? (
+              <div className="rounded-md border border-border bg-muted/40 p-4 space-y-3.5" role="status">
+                <p className="text-sm text-status-done font-medium">
+                  Thanks!
+                  {result.voted && ' Your vote has been recorded.'}
+                  {result.commented && ' Your comment will appear once it\'s been approved. We\'ve emailed you a link in case you want to delete it later.'}
+                </p>
+                <p className="text-sm font-semibold">Now ask a neighbour to have their say →</p>
+                <ShareVote total={total} hideLabel />
+              </div>
+            ) : (
               <ShareVote total={total} />
-            </div>
-          )}
+            )}
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 min-w-0" noValidate>
-          {result && (
-            <div className="rounded-md border border-border bg-muted/40 p-4 space-y-3.5" role="status">
-              <p className="text-sm text-status-done font-medium">
-                Thanks!
-                {result.voted && ' Your vote has been recorded.'}
-                {result.commented && ' Your comment will appear once it\'s been approved. We\'ve emailed you a link in case you want to delete it later.'}
-              </p>
-              <p className="text-sm font-semibold">Now ask a neighbour to have their say →</p>
-              <ShareVote total={total} hideLabel />
-            </div>
-          )}
           {error && <p className="text-sm text-destructive font-medium" role="alert">{error}</p>}
 
           <div>

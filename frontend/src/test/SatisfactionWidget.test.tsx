@@ -232,3 +232,26 @@ describe('SatisfactionWidget — comments', () => {
     expect(screen.getByText(/Your vote has been recorded/i)).toBeInTheDocument();
   });
 });
+
+describe('SatisfactionWidget — thank-you placement', () => {
+  test('the thank-you message replaces the share buttons on the left, outside the form', async () => {
+    mockUseApp.mockReturnValue({
+      satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
+      submitSatisfactionVote: vi.fn().mockResolvedValue(undefined),
+      submitVoteComment: vi.fn(),
+    } as any);
+
+    render(<SatisfactionWidget />);
+    expect(screen.getByText('Share this vote')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /^High$/i }));
+    fireEvent.change(screen.getByLabelText(/Your Email/i), { target: { value: 'jane@example.com' } });
+    const form = screen.getByRole('button', { name: /^Submit$/i }).closest('form')!;
+    fireEvent.submit(form);
+
+    const thanks = await screen.findByRole('status');
+    expect(thanks).toHaveTextContent(/Now ask a neighbour/i);
+    expect(form.contains(thanks)).toBe(false);
+    expect(screen.queryByText('Share this vote')).not.toBeInTheDocument();
+  });
+});
