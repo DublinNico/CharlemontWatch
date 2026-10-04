@@ -1,5 +1,5 @@
-// Vercel Routing Middleware: gives shared incident links their own link
-// preview. The app is a client-rendered SPA, so Facebook, WhatsApp, X etc.
+// Vercel Routing Middleware: gives shared incident links (and the Túath vote
+// page) their own link preview. The app is a client-rendered SPA, so Facebook, WhatsApp, X etc.
 // (which don't run JavaScript) otherwise only ever see index.html's generic
 // site-wide title/description/image for every /track?id=… URL.
 //
@@ -7,7 +7,7 @@
 // with no extra API round-trip (which could hit a Render cold start).
 
 export const config = {
-  matcher: '/track',
+  matcher: ['/track', '/vote'],
 };
 
 const API_BASE = process.env.VITE_API_URL || 'https://charlemontwatch.onrender.com/api';
@@ -67,10 +67,50 @@ const fetchIncident = async id => {
   return data && (data.incident || data);
 };
 
+// Fixed preview for /vote — needs no API call, so it works even while the
+// Render backend is asleep
+const VOTE_PREVIEW = {
+  title: 'Are you happy with Túath Housing? | CharlemontWatch',
+  description: 'Charlemont Street residents are voting. Rate Túath Housing and leave a comment. It takes less than a minute.',
+  image: '/og-vote.jpg',
+  width: 1200,
+  height: 630,
+};
+
+const votePreview = async (url) => {
+  const template = await fetchWithTimeout(new URL('/index.html', url), TEMPLATE_TIMEOUT_MS, res => res.text());
+  if (!template) return;
+
+  const { title, description } = VOTE_PREVIEW;
+  const image = `${url.origin}${VOTE_PREVIEW.image}`;
+  let html = template.replace(/<title>[^<]*<\/title>/i, () => `<title>${escapeHtml(title)}</title>`);
+  html = setMeta(html, 'name', 'description', description);
+  html = setMeta(html, 'property', 'og:url', `${url.origin}/vote`);
+  html = setMeta(html, 'property', 'og:title', title);
+  html = setMeta(html, 'property', 'og:description', description);
+  html = setMeta(html, 'property', 'og:image', image);
+  html = setMeta(html, 'property', 'og:image:width', String(VOTE_PREVIEW.width));
+  html = setMeta(html, 'property', 'og:image:height', String(VOTE_PREVIEW.height));
+  html = setMeta(html, 'name', 'twitter:title', title);
+  html = setMeta(html, 'name', 'twitter:description', description);
+  html = setMeta(html, 'name', 'twitter:image', image);
+
+  return new Response(html, {
+    headers: {
+      'content-type': 'text/html; charset=utf-8',
+      'cache-control': 'public, max-age=0, s-maxage=300',
+    },
+  });
+};
+
 export default async function middleware(request) {
   const url = new URL(request.url);
   const id = url.searchParams.get('id');
   const userAgent = request.headers.get('user-agent') || '';
+
+  if (url.pathname === '/vote') {
+    return PREVIEW_BOTS.test(userAgent) ? votePreview(url) : undefined;
+  }
 
   // Returning nothing lets the request continue to the normal SPA rewrite
   if (!id || !PREVIEW_BOTS.test(userAgent)) return;

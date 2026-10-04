@@ -70,3 +70,36 @@ describe('incident link-preview middleware', () => {
     expect(res).toBeUndefined();
   });
 });
+
+// ─── Link preview for the Túath vote page ─────────────────────────────────────
+
+describe('vote page link preview', () => {
+  const crawlVote = (ua = 'facebookexternalhit/1.1') => middleware(new Request('https://charlemontwatch.ie/vote', {
+    headers: { 'user-agent': ua },
+  }));
+
+  test('gives crawlers the vote title, description and sized image', async () => {
+    mockFetch(null);
+    const html = await (await crawlVote())!.text();
+
+    expect(html).toContain('<title>Are you happy with Túath Housing? | CharlemontWatch</title>');
+    expect(html).toContain('<meta property="og:url" content="https://charlemontwatch.ie/vote" />');
+    expect(html).toContain('<meta property="og:image" content="https://charlemontwatch.ie/og-vote.jpg" />');
+    expect(html).toContain('<meta property="og:image:width" content="1200" />');
+    expect(html).toContain('<meta property="og:image:height" content="630" />');
+    expect(html).toContain('<meta name="twitter:image" content="https://charlemontwatch.ie/og-vote.jpg" />');
+    expect(html).toContain('leave a comment');
+  });
+
+  test('does not call the backend API', async () => {
+    mockFetch(null);
+    await crawlVote();
+    const calls = (fetch as unknown as { mock: { calls: unknown[][] } }).mock.calls.map(c => String(c[0]));
+    expect(calls).toEqual(['https://charlemontwatch.ie/index.html']);
+  });
+
+  test('ignores regular visitors', async () => {
+    mockFetch(null);
+    expect(await crawlVote('Mozilla/5.0')).toBeUndefined();
+  });
+});
