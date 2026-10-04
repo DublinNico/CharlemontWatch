@@ -323,10 +323,60 @@ const sendContactMessage = async (name, email, message) => {
   }
 };
 
+// Tell the admin a new comment is waiting for approval under the Túath vote
+const sendVoteCommentNotification = async (comment) => {
+  const adminEmail = process.env.ADMIN_EMAIL;
+
+  try {
+    await send({
+      from: FROM,
+      to: [adminEmail],
+      replyTo: comment.email,
+      subject: `[Vote Comment] New comment from ${sanitizeHeader(comment.name)} awaiting approval`,
+      html: `
+        <h2>New comment awaiting approval</h2>
+        <p><strong>Name:</strong> ${escapeHtml(comment.name)}</p>
+        <p><strong>Email:</strong> ${escapeHtml(comment.email)}</p>
+        <p><strong>Comment:</strong></p>
+        <p style="white-space:pre-wrap;">${escapeHtml(comment.text)}</p>
+        <p>Approve or delete it from the Admin Dashboard. It isn't public until you approve it.</p>
+      `
+    });
+  } catch (error) {
+    console.error('Failed to send vote comment notification:', error);
+  }
+};
+
+// Send the commenter a private link to delete their comment later
+const sendCommentDeleteLink = async (comment, deleteToken) => {
+  const deleteLink = `${process.env.FRONTEND_URL}/comment/delete?token=${deleteToken}`;
+
+  try {
+    await send({
+      from: FROM,
+      to: [comment.email],
+      replyTo: process.env.ADMIN_EMAIL,
+      subject: 'Your comment on the Túath Housing vote',
+      html: `
+        <h2>Thanks for your comment</h2>
+        <p>Your comment on the Túath Housing vote will appear on CharlemontWatch once it's been approved.</p>
+        <p style="white-space:pre-wrap;border-left:3px solid #ccc;padding-left:12px;color:#444;">${escapeHtml(comment.text)}</p>
+        <p>Changed your mind? You can delete it at any time, before or after it's published:</p>
+        <p><a href="${deleteLink}">Delete my comment</a></p>
+        <p style="font-size:12px;color:#888;">Keep this email private: anyone with this link can delete your comment.</p>
+      `
+    });
+  } catch (error) {
+    console.error('Failed to send comment delete link:', error);
+  }
+};
+
 module.exports = {
   sendResidentConfirmation,
   sendAdminNotification,
   sendStatusUpdate,
   sendComplaintEmails,
-  sendContactMessage
+  sendContactMessage,
+  sendVoteCommentNotification,
+  sendCommentDeleteLink
 };

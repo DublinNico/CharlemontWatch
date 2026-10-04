@@ -94,6 +94,7 @@ interface AppContextType {
   satisfactionSummary: SatisfactionSummary | null;
   refreshSatisfactionSummary: () => Promise<void>;
   submitSatisfactionVote: (email: string, rating: SatisfactionRating) => Promise<void>;
+  submitVoteComment: (email: string, text: string, name: string, website: string) => Promise<void>;
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<boolean>;
@@ -222,6 +223,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const submitSatisfactionVote = async (email: string, rating: SatisfactionRating): Promise<void> => {
     await axios.post(`${API_BASE}/satisfaction`, { email, rating });
     await refreshSatisfactionSummary();
+  };
+
+  // Submits a comment under the satisfaction vote. It's held for admin
+  // approval, so there's nothing to refresh locally afterwards.
+  const submitVoteComment = async (email: string, text: string, name: string, website: string): Promise<void> => {
+    await axios.post(`${API_BASE}/satisfaction/comments`, { email, text, name, website });
   };
 
   // Initial data load on mount
@@ -362,6 +369,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         satisfactionSummary,
         refreshSatisfactionSummary,
         submitSatisfactionVote,
+        submitVoteComment,
         user,
         token,
         login,

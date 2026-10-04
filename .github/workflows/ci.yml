@@ -103,6 +103,12 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      # GitHub's runner image ships a Microsoft apt source that currently
+      # returns 403, which makes apt-get update (and so --with-deps) fail.
+      # Chromium's system deps all come from Ubuntu's own mirrors.
+      - name: Remove broken Microsoft apt source
+        run: sudo grep -rl packages.microsoft.com /etc/apt/sources.list.d/ | xargs -r sudo rm -f
+
       # Both configured projects (chromium, mobile) run on the Chromium
       # engine, so only that browser needs installing
       - name: Install Playwright browsers

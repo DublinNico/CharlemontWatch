@@ -101,8 +101,15 @@ export default async function middleware(request) {
   if (photo) {
     html = setMeta(html, 'property', 'og:image', photo.url);
     html = setMeta(html, 'name', 'twitter:image', photo.url);
-    // The fixed 1200×630 dimensions belong to the default og-image.jpg
-    html = html.replace(/\s*<meta\s+property="og:image:(width|height)"[^>]*>/gi, '');
+    // Facebook only shows a never-seen image on the first share if its size
+    // is declared, so pass the photo's real size when the upload recorded it.
+    // Otherwise drop the tags: 1200×630 belongs to the default og-image.jpg.
+    if (Number(photo.width) > 0 && Number(photo.height) > 0) {
+      html = setMeta(html, 'property', 'og:image:width', String(photo.width));
+      html = setMeta(html, 'property', 'og:image:height', String(photo.height));
+    } else {
+      html = html.replace(/\s*<meta\s+property="og:image:(width|height)"[^>]*>/gi, '');
+    }
   }
 
   return new Response(html, {

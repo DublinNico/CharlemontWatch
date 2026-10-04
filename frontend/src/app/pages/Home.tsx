@@ -59,10 +59,10 @@ export function Home() {
               Charlemont Street, Dublin 2
             </div>
             <h1 className="text-[40px] md:text-[56px] lg:text-[64px] 2xl:text-[76px] leading-[1.02] tracking-[-0.035em] font-bold max-w-[12ch]">
-              Keep Charlemont Street <span className="text-primary">safe and thriving.</span>
+              Keep Charlemont Street <span className="text-primary">Safe and Secure.</span>
             </h1>
             <p className="mt-6 text-lg md:text-[19px] 2xl:text-[21px] text-muted-foreground leading-normal max-w-[44ch]">
-              Log problems with photo evidence, then send formal complaints to Túath Housing and Dublin City Council.
+              Our street, our neighbours, our home.
             </p>
             <div className="mt-9 flex flex-col sm:flex-row gap-3">
               <Button size="lg" onClick={() => navigate('/report')} className="group">
@@ -240,7 +240,7 @@ export function Home() {
       </section>
 
       {/* Satisfaction Voting */}
-      <section className="page-container">
+      <section id="vote" className="page-container scroll-mt-24">
         <SatisfactionWidget />
       </section>
     </div>
