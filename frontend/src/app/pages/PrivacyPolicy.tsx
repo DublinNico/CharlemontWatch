@@ -79,8 +79,8 @@ export function PrivacyPolicy() {
             </ul>
             <p className="text-muted-foreground">
               To exercise any of these rights, contact us at{' '}
-              <a href="mailto:reports@charlemontwatch.ie" className="text-blue-600 underline">
-                reports@charlemontwatch.ie
+              <a href="mailto:contact@charlemontwatch.ie" className="text-blue-600 underline">
+                contact@charlemontwatch.ie
               </a>.
               We will respond within 30 days.
             </p>
@@ -90,8 +90,8 @@ export function PrivacyPolicy() {
             <h2 className="text-[21px] font-semibold tracking-[-0.02em]">6. Contact</h2>
             <p className="text-muted-foreground">
               For any privacy-related questions, email{' '}
-              <a href="mailto:reports@charlemontwatch.ie" className="text-blue-600 underline">
-                reports@charlemontwatch.ie
+              <a href="mailto:contact@charlemontwatch.ie" className="text-blue-600 underline">
+                contact@charlemontwatch.ie
               </a>.
             </p>
           </section>

@@ -111,8 +111,8 @@ export function TermsAndConditions() {
             <h2 className="text-[21px] font-semibold tracking-[-0.02em]">10. Contact</h2>
             <p className="text-muted-foreground">
               For any questions about these Terms, email{' '}
-              <a href="mailto:reports@charlemontwatch.ie" className="text-blue-600 underline">
-                reports@charlemontwatch.ie
+              <a href="mailto:contact@charlemontwatch.ie" className="text-blue-600 underline">
+                contact@charlemontwatch.ie
               </a>.
             </p>
           </section>
