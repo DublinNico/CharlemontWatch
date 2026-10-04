@@ -16,11 +16,13 @@ interface PublicComment {
 export function VoteComments() {
   const [comments, setComments] = useState<PublicComment[]>([]);
   const [loadFailed, setLoadFailed] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     axios.get(`${API_BASE}/satisfaction/comments`)
       .then(res => setComments(res.data))
-      .catch(() => setLoadFailed(true));
+      .catch(() => setLoadFailed(true))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -29,7 +31,9 @@ export function VoteComments() {
       <p className="mt-2 text-[15px] text-muted-foreground">Comments are checked before they appear.</p>
 
       <div className="mt-6">
-        {loadFailed ? (
+        {loading ? (
+          <p className="text-sm text-muted-foreground">Loading comments…</p>
+        ) : loadFailed ? (
           <p className="text-sm text-muted-foreground">Comments couldn't be loaded right now.</p>
         ) : comments.length === 0 ? (
           <div className="flex items-center gap-3 text-sm text-muted-foreground">

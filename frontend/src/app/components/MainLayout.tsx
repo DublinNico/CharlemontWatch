@@ -10,7 +10,14 @@ export function MainLayout() {
   useEffect(() => {
     // Links like /#vote jump to that section (the browser can't do it itself
     // because the content renders after load); anything else starts at the top
-    const target = hash ? document.getElementById(decodeURIComponent(hash.slice(1))) : null;
+    let target: HTMLElement | null = null;
+    if (hash) {
+      try {
+        target = document.getElementById(decodeURIComponent(hash.slice(1)));
+      } catch {
+        // Malformed percent-encoding (e.g. /#%E0) — treat as no target
+      }
+    }
     if (target) target.scrollIntoView();
     else window.scrollTo(0, 0);
   }, [pathname, hash]);

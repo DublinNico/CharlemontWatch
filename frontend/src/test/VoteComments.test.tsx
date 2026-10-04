@@ -77,3 +77,18 @@ describe('CommentModeration', () => {
     expect(ax.delete).toHaveBeenCalledWith(expect.stringContaining('/comments/admin/a1'), expect.anything());
   });
 });
+
+describe('VoteComments — loading', () => {
+  test('shows a loading message, not the empty state, while comments load', async () => {
+    let resolve: (v: unknown) => void = () => {};
+    ax.get.mockReturnValue(new Promise(r => { resolve = r; }));
+    render(<VoteComments />);
+
+    expect(screen.getByText(/Loading comments/i)).toBeInTheDocument();
+    expect(screen.queryByText(/No comments yet/i)).not.toBeInTheDocument();
+
+    resolve({ data: [] });
+    expect(await screen.findByText(/No comments yet/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Loading comments/i)).not.toBeInTheDocument();
+  });
+});
