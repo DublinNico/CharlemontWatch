@@ -2,5 +2,6 @@ User-agent: *
 Allow: /
 Disallow: /admin
 Disallow: /cw-admin
+Disallow: /comment/delete
 
 Sitemap: https://charlemontwatch.ie/sitemap.xml

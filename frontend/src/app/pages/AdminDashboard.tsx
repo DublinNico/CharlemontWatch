@@ -3,11 +3,12 @@ import { ArrowLeft, Trash2, CheckCircle, XCircle, Eye, EyeOff, AlertTriangle, Ch
 import { useNavigate } from 'react-router';
 import { Header } from '../components/Header';
 import { StatusBadge } from '../components/StatusBadge';
+import { CommentModeration } from '../components/CommentModeration';
 import { useApp, IncidentStatus, Incident } from '../context/AppContext';
 import { Button } from '../components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../components/ui/dialog';
 
-type ActiveTab = 'queue' | 'manage';
+type ActiveTab = 'queue' | 'manage' | 'comments';
 
 interface IncidentRowProps {
   incident: Incident;
@@ -326,7 +327,7 @@ export function AdminDashboard() {
           </div>
 
           {/* Top-level tabs */}
-          <div className="inline-flex self-start md:self-auto p-1 rounded-md bg-muted gap-1" role="group" aria-label="Dashboard view">
+          <div className="inline-flex flex-wrap self-start md:self-auto p-1 rounded-md bg-muted gap-1" role="group" aria-label="Dashboard view">
             <button
               aria-pressed={activeTab === 'queue'}
               onClick={() => setActiveTab('queue')}
@@ -353,6 +354,17 @@ export function AdminDashboard() {
               }`}
             >
               Manage Incidents
+            </button>
+            <button
+              aria-pressed={activeTab === 'comments'}
+              onClick={() => setActiveTab('comments')}
+              className={`h-[38px] px-[18px] rounded-md transition-colors text-sm font-semibold ${
+                activeTab === 'comments'
+                  ? 'bg-card text-foreground shadow-[0_1px_2px_rgb(0_0_0/.08)]'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Comments
             </button>
           </div>
         </div>
@@ -395,6 +407,9 @@ export function AdminDashboard() {
             )}
           </>
         )}
+
+        {/* ── Vote comments ── */}
+        {activeTab === 'comments' && <CommentModeration />}
 
         {/* ── Manage Incidents ── */}
         {activeTab === 'manage' && (
