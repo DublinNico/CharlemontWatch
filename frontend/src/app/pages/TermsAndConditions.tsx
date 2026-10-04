@@ -9,7 +9,7 @@ export function TermsAndConditions() {
       <main className="page-container pt-10 md:pt-16">
         <div className="max-w-[72ch]">
           <h1 className="text-[34px] md:text-[44px] leading-[1.05] tracking-[-0.035em] font-bold mb-3">Terms and Conditions</h1>
-          <p className="text-sm text-subtle-foreground pb-8 mb-10 border-b border-border">Last updated: July 21, 2026</p>
+          <p className="text-sm text-subtle-foreground pb-8 mb-10 border-b border-border">Last updated: October 4, 2026</p>
 
           <section className="space-y-3.5 mb-10">
             <h2 className="text-[21px] font-semibold tracking-[-0.02em]">1. Who we are</h2>
@@ -25,6 +25,8 @@ export function TermsAndConditions() {
               CharlemontWatch lets residents report local safety, maintenance, and quality-of-life incidents with photo evidence,
               track those reports, and optionally escalate a report as a formal complaint to Túath Housing and/or Dublin City Council.
               Reports are reviewed by a volunteer administrator before appearing on the public incident list.
+              Residents can also vote on their satisfaction with Túath Housing and leave comments, which are reviewed by an
+              administrator before appearing publicly.
             </p>
           </section>
 
@@ -44,7 +46,21 @@ export function TermsAndConditions() {
           </section>
 
           <section className="space-y-3.5 mb-10">
-            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">4. Formal complaints to Túath Housing / Dublin City Council</h2>
+            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">4. Comments</h2>
+            <p className="text-muted-foreground">When leaving a comment, you agree that you will:</p>
+            <ul className="list-disc pl-5 text-muted-foreground space-y-2">
+              <li>Stick to facts and your own experience.</li>
+              <li>Not name, identify, or make allegations against any individual.</li>
+              <li>Not post anything abusive, discriminatory, or unlawful, or anyone else's personal information.</li>
+            </ul>
+            <p className="text-muted-foreground">
+              All comments are reviewed before they appear. We may decline or remove any comment at any time, without giving a
+              reason. You can delete your own comment at any time using the link we email you.
+            </p>
+          </section>
+
+          <section className="space-y-3.5 mb-10">
+            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">5. Formal complaints to Túath Housing / Dublin City Council</h2>
             <p className="text-muted-foreground">
               If you choose to send a formal complaint, CharlemontWatch forwards your report and contact details to Túath Housing
               and/or Dublin City Council on your behalf, once an administrator has approved the underlying report. CharlemontWatch is
@@ -55,17 +71,17 @@ export function TermsAndConditions() {
           </section>
 
           <section className="space-y-3.5 mb-10">
-            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">5. Your content</h2>
+            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">6. Your content</h2>
             <p className="text-muted-foreground">
-              You retain ownership of any text and photos you submit. By submitting a report, you grant CharlemontWatch a
+              You retain ownership of any text and photos you submit. By submitting a report or comment, you grant CharlemontWatch a
               non-exclusive licence to display, store, and forward that content as necessary to operate the service described
-              above — including showing approved reports on the public incident list and including your report and photos in a
+              above — including showing approved reports on the public incident list and approved comments on the site and including your report and photos in a
               formal complaint email, if you request one.
             </p>
           </section>
 
           <section className="space-y-3.5 mb-10">
-            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">6. No warranty, limitation of liability</h2>
+            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">7. No warranty, limitation of liability</h2>
             <p className="text-muted-foreground">
               CharlemontWatch is provided by volunteers on a best-effort basis, "as is," with no guarantee of uptime, accuracy, or
               fitness for any particular purpose. We do not warrant that the service will be uninterrupted, error-free, or secure.
@@ -76,7 +92,7 @@ export function TermsAndConditions() {
           </section>
 
           <section className="space-y-3.5 mb-10">
-            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">7. Changes to these terms</h2>
+            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">8. Changes to these terms</h2>
             <p className="text-muted-foreground">
               We may update these Terms from time to time. Continued use of the service after a change is posted means you accept
               the updated Terms. This page always reflects the current version.
@@ -84,7 +100,7 @@ export function TermsAndConditions() {
           </section>
 
           <section className="space-y-3.5 mb-10">
-            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">8. Governing law</h2>
+            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">9. Governing law</h2>
             <p className="text-muted-foreground">
               These Terms are governed by the laws of Ireland, and any dispute arising from them is subject to the exclusive
               jurisdiction of the Irish courts.
@@ -92,7 +108,7 @@ export function TermsAndConditions() {
           </section>
 
           <section className="space-y-4">
-            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">9. Contact</h2>
+            <h2 className="text-[21px] font-semibold tracking-[-0.02em]">10. Contact</h2>
             <p className="text-muted-foreground">
               For any questions about these Terms, email{' '}
               <a href="mailto:reports@charlemontwatch.ie" className="text-blue-600 underline">

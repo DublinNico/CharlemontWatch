@@ -92,3 +92,32 @@ describe('VoteComments — loading', () => {
     expect(screen.queryByText(/Loading comments/i)).not.toBeInTheDocument();
   });
 });
+
+describe('VoteComments — show more', () => {
+  const many = Array.from({ length: 14 }, (_, i) => ({
+    _id: String(i), name: `Resident ${i}`, text: `Comment number ${i}`, createdAt: '2026-10-01T10:00:00Z',
+  }));
+
+  test('shows 6 at first and 6 more per click until all are shown', async () => {
+    ax.get.mockResolvedValue({ data: many });
+    render(<VoteComments />);
+
+    expect(await screen.findByText('Comment number 5')).toBeInTheDocument();
+    expect(screen.queryByText('Comment number 6')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Show more comments \(8 more\)/i }));
+    expect(screen.getByText('Comment number 11')).toBeInTheDocument();
+    expect(screen.queryByText('Comment number 12')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Show more comments \(2 more\)/i }));
+    expect(screen.getByText('Comment number 13')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Show more comments/i })).not.toBeInTheDocument();
+  });
+
+  test('no button when there are 6 or fewer comments', async () => {
+    ax.get.mockResolvedValue({ data: many.slice(0, 6) });
+    render(<VoteComments />);
+    expect(await screen.findByText('Comment number 5')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Show more comments/i })).not.toBeInTheDocument();
+  });
+});

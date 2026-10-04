@@ -8,7 +8,7 @@ export function PrivacyPolicy() {
       <main className="page-container pt-10 md:pt-16">
         <div className="max-w-[72ch]">
           <h1 className="text-[34px] md:text-[44px] leading-[1.05] tracking-[-0.035em] font-bold mb-3">Privacy Policy</h1>
-          <p className="text-sm text-subtle-foreground pb-8 mb-10 border-b border-border">Last updated: July 19, 2026</p>
+          <p className="text-sm text-subtle-foreground pb-8 mb-10 border-b border-border">Last updated: October 4, 2026</p>
 
           <section className="space-y-3.5 mb-10">
             <h2 className="text-[21px] font-semibold tracking-[-0.02em]">1. Who we are</h2>
@@ -23,6 +23,8 @@ export function PrivacyPolicy() {
             <ul className="list-disc pl-5 text-muted-foreground space-y-2">
               <li><strong className="text-foreground">Incident reports:</strong> location, type, description, and photos submitted by residents.</li>
               <li><strong className="text-foreground">Reporter email address:</strong> required for every incident report, used to send you status updates.</li>
+              <li><strong className="text-foreground">Satisfaction votes:</strong> your email address and your rating (Low, Medium or High). Your email is used only to make sure each resident has one vote, and is never published.</li>
+              <li><strong className="text-foreground">Vote comments:</strong> your email address, your comment, and optionally a name to show with it. Your email is never published.</li>
               <li><strong className="text-foreground">IP address:</strong> logged automatically by our server for security and abuse prevention.</li>
             </ul>
             <p className="text-muted-foreground">We do not use cookies, analytics scripts, or any third-party tracking.</p>
@@ -34,6 +36,9 @@ export function PrivacyPolicy() {
               <li>To display incident reports on the public map for community awareness.</li>
               <li>To send you email updates on your report.</li>
               <li>To allow community administrators to review and moderate reports.</li>
+              <li>To count satisfaction votes and show the overall results publicly. Only the totals are shown, never who voted or how.</li>
+              <li>To review comments before they appear. Once approved, your comment and the name you chose (or "A resident" if you left it blank) are shown publicly with the date. Your email address is never shown.</li>
+              <li>To email you, when you post a comment, a private link you can use to delete it.</li>
             </ul>
             <p className="text-muted-foreground">We do not sell your data or use it for advertising. To operate the service, we use the following third-party processors, each acting only on our instructions and only for the purpose stated:</p>
             <ul className="list-disc pl-5 text-muted-foreground space-y-2">
@@ -50,6 +55,8 @@ export function PrivacyPolicy() {
               <li><strong className="text-foreground">Incident reports:</strong> retained until an administrator deletes the report. We do not currently run an automatic time-based deletion, reports are kept as an ongoing public record and evidence base unless removed.</li>
               <li><strong className="text-foreground">Reporter email addresses:</strong> stored as part of the incident record; deleted along with it if the incident is deleted.</li>
               <li><strong className="text-foreground">Photos:</strong> stored in AWS S3 and deleted when the associated incident is deleted.</li>
+              <li><strong className="text-foreground">Satisfaction votes:</strong> kept until the vote is withdrawn. To withdraw your vote, contact us using the email address you voted with.</li>
+              <li><strong className="text-foreground">Vote comments:</strong> kept until deleted by you (using the link in your email) or by an administrator. Comments that aren't approved may be deleted.</li>
               <li><strong className="text-foreground">Server logs:</strong> retained according to our hosting provider's (Render) standard log retention period for our plan, not independently extended or purged by us.</li>
             </ul>
           </section>

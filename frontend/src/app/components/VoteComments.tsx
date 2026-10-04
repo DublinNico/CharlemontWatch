@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { MessageSquare } from 'lucide-react';
+import { Button } from './ui/button';
 
 const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api';
+// Comments shown at first, and added per "Show more" click, so a busy vote
+// doesn't stretch the card down the whole page
+const PAGE_SIZE = 6;
 
 interface PublicComment {
   _id: string;
@@ -17,6 +21,7 @@ export function VoteComments() {
   const [comments, setComments] = useState<PublicComment[]>([]);
   const [loadFailed, setLoadFailed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   useEffect(() => {
     axios.get(`${API_BASE}/satisfaction/comments`)
@@ -41,19 +46,26 @@ export function VoteComments() {
             No comments yet. Be the first to say something.
           </div>
         ) : (
-          <ul className="grid md:grid-cols-2 gap-x-14 gap-y-5">
-            {comments.map(c => (
-              <li key={c._id} className="border-b border-border pb-5">
-                <div className="flex items-baseline justify-between gap-3">
-                  <span className="text-[15px] font-semibold break-words min-w-0">{c.name}</span>
-                  <time dateTime={c.createdAt} className="text-[13px] text-subtle-foreground shrink-0">
-                    {new Date(c.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </time>
-                </div>
-                <p className="mt-1.5 text-[15px] text-muted-foreground whitespace-pre-wrap break-words">{c.text}</p>
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="grid md:grid-cols-2 gap-x-14 gap-y-5">
+              {comments.slice(0, visibleCount).map(c => (
+                <li key={c._id} className="border-b border-border pb-5">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[15px] font-semibold break-words min-w-0">{c.name}</span>
+                    <time dateTime={c.createdAt} className="text-[13px] text-subtle-foreground shrink-0">
+                      {new Date(c.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </time>
+                  </div>
+                  <p className="mt-1.5 text-[15px] text-muted-foreground whitespace-pre-wrap break-words">{c.text}</p>
+                </li>
+              ))}
+            </ul>
+            {comments.length > visibleCount && (
+              <Button variant="outline" className="mt-6" onClick={() => setVisibleCount(n => n + PAGE_SIZE)}>
+                Show more comments ({comments.length - visibleCount} more)
+              </Button>
+            )}
+          </>
         )}
       </div>
     </div>
