@@ -26,8 +26,10 @@ jobs:
         run: npm ci
 
       # Fails the build on high/critical vulnerabilities in production
-      # dependencies only — moderate ones (currently just the legacy aws-sdk v2
-      # client, pending a v3 migration) don't block CI. Dev-only tooling (jest,
+      # dependencies only — moderate ones don't block CI. Dependabot
+      # (.github/dependabot.yml) opens fix PRs against main as advisories land,
+      # and this job runs on those PRs, so this gate should rarely be the first
+      # to notice. Dev-only tooling (jest,
       # nodemon, artillery) is excluded: it never ships, and the braces
       # advisory (GHSA-vfj7-8cjw-p6xm) covers every version with no fix yet.
       - name: Audit dependencies

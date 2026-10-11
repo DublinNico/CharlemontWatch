@@ -1,0 +1,31 @@
+# Opens fix PRs for vulnerable or outdated dependencies, so new security
+# advisories arrive as a ready-made update instead of a red CI audit step.
+# Minor and patch bumps are grouped into one PR per folder to keep noise down;
+# major versions still come one at a time since they can break things.
+# No target-branch is set: all PRs go to main, the branch work is merged into.
+# Security updates always target the default branch anyway, so this keeps
+# them and the routine version updates in one place.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      backend-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      frontend-minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

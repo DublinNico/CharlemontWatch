@@ -5,9 +5,8 @@
 const mockResendSend = jest.fn().mockResolvedValue({ data: { id: 'mock-id' }, error: null });
 jest.mock('resend', () => ({ Resend: jest.fn().mockImplementation(() => ({ emails: { send: mockResendSend } })) }));
 jest.mock('../../config/s3', () => ({
-  upload: jest.fn().mockReturnValue({
-    promise: jest.fn().mockResolvedValue({ Location: 'https://s3.example.com/test.jpg' }),
-  }),
+  upload: jest.fn().mockResolvedValue({}),
+  deleteObjects: jest.fn().mockResolvedValue({}),
 }));
 // The JPEG_BUFFER fixture isn't a real decodable image, so sharp is mocked —
 // compression itself is exercised manually, not through these fixtures.
