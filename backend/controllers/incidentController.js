@@ -152,7 +152,7 @@ const createIncident = async (req, res) => {
             Body: compressed.data,
             ContentType: 'image/jpeg'
           };
-          await s3.upload(params).promise();
+          await s3.upload(params);
           photos.push({
             url: `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
             width: compressed.info.width,
@@ -416,7 +416,7 @@ const addPhoto = async (req, res) => {
       ContentType: 'image/jpeg'
     };
 
-    await s3.upload(params).promise();
+    await s3.upload(params);
 
     incident.photos.push({
       url: `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
@@ -452,7 +452,7 @@ const deleteIncident = async (req, res) => {
           await s3.deleteObjects({
             Bucket: process.env.AWS_S3_BUCKET,
             Delete: { Objects: keys.map(Key => ({ Key })) }
-          }).promise();
+          });
         } catch (s3Error) {
           // Logged, not fatal — the incident record itself should still be
           // deletable even if the bucket is briefly unreachable
