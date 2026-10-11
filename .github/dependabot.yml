@@ -1,31 +1,25 @@
-# Opens fix PRs for vulnerable or outdated dependencies, so new security
-# advisories arrive as a ready-made update instead of a red CI audit step.
-# Minor and patch bumps are grouped into one PR per folder to keep noise down;
-# major versions still come one at a time since they can break things.
-# No target-branch is set: all PRs go to main, the branch work is merged into.
-# Security updates always target the default branch anyway, so this keeps
-# them and the routine version updates in one place.
+# Security updates only. Dependabot opens a fix PR when a dependency has a
+# known vulnerability, so new advisories arrive as a ready-made update instead
+# of a red CI audit step. Routine version updates are switched off with
+# open-pull-requests-limit: 0, which leaves security updates working.
+# Security updates also need "Dependabot security updates" turned on under
+# the repo's Settings > Code security. They always target main.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /backend
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
-    groups:
-      backend-minor-and-patch:
-        update-types: [minor, patch]
+    open-pull-requests-limit: 0
 
   - package-ecosystem: npm
     directory: /frontend
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
-    groups:
-      frontend-minor-and-patch:
-        update-types: [minor, patch]
+    open-pull-requests-limit: 0
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    open-pull-requests-limit: 0
