@@ -3,6 +3,7 @@ import { Smile, Meh, Frown } from 'lucide-react';
 import { useApp, SatisfactionRating } from '../context/AppContext';
 import { Card, CardDescription, CardTitle } from './ui/card';
 import { Button } from './ui/button';
+import { Checkbox } from './ui/checkbox';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
@@ -41,6 +42,7 @@ export function SatisfactionWidget() {
   const [rating, setRating] = useState<SatisfactionRating | null>(null);
   const [comment, setComment] = useState('');
   const [name, setName] = useState('');
+  const [isResident, setIsResident] = useState(false);
   const [website, setWebsite] = useState(''); // honeypot — must stay empty
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -56,6 +58,10 @@ export function SatisfactionWidget() {
     }
     if (!rating && !comment.trim()) {
       setError('Choose a rating, write a comment, or both.');
+      return;
+    }
+    if (!isResident) {
+      setError('Please confirm you live in Ffrench Mullen House.');
       return;
     }
 
@@ -102,6 +108,9 @@ export function SatisfactionWidget() {
           <CardDescription className="mt-3 text-base">
             Vote, leave a comment, or both. You only need your email, and you can change your vote any time by submitting again.
           </CardDescription>
+          <p className="mt-3 text-[15px] text-muted-foreground">
+            Votes and comments are not sent to Túath Housing. They are published here so residents can see the results and hold Túath to account.
+          </p>
 
           <div className="mt-7">
             {total > 0 ? (
@@ -237,6 +246,15 @@ export function SatisfactionWidget() {
               value={website}
               onChange={e => setWebsite(e.target.value)}
             />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="satisfaction-resident"
+              checked={isResident}
+              onCheckedChange={v => setIsResident(!!v)}
+            />
+            <Label htmlFor="satisfaction-resident" className="cursor-pointer">I live in Ffrench Mullen House</Label>
           </div>
 
           <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">
