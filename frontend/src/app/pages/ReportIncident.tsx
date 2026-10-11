@@ -708,10 +708,10 @@ export function ReportIncident() {
                     />
                   </div>
                   <p className="text-[13px] text-subtle-foreground">
-                    Your name, address, and email are used only to send your complaint to {[
+                    Your name, address, and email are sent with your complaint to {[
                       complaint.sendToTuath ? 'Túath Housing' : null,
                       complaint.sendToDCC ? 'Dublin City Council' : null,
-                    ].filter(Boolean).join(' and ')} so they can respond to you directly. They are never shown on the public site. Once you hear back, let the CharlemontWatch team know and we will update the status on the app.
+                    ].filter(Boolean).join(' and ')} so they can respond to you directly. We also use your email to send you updates on your report. None of these are shown on the public site. Once you hear back, let the CharlemontWatch team know and we will update the status on the app.
                   </p>
                 </div>
               )}
