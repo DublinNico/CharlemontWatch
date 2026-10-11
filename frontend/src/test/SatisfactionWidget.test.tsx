@@ -94,7 +94,7 @@ describe('SatisfactionWidget — submitting a vote', () => {
     });
   });
 
-  test('FT-016-F: blocks submitting until the Ffrench Mullen House box is ticked', async () => {
+  test('FT-016-F: blocks submitting until the ffrench-Mullen House box is ticked', async () => {
     const mockSubmit = vi.fn();
     mockUseApp.mockReturnValue({
       satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
@@ -108,7 +108,7 @@ describe('SatisfactionWidget — submitting a vote', () => {
     fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
 
     await waitFor(() => {
-      expect(screen.getByText(/Please confirm you live in Ffrench Mullen House/i)).toBeInTheDocument();
+      expect(screen.getByText(/Please confirm you live in ffrench-Mullen House/i)).toBeInTheDocument();
     });
     expect(mockSubmit).not.toHaveBeenCalled();
   });
@@ -124,7 +124,7 @@ describe('SatisfactionWidget — submitting a vote', () => {
     render(<SatisfactionWidget />);
     fireEvent.click(screen.getByRole('button', { name: /^Medium$/i }));
     fireEvent.change(screen.getByLabelText(/Your Email/i), { target: { value: 'jane@example.com' } });
-    fireEvent.click(screen.getByLabelText(/I live in Ffrench Mullen House/i));
+    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
     fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
 
     await waitFor(() => {
@@ -143,7 +143,7 @@ describe('SatisfactionWidget — submitting a vote', () => {
     render(<SatisfactionWidget />);
     fireEvent.click(screen.getByRole('button', { name: /^Low$/i }));
     fireEvent.change(screen.getByLabelText(/Your Email/i), { target: { value: 'jane@example.com' } });
-    fireEvent.click(screen.getByLabelText(/I live in Ffrench Mullen House/i));
+    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
     fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
 
     await waitFor(() => {
@@ -162,7 +162,7 @@ describe('SatisfactionWidget — submitting a vote', () => {
     render(<SatisfactionWidget />);
     fireEvent.click(screen.getByRole('button', { name: /^High$/i }));
     fireEvent.change(screen.getByLabelText(/Your Email/i), { target: { value: 'jane@example.com' } });
-    fireEvent.click(screen.getByLabelText(/I live in Ffrench Mullen House/i));
+    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
     fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
 
     await waitFor(() => {
@@ -190,7 +190,7 @@ describe('SatisfactionWidget — comments', () => {
 
     render(<SatisfactionWidget />);
     fillComment();
-    fireEvent.click(screen.getByLabelText(/I live in Ffrench Mullen House/i));
+    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
     fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
 
     await waitFor(() => {
@@ -212,7 +212,7 @@ describe('SatisfactionWidget — comments', () => {
     expect(screen.queryByLabelText(/Name to show/i)).not.toBeInTheDocument();
     fillComment();
     fireEvent.change(screen.getByLabelText(/Name to show/i), { target: { value: 'Jane' } });
-    fireEvent.click(screen.getByLabelText(/I live in Ffrench Mullen House/i));
+    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
     fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
 
     await waitFor(() => {
@@ -230,7 +230,7 @@ describe('SatisfactionWidget — comments', () => {
     render(<SatisfactionWidget />);
     fireEvent.click(screen.getByRole('button', { name: /^High$/i }));
     fillComment();
-    fireEvent.click(screen.getByLabelText(/I live in Ffrench Mullen House/i));
+    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
     fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
 
     await waitFor(() => {
@@ -249,7 +249,7 @@ describe('SatisfactionWidget — comments', () => {
     render(<SatisfactionWidget />);
     fireEvent.click(screen.getByRole('button', { name: /^Low$/i }));
     fillComment();
-    fireEvent.click(screen.getByLabelText(/I live in Ffrench Mullen House/i));
+    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
     fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
 
     await waitFor(() => {
@@ -272,7 +272,7 @@ describe('SatisfactionWidget — thank-you placement', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^High$/i }));
     fireEvent.change(screen.getByLabelText(/Your Email/i), { target: { value: 'jane@example.com' } });
-    fireEvent.click(screen.getByLabelText(/I live in Ffrench Mullen House/i));
+    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
     const form = screen.getByRole('button', { name: /^Submit$/i }).closest('form')!;
     fireEvent.submit(form);
 
