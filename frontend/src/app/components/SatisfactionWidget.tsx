@@ -61,7 +61,7 @@ export function SatisfactionWidget() {
       return;
     }
     if (!isResident) {
-      setError('Please confirm you live in Ffrench Mullen House.');
+      setError('Please confirm you live in ffrench-Mullen House.');
       return;
     }
 
@@ -254,7 +254,7 @@ export function SatisfactionWidget() {
               checked={isResident}
               onCheckedChange={v => setIsResident(!!v)}
             />
-            <Label htmlFor="satisfaction-resident" className="cursor-pointer">I live in Ffrench Mullen House</Label>
+            <Label htmlFor="satisfaction-resident" className="cursor-pointer">I live in ffrench-Mullen House</Label>
           </div>
 
           <Button type="submit" size="lg" disabled={isSubmitting} className="w-full">

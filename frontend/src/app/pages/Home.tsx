@@ -160,7 +160,7 @@ export function Home() {
             >
               <img
                 src="/images/ffrench-mullen-house.jpg"
-                alt="Ffrench Mullen House, a red-brick apartment building on Charlemont Street"
+                alt="ffrench-Mullen House, a red-brick apartment building on Charlemont Street"
                 loading="lazy"
                 className="absolute inset-0 size-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
               />
