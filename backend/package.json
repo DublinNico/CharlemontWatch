@@ -4,7 +4,7 @@
   "description": "CharlemontWatch incident reporting API",
   "main": "server.js",
   "engines": {
-    "node": ">=20.9.0"
+    "node": ">=24.22.1 <25"
   },
   "scripts": {
     "start": "node server.js",
