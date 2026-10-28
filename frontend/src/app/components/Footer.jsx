@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router";
-import { Shield, Mail, Facebook, MapPin, Siren } from "lucide-react";
+import { Mail, Facebook, MapPin, Siren } from "lucide-react";
+import { BrandMark } from "./BrandMark";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -50,11 +51,11 @@ export default function Footer() {
           {/* Brand + contact */}
           <div className="col-span-2 lg:col-span-1 flex flex-col gap-[18px]">
             <div className="flex items-center gap-2.5 text-foreground">
-              <span className="size-[34px] rounded-md bg-foreground text-background grid place-items-center">
-                <Shield className="size-[19px]" strokeWidth={2.25} />
-              </span>
+              <BrandMark className="h-[34px] w-auto" />
               <div>
-                <div className="text-lg font-bold tracking-[-0.02em] leading-tight">CharlemontWatch</div>
+                <div className="text-lg font-bold tracking-[-0.02em] leading-tight">
+                  Charlemont <span className="text-primary">Watch</span>
+                </div>
                 <div className="text-[12.5px] font-medium text-subtle-foreground">Community Safety Platform</div>
               </div>
             </div>
