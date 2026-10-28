@@ -15,14 +15,14 @@ function renderHeader() {
 }
 
 describe('Header — unauthenticated', () => {
-  test('FT-007-A: shows the CharlemontWatch logo and title', () => {
+  test('FT-007-A: shows the Charlemont Watch logo and title', () => {
     mockUseApp.mockReturnValue({
       isAuthenticated: false, user: null, logout: vi.fn(),
     } as any);
 
     renderHeader();
 
-    expect(screen.getByText('CharlemontWatch')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Charlemont Watch' })).toBeInTheDocument();
   });
 
   test('FT-007-B: does not show Dashboard or Sign Out buttons when unauthenticated', () => {

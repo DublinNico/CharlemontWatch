@@ -3,6 +3,7 @@ import { Shield, LogOut, Menu, X } from 'lucide-react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router';
 import { useApp } from '../context/AppContext';
 import { Button } from './ui/button';
+import { BrandMark } from './BrandMark';
 
 const NAV_LINKS = [
   { label: 'All incidents', to: '/incidents' },
@@ -37,11 +38,11 @@ export function Header() {
     <header className="w-full bg-background/95 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="page-container h-[68px] flex items-center justify-between gap-3 sm:gap-6">
         <Link to="/" className="flex items-center gap-2.5 shrink-0" aria-label="CharlemontWatch home">
-          <span className="size-[34px] rounded-md bg-foreground text-background grid place-items-center">
-            <Shield className="size-[19px]" strokeWidth={2.25} />
-          </span>
+          <BrandMark className="h-[30px] w-auto text-foreground" />
           {/* Visually hidden below 360px so the header fits a 320px screen; stays the accessible name */}
-          <h1 className="text-base md:text-lg font-bold tracking-[-0.02em] leading-none max-[359px]:sr-only">CharlemontWatch</h1>
+          <h1 className="text-base md:text-lg font-bold tracking-[-0.02em] leading-none max-[359px]:sr-only">
+            Charlemont <span className="text-primary">Watch</span>
+          </h1>
         </Link>
 
         <nav className="flex items-center gap-2 md:gap-7 text-[15px]" aria-label="Main">

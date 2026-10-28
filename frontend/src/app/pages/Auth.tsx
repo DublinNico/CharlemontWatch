@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield } from 'lucide-react';
+import { BrandMark } from '../components/BrandMark';
 import { useNavigate, useSearchParams } from 'react-router';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/ui/button';
@@ -53,9 +53,7 @@ export function Auth() {
   return (
     <div className="bg-background grid place-items-center px-4 py-16 md:py-24">
       <div className="bg-card border border-border rounded-lg p-8 md:p-10 max-w-[420px] w-full">
-        <div className="size-12 rounded-md bg-foreground text-background grid place-items-center">
-          <Shield className="size-6" strokeWidth={2.25} />
-        </div>
+        <BrandMark className="h-12 w-auto text-foreground" />
         <h1 className="mt-5 text-[30px] leading-tight tracking-[-0.03em] font-bold">Admin Login</h1>
         <p className="mt-1 mb-7 text-muted-foreground">Manage incident reports</p>
 

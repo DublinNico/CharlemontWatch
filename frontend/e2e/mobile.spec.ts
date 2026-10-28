@@ -40,9 +40,9 @@ test('ET-013: mobile — track report search works at 375px', async ({ page }) =
   await expect(page.getByText('Block A, Charlemont Street')).toBeVisible();
 });
 
-test('ET-014: mobile — header shows CharlemontWatch title', async ({ page }) => {
+test('ET-014: mobile — header shows Charlemont Watch title', async ({ page }) => {
   await page.goto('/');
   // Home page copy now also mentions "CharlemontWatch" in body text and the
   // footer, so scope to the header heading specifically to avoid ambiguity
-  await expect(page.getByRole('heading', { name: 'CharlemontWatch' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Charlemont Watch' })).toBeVisible();
 });
