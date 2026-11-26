@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { Header } from '../components/Header';
+import { SatisfactionWidget } from '../components/SatisfactionWidget';
 import { useApp } from '../context/AppContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -236,6 +237,11 @@ export function Home() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Satisfaction Voting */}
+      <section id="vote" className="page-container scroll-mt-24">
+        <SatisfactionWidget />
       </section>
     </div>
   );

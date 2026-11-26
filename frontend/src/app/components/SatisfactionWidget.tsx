@@ -8,7 +8,6 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { ShareVote } from './ShareVote';
-import { VoteComments } from './VoteComments';
 
 const MAX_COMMENT_LENGTH = 1000;
 
@@ -261,10 +260,6 @@ export function SatisfactionWidget() {
             {isSubmitting ? 'Submitting…' : 'Submit'}
           </Button>
         </form>
-      </div>
-
-      <div className="mt-10 pt-10 border-t border-border">
-        <VoteComments />
       </div>
     </Card>
   );
