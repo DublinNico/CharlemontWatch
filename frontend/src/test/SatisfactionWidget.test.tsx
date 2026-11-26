@@ -1,11 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, beforeEach, describe, test, expect } from 'vitest';
 
-// The approved-comments list inside the card fetches with axios
-vi.mock('axios', () => ({
-  default: { get: vi.fn().mockResolvedValue({ data: [] }) },
-}));
-
 vi.mock('../app/context/AppContext', () => ({
   useApp: vi.fn(),
 }));
@@ -26,7 +21,6 @@ describe('SatisfactionWidget — results display', () => {
     mockUseApp.mockReturnValue({
       satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
       submitSatisfactionVote: vi.fn(),
-      submitVoteComment: vi.fn(),
     } as any);
 
     render(<SatisfactionWidget />);
@@ -37,7 +31,6 @@ describe('SatisfactionWidget — results display', () => {
     mockUseApp.mockReturnValue({
       satisfactionSummary: { low: 2, medium: 3, high: 5, total: 10 },
       submitSatisfactionVote: vi.fn(),
-      submitVoteComment: vi.fn(),
     } as any);
 
     render(<SatisfactionWidget />);
@@ -51,7 +44,6 @@ describe('SatisfactionWidget — results display', () => {
     mockUseApp.mockReturnValue({
       satisfactionSummary: { low: 0, medium: 0, high: 1, total: 1 },
       submitSatisfactionVote: vi.fn(),
-      submitVoteComment: vi.fn(),
     } as any);
 
     render(<SatisfactionWidget />);
@@ -62,11 +54,10 @@ describe('SatisfactionWidget — results display', () => {
 // ─── FT-016: voting ────────────────────────────────────────────────────────────
 
 describe('SatisfactionWidget — submitting a vote', () => {
-  test('FT-016-A: asks for a rating or comment when only an email is given', async () => {
+  test('FT-016-A: asks for a rating when only an email is given', async () => {
     mockUseApp.mockReturnValue({
       satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
       submitSatisfactionVote: vi.fn(),
-      submitVoteComment: vi.fn(),
     } as any);
 
     render(<SatisfactionWidget />);
@@ -74,7 +65,7 @@ describe('SatisfactionWidget — submitting a vote', () => {
     fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
 
     await waitFor(() => {
-      expect(screen.getByText(/Choose a rating, write a comment, or both/i)).toBeInTheDocument();
+      expect(screen.getByText(/Please choose a rating/i)).toBeInTheDocument();
     });
   });
 
@@ -82,7 +73,6 @@ describe('SatisfactionWidget — submitting a vote', () => {
     mockUseApp.mockReturnValue({
       satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
       submitSatisfactionVote: vi.fn(),
-      submitVoteComment: vi.fn(),
     } as any);
 
     render(<SatisfactionWidget />);
@@ -99,7 +89,6 @@ describe('SatisfactionWidget — submitting a vote', () => {
     mockUseApp.mockReturnValue({
       satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
       submitSatisfactionVote: mockSubmit,
-      submitVoteComment: vi.fn(),
     } as any);
 
     render(<SatisfactionWidget />);
@@ -118,7 +107,6 @@ describe('SatisfactionWidget — submitting a vote', () => {
     mockUseApp.mockReturnValue({
       satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
       submitSatisfactionVote: mockSubmit,
-      submitVoteComment: vi.fn(),
     } as any);
 
     render(<SatisfactionWidget />);
@@ -137,7 +125,6 @@ describe('SatisfactionWidget — submitting a vote', () => {
     mockUseApp.mockReturnValue({
       satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
       submitSatisfactionVote: mockSubmit,
-      submitVoteComment: vi.fn(),
     } as any);
 
     render(<SatisfactionWidget />);
@@ -156,7 +143,6 @@ describe('SatisfactionWidget — submitting a vote', () => {
     mockUseApp.mockReturnValue({
       satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
       submitSatisfactionVote: mockSubmit,
-      submitVoteComment: vi.fn(),
     } as any);
 
     render(<SatisfactionWidget />);
@@ -171,100 +157,11 @@ describe('SatisfactionWidget — submitting a vote', () => {
   });
 });
 
-// ─── Comments in the same form ────────────────────────────────────────────────
-
-describe('SatisfactionWidget — comments', () => {
-  const fillComment = () => {
-    fireEvent.change(screen.getByLabelText(/Your Comment/i), { target: { value: 'Lights are out again.' } });
-    fireEvent.change(screen.getByLabelText(/Your Email/i), { target: { value: 'jane@example.com' } });
-  };
-
-  test('a comment alone can be sent with just an email', async () => {
-    const mockVote = vi.fn();
-    const mockComment = vi.fn().mockResolvedValue(undefined);
-    mockUseApp.mockReturnValue({
-      satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
-      submitSatisfactionVote: mockVote,
-      submitVoteComment: mockComment,
-    } as any);
-
-    render(<SatisfactionWidget />);
-    fillComment();
-    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
-    fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
-
-    await waitFor(() => {
-      expect(screen.getByText(/will appear once it's been approved/i)).toBeInTheDocument();
-    });
-    expect(mockComment).toHaveBeenCalledWith('jane@example.com', 'Lights are out again.', '', '');
-    expect(mockVote).not.toHaveBeenCalled();
-  });
-
-  test('the name field only appears once a comment is typed, and is sent with it', async () => {
-    const mockComment = vi.fn().mockResolvedValue(undefined);
-    mockUseApp.mockReturnValue({
-      satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
-      submitSatisfactionVote: vi.fn(),
-      submitVoteComment: mockComment,
-    } as any);
-
-    render(<SatisfactionWidget />);
-    expect(screen.queryByLabelText(/Name to show/i)).not.toBeInTheDocument();
-    fillComment();
-    fireEvent.change(screen.getByLabelText(/Name to show/i), { target: { value: 'Jane' } });
-    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
-    fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
-
-    await waitFor(() => {
-      expect(mockComment).toHaveBeenCalledWith('jane@example.com', 'Lights are out again.', 'Jane', '');
-    });
-  });
-
-  test('a vote and comment together confirm both', async () => {
-    mockUseApp.mockReturnValue({
-      satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
-      submitSatisfactionVote: vi.fn().mockResolvedValue(undefined),
-      submitVoteComment: vi.fn().mockResolvedValue(undefined),
-    } as any);
-
-    render(<SatisfactionWidget />);
-    fireEvent.click(screen.getByRole('button', { name: /^High$/i }));
-    fillComment();
-    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
-    fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Your vote has been recorded/i)).toBeInTheDocument();
-    });
-    expect(screen.getByText(/will appear once it's been approved/i)).toBeInTheDocument();
-  });
-
-  test('if only the comment fails, it says the vote was still recorded', async () => {
-    mockUseApp.mockReturnValue({
-      satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
-      submitSatisfactionVote: vi.fn().mockResolvedValue(undefined),
-      submitVoteComment: vi.fn().mockRejectedValue({ response: { data: { error: 'Too many comments, please try again later' } } }),
-    } as any);
-
-    render(<SatisfactionWidget />);
-    fireEvent.click(screen.getByRole('button', { name: /^Low$/i }));
-    fillComment();
-    fireEvent.click(screen.getByLabelText(/I live in ffrench-Mullen House/i));
-    fireEvent.submit(screen.getByRole('button', { name: /^Submit$/i }).closest('form')!);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Too many comments.*your vote was recorded/i)).toBeInTheDocument();
-    });
-    expect(screen.getByText(/Your vote has been recorded/i)).toBeInTheDocument();
-  });
-});
-
 describe('SatisfactionWidget — thank-you placement', () => {
   test('the thank-you message replaces the share buttons on the left, outside the form', async () => {
     mockUseApp.mockReturnValue({
       satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
       submitSatisfactionVote: vi.fn().mockResolvedValue(undefined),
-      submitVoteComment: vi.fn(),
     } as any);
 
     render(<SatisfactionWidget />);
@@ -280,5 +177,18 @@ describe('SatisfactionWidget — thank-you placement', () => {
     expect(thanks).toHaveTextContent(/Now ask a neighbour/i);
     expect(form.contains(thanks)).toBe(false);
     expect(screen.queryByText('Share this vote')).not.toBeInTheDocument();
+  });
+});
+
+describe('SatisfactionWidget — no comments', () => {
+  test('has no comment box', () => {
+    mockUseApp.mockReturnValue({
+      satisfactionSummary: { low: 0, medium: 0, high: 0, total: 0 },
+      submitSatisfactionVote: vi.fn(),
+    } as any);
+
+    render(<SatisfactionWidget />);
+    expect(screen.queryByLabelText(/Your Comment/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/comment/i)).not.toBeInTheDocument();
   });
 });

@@ -71,7 +71,7 @@ const fetchIncident = async id => {
 // Render backend is asleep
 const VOTE_PREVIEW = {
   title: 'Are you happy with Túath Housing? | CharlemontWatch',
-  description: 'Charlemont Street residents are voting. Rate Túath Housing and leave a comment. It takes less than a minute.',
+  description: 'Charlemont Street residents are voting. Rate Túath Housing. It takes less than a minute.',
   image: '/og-vote.jpg',
   width: 1200,
   height: 630,

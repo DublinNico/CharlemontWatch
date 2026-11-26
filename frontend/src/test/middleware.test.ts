@@ -88,7 +88,8 @@ describe('vote page link preview', () => {
     expect(html).toContain('<meta property="og:image:width" content="1200" />');
     expect(html).toContain('<meta property="og:image:height" content="630" />');
     expect(html).toContain('<meta name="twitter:image" content="https://charlemontwatch.ie/og-vote.jpg" />');
-    expect(html).toContain('leave a comment');
+    expect(html).toContain('Rate Túath Housing.');
+    expect(html).not.toContain('comment');
   });
 
   test('does not call the backend API', async () => {

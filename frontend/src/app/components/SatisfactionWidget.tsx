@@ -6,10 +6,7 @@ import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
 import { ShareVote } from './ShareVote';
-
-const MAX_COMMENT_LENGTH = 1000;
 
 // The three selectable rating options, each with its icon
 const RATINGS: { value: SatisfactionRating; label: string; icon: typeof Smile }[] = [
@@ -25,38 +22,25 @@ const BAR_COLORS: Record<SatisfactionRating, string> = {
   high: 'bg-status-done',
 };
 
-// What the last submit achieved, so the thank-you message can say exactly
-// which parts went through (and a half-failed submit isn't resent in full)
-interface SubmitResult {
-  voted: boolean;
-  commented: boolean;
-}
-
-// Home page and /vote card: residents rate Túath Housing, leave a comment, or
-// both, with just an email. Shows the live results bar, share buttons, and
-// approved comments below.
+// Home page and /vote card: residents rate Túath Housing with just an email.
+// Shows the live results bar and share buttons.
 export function SatisfactionWidget() {
-  const { satisfactionSummary, submitSatisfactionVote, submitVoteComment } = useApp();
+  const { satisfactionSummary, submitSatisfactionVote } = useApp();
   const [email, setEmail] = useState('');
   const [rating, setRating] = useState<SatisfactionRating | null>(null);
-  const [comment, setComment] = useState('');
-  const [name, setName] = useState('');
   const [isResident, setIsResident] = useState(false);
-  const [website, setWebsite] = useState(''); // honeypot — must stay empty
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [result, setResult] = useState<SubmitResult | null>(null);
+  const [voted, setVoted] = useState(false);
 
-  // Sends the vote and/or comment. They go to separate endpoints, so each
-  // can succeed or fail on its own and the message reports both outcomes.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
       setError('Please enter your email.');
       return;
     }
-    if (!rating && !comment.trim()) {
-      setError('Choose a rating, write a comment, or both.');
+    if (!rating) {
+      setError('Please choose a rating.');
       return;
     }
     if (!isResident) {
@@ -66,27 +50,12 @@ export function SatisfactionWidget() {
 
     setIsSubmitting(true);
     setError('');
-    setResult(null);
-
-    const [voteOutcome, commentOutcome] = await Promise.allSettled([
-      rating ? submitSatisfactionVote(email, rating) : Promise.resolve(null),
-      comment.trim() ? submitVoteComment(email, comment, name, website) : Promise.resolve(null),
-    ]);
-    const voteFailed = !!rating && voteOutcome.status === 'rejected';
-    const commentFailed = !!comment.trim() && commentOutcome.status === 'rejected';
-    const voted = !!rating && !voteFailed;
-    const commented = !!comment.trim() && !commentFailed;
-
-    if (commented) setComment('');
-    if (voted || commented) setResult({ voted, commented });
-
-    if (voteFailed && commentFailed) {
-      setError('Failed to send your vote and comment. Please check your connection and try again.');
-    } else if (voteFailed) {
-      setError('Your vote didn\'t go through. Please try again (your comment was sent).');
-    } else if (commentFailed) {
-      const serverError = (commentOutcome as PromiseRejectedResult).reason?.response?.data?.error;
-      setError(`${serverError || 'Your comment didn\'t go through.'} Please try again${voted ? ' (your vote was recorded).' : '.'}`);
+    setVoted(false);
+    try {
+      await submitSatisfactionVote(email, rating);
+      setVoted(true);
+    } catch {
+      setError('Your vote didn\'t go through. Please check your connection and try again.');
     }
     setIsSubmitting(false);
   };
@@ -105,10 +74,10 @@ export function SatisfactionWidget() {
         <div className="min-w-0">
           <CardTitle className="text-[28px] md:text-[32px] font-bold leading-tight tracking-[-0.03em]">Are you happy with Túath Housing?</CardTitle>
           <CardDescription className="mt-3 text-base">
-            Vote, leave a comment, or both. You only need your email, and you can change your vote any time by submitting again.
+            You only need your email, and you can change your vote any time by submitting again.
           </CardDescription>
           <p className="mt-3 text-[15px] text-muted-foreground">
-            Votes and comments are not sent to Túath Housing. They are published here so residents can see the results and hold Túath to account.
+            Votes are not sent to Túath Housing. The results are published here so residents can see them and hold Túath to account.
           </p>
 
           <div className="mt-7">
@@ -141,15 +110,13 @@ export function SatisfactionWidget() {
             </p>
           </div>
 
-          {/* Share buttons, or after submitting, the thank-you message with the
+          {/* Share buttons, or after voting, the thank-you message with the
               share prompt — in the left column so the form doesn't jump down */}
           <div className="mt-7">
-            {result ? (
+            {voted ? (
               <div className="rounded-md border border-border bg-muted/40 p-4 space-y-3.5" role="status">
                 <p className="text-sm text-status-done font-medium">
-                  Thanks!
-                  {result.voted && ' Your vote has been recorded.'}
-                  {result.commented && ' Your comment will appear once it\'s been approved. We\'ve emailed you a link in case you want to delete it later.'}
+                  Thanks! Your vote has been recorded.
                 </p>
                 <p className="text-sm font-semibold">Now ask a neighbour to have their say →</p>
                 <ShareVote total={total} hideLabel />
@@ -165,7 +132,7 @@ export function SatisfactionWidget() {
 
           <div>
             <div className="text-sm font-semibold mb-2.5">
-              Your rating <span className="font-normal text-muted-foreground">(optional)</span>
+              Your rating
             </div>
             <div className="grid grid-cols-3 gap-2.5">
               {RATINGS.map(r => (
@@ -174,7 +141,7 @@ export function SatisfactionWidget() {
                   type="button"
                   variant="outline"
                   aria-pressed={rating === r.value}
-                  onClick={() => { setRating(rating === r.value ? null : r.value); setResult(null); }}
+                  onClick={() => { setRating(rating === r.value ? null : r.value); setVoted(false); }}
                   className={`flex flex-col h-[76px] rounded-md gap-1 font-medium bg-background ${rating === r.value ? 'border-primary bg-primary-soft ring-1 ring-primary hover:bg-primary-soft' : ''}`}
                 >
                   <r.icon className="size-6" />
@@ -183,37 +150,6 @@ export function SatisfactionWidget() {
               ))}
             </div>
           </div>
-
-          <div>
-            <Label htmlFor="satisfaction-comment" className="mb-2 block">
-              Your Comment <span className="font-normal text-muted-foreground">(optional)</span>
-            </Label>
-            <Textarea
-              id="satisfaction-comment"
-              rows={3}
-              maxLength={MAX_COMMENT_LENGTH}
-              value={comment}
-              onChange={e => { setComment(e.target.value); setResult(null); }}
-            />
-            <p className="text-[13px] text-subtle-foreground mt-2">
-              {comment.length}/{MAX_COMMENT_LENGTH}. Checked before it appears. Stick to facts and your own experience; comments naming individuals won't be approved.
-            </p>
-          </div>
-
-          {comment.trim() && (
-            <div>
-              <Label htmlFor="satisfaction-name" className="mb-2 block">
-                Name to show <span className="font-normal text-muted-foreground">(optional)</span>
-              </Label>
-              <Input
-                id="satisfaction-name"
-                maxLength={50}
-                placeholder="A resident"
-                value={name}
-                onChange={e => setName(e.target.value)}
-              />
-            </div>
-          )}
 
           <div>
             <Label htmlFor="satisfaction-email" className="mb-2 block">
@@ -225,26 +161,11 @@ export function SatisfactionWidget() {
               required
               placeholder="your.email@example.com"
               value={email}
-              onChange={e => { setEmail(e.target.value); setResult(null); }}
+              onChange={e => { setEmail(e.target.value); setVoted(false); }}
             />
             <p className="text-[13px] text-subtle-foreground mt-2">
               Never published, and used only to keep one vote per resident.
             </p>
-          </div>
-
-          {/* Honeypot: off-screen from real users; bots that autofill every
-              field fill it in, and the backend silently drops the comment */}
-          <div className="absolute -left-[9999px]" aria-hidden="true">
-            <label htmlFor="satisfaction-website">Website</label>
-            <input
-              id="satisfaction-website"
-              type="text"
-              name="website"
-              tabIndex={-1}
-              autoComplete="off"
-              value={website}
-              onChange={e => setWebsite(e.target.value)}
-            />
           </div>
 
           <div className="flex items-center gap-2">
